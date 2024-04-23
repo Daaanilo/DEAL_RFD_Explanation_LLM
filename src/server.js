@@ -48,4 +48,21 @@ app.post('/upload', upload.single('file'), (req, res) => {
   });
 });
 
+// Route per recuperare tutti i nomi dei file
+app.get('/files', async (req, res) => {
+  try {
+    const files = await JSONModel.find({}, '_id'); // Recupera solo l'ID per comodità
+    const fileNames = files.map(file => file._id); // Estrai solo i nomi dei file
+
+    res.json(fileNames);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Errore durante il recupero dei nomi dei file' });
+  }
+});
+
 app.listen(port, () => console.log(`Server running on port ${port}`));
+
+
+//node server.js
+//npm start
