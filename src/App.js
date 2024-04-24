@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import FileDetailsPage from './FileDetailsPage';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileNames, setFileNames] = useState([]);
+  const [selectedFileName, setSelectedFileName] = useState(null);
 
   useEffect(() => {
     // Effettua una richiesta al server per ottenere i nomi dei file una volta che il componente è montato
@@ -50,17 +52,48 @@ function App() {
     }
   };
 
+  const handleFileNameClick = (fileName) => {
+    setSelectedFileName(fileName);
+  };
+
+  const handleDelete = (fileName, event) => {
+    event.stopPropagation(); // Impedisci la propagazione dell'evento
+    axios.delete(`http://localhost:5000/files/${fileName}`)
+      .then(response => {
+        alert(response.data.message);
+        // Aggiorna i nomi dei file dopo l'eliminazione
+        setFileNames(fileNames.filter(name => name !== fileName));
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Errore durante l\'eliminazione del file');
+      });
+  };
+
+  const handleBack = () => {
+    setSelectedFileName(null);
+  };
+
   return (
     <div>
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Carica File</button>
+      {!selectedFileName ? (
+        <div>
+          <input type="file" onChange={handleFileChange} />
+          <button onClick={handleUpload}>Carica File</button>
 
-      <h2>Nomi dei file nel database:</h2>
-      <ul>
-        {fileNames.map((fileName, index) => (
-          <li key={index}>{fileName}</li>
-        ))}
-      </ul>
+          <h2>Nomi dei file nel database:</h2>
+          <ul>
+            {fileNames.map((fileName, index) => (
+              <li key={index} onClick={() => handleFileNameClick(fileName)} style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }}>
+                {fileName}
+                <button onClick={(event) => handleDelete(fileName, event)}>Elimina</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <FileDetailsPage fileName={selectedFileName} onBack={handleBack} />
+      )}
     </div>
   );
 }

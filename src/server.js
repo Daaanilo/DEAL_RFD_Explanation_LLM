@@ -61,8 +61,34 @@ app.get('/files', async (req, res) => {
   }
 });
 
+// Route per recuperare il contenuto di un file specifico
+app.get('/files/:id', async (req, res) => {
+  try {
+    const file = await JSONModel.findById(req.params.id);
+    if (!file) {
+      return res.status(404).json({ error: 'File non trovato' });
+    }
+    res.json(file.data); // Restituisci solo il contenuto del file
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Errore durante il recupero del contenuto del file' });
+  }
+});
+
+// Route per eliminare un file specifico
+app.delete('/files/:id', async (req, res) => {
+  try {
+    const fileId = req.params.id;
+    const deletedFile = await JSONModel.findByIdAndDelete(fileId);
+    if (!deletedFile) {
+      return res.status(404).json({ error: 'File non trovato' });
+    }
+    res.json({ message: 'File eliminato con successo' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Errore durante l\'eliminazione del file' });
+  }
+});
+
+
 app.listen(port, () => console.log(`Server running on port ${port}`));
-
-
-//node server.js
-//npm start
