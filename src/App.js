@@ -8,7 +8,6 @@ function App() {
   const [selectedFileName, setSelectedFileName] = useState(null);
 
   useEffect(() => {
-    // Effettua una richiesta al server per ottenere i nomi dei file una volta che il componente è montato
     axios.get('http://localhost:5000/files')
       .then(response => {
         setFileNames(response.data);
@@ -17,7 +16,7 @@ function App() {
         console.error(error);
         alert('Errore durante il recupero dei nomi dei file');
       });
-  }, []); // Assicurati che questo effetto venga eseguito solo una volta
+  }, []);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -34,7 +33,6 @@ function App() {
         }
       }).then(response => {
         alert(response.data);
-        // Aggiorna i nomi dei file dopo aver caricato un nuovo file
         axios.get('http://localhost:5000/files')
           .then(response => {
             setFileNames(response.data);
@@ -57,17 +55,19 @@ function App() {
   };
 
   const handleDelete = (fileName, event) => {
-    event.stopPropagation(); // Impedisci la propagazione dell'evento
-    axios.delete(`http://localhost:5000/files/${fileName}`)
-      .then(response => {
-        alert(response.data.message);
-        // Aggiorna i nomi dei file dopo l'eliminazione
-        setFileNames(fileNames.filter(name => name !== fileName));
-      })
-      .catch(error => {
-        console.error(error);
-        alert('Errore durante l\'eliminazione del file');
-      });
+    event.stopPropagation();
+    const confirmation = window.confirm(`Sei sicuro di voler eliminare il file "${fileName}"?`);
+    if (confirmation) {
+      axios.delete(`http://localhost:5000/files/${fileName}`)
+        .then(response => {
+          alert(response.data.message);
+          setFileNames(fileNames.filter(name => name !== fileName));
+        })
+        .catch(error => {
+          console.error(error);
+          alert('Errore durante l\'eliminazione del file');
+        });
+    }
   };
 
   const handleBack = () => {

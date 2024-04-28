@@ -6,12 +6,14 @@ const fs = require('fs');
 const app = express();
 const port = 5000;
 
-// Connessione al database MongoDB
-mongoose.connect('mongodb+srv://admin:admin@progettouniversitario.7eqm09o.mongodb.net/?retryWrites=true&w=majority&appName=progettouniversitario', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+// Connessione al database MongoDB con un timeout maggiore
+mongoose.connect('mongodb+srv://admin:admin@progettouniversitario.7eqm09o.mongodb.net/?retryWrites=true&w=majority&appName=progettouniversitario')
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => {
+    console.error('Errore di connessione al database MongoDB:', err);
+    process.exit(1); // Esci dall'applicazione in caso di errore di connessione
+  });
+
 
 // Definizione dello schema per i dati JSON
 const jsonSchema = new mongoose.Schema({
@@ -30,33 +32,35 @@ app.use(function(req, res, next) {
   next();
 });
 
-// Route per il caricamento dei file JSON
+// Gestione degli errori durante il caricamento dei file
 app.post('/upload', upload.single('file'), (req, res) => {
-  const filePath = req.file.path;
-  const rawData = fs.readFileSync(filePath);
-  const jsonData = JSON.parse(rawData);
+  try {
+    const filePath = req.file.path;
+    const rawData = fs.readFileSync(filePath);
+    const jsonData = JSON.parse(rawData);
 
-  // Salvataggio dei dati JSON nel database MongoDB
-  const newJSON = new JSONModel({ data: jsonData });
-  newJSON.save().then(() => {
-    // Rimuovi il file temporaneo dopo il caricamento
-    fs.unlinkSync(filePath);
-    res.send('File JSON caricato e salvato con successo!');
-  }).catch(err => {
-    console.log(err);
-    res.status(500).send('Errore durante il salvataggio del file JSON');
-  });
+    const newJSON = new JSONModel({ data: jsonData });
+    newJSON.save().then(() => {
+      fs.unlinkSync(filePath);
+      res.send('File JSON caricato e salvato con successo!');
+    }).catch(err => {
+      console.error('Errore durante il salvataggio del file JSON:', err);
+      res.status(500).send('Errore durante il salvataggio del file JSON');
+    });
+  } catch (error) {
+    console.error('Errore durante il caricamento del file:', error);
+    res.status(500).send('Errore durante il caricamento del file JSON');
+  }
 });
 
-// Route per recuperare tutti i nomi dei file
+// Gestione degli errori nella query per recuperare i nomi dei file
 app.get('/files', async (req, res) => {
   try {
-    const files = await JSONModel.find({}, '_id'); // Recupera solo l'ID per comodità
-    const fileNames = files.map(file => file._id); // Estrai solo i nomi dei file
-
+    const files = await JSONModel.find({}, '_id').lean(); // Usare il metodo lean per ottenere un oggetto JavaScript piuttosto che un documento Mongoose
+    const fileNames = files.map(file => file._id);
     res.json(fileNames);
   } catch (error) {
-    console.error(error);
+    console.error('Errore durante il recupero dei nomi dei file:', error);
     res.status(500).json({ error: 'Errore durante il recupero dei nomi dei file' });
   }
 });
