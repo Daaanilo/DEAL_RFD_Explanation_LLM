@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FileDetailsPage from './FileDetailsPage';
+import './App.css';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -78,13 +79,14 @@ function App() {
     <div>
       {!selectedFileName ? (
         <div>
+          <div class="upload">
           <input type="file" onChange={handleFileChange} />
-          <button onClick={handleUpload}>Carica File</button>
-
-          <h2>Nomi dei file nel database:</h2>
+          <button id="caricamento"onClick={handleUpload}>Carica File</button>
+          </div>
+          <h2>File nel database:</h2>
           <ul>
             {fileNames.map((fileName, index) => (
-              <li key={index} onClick={() => handleFileNameClick(fileName)} style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }}>
+              <li key={index} onClick={() => handleFileNameClick(fileName)} >
                 {fileName}
                 <button onClick={(event) => handleDelete(fileName, event)}>Elimina</button>
               </li>
