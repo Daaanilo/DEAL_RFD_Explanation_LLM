@@ -37,91 +37,110 @@
   }
 }
 
-body{
+body {
   padding: 20px;
 }
 
-.upload {
-  display: flex;  
-  justify-content: center;  
+.upload-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.file-button {
-padding: 10px 20px;
-border: none;
-border-radius: 4px;
-background-color: #3f51b5; 
-color: #fff;
-cursor: pointer;
-transition: background-color 0.2s ease-in-out;
-}
-
-.file-button:hover {
-background-color: #334799; 
-}
-
-h2{
-  font-style: italic;
-  text-align: center;
-}
-
-input[type="file"] {
-  padding: 10px 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#caricamento {
-  margin-left: 10px;
-  padding: 10px 20px;
+.upload-container input[type="file"],
+.upload-container button {
+  background-color: #4CAF50;
+  color: white;
   border: none;
-  border-radius: 4px;
-  background-color: #3f51b5; 
-  color: #fff;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  margin-right: 10px;
 }
 
-#caricamento:hover {
-  background-color: #334799; 
+.upload-container input[type="file"]:hover,
+.upload-container button:hover {
+  background-color: #45a049;
 }
 
 ul {
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 
-li {
+ul li {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding: 10px 15px;
-  border-radius: 4px;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease-in-out;
+  transition: background-color 0.3s ease;
 }
 
-li:hover {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
-  cursor: pointer;
-  color: #a5a5a5;
+ul li:hover {
+  background-color: #f0f0f0;
 }
 
-li button {
-  padding: 5px 10px;
+ul li button {
+  background-color: #f44336;
+  color: white;
   border: none;
-  border-radius: 4px;
-  background-color: transparent;
-  color: #000000; 
+  padding: 6px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: color 0.2s ease-in-out;
+  transition: background-color 0.3s ease;
 }
 
-li button:hover {
-  color: #a5a5a5; 
+ul li button:hover {
+  background-color: #d32f2f;
 }
 
+#fileName:hover {
+  color: #61dafb;
+}
+
+.fade-in {
+  animation: fadeIn ease 0.5s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes deleteFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.delete-fade-out {
+  animation: deleteFadeOut 0.5s ease forwards;
+}
+
+.upload-container button:hover,
+ul li button:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}

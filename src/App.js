@@ -7,11 +7,13 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileNames, setFileNames] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState(null);
+  const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
     axios.get('http://localhost:5000/files')
       .then(response => {
         setFileNames(response.data);
+        setFadeIn(true);
       })
       .catch(error => {
         console.error(error);
@@ -76,12 +78,12 @@ function App() {
   };
 
   return (
-    <div>
+    <div className={fadeIn ? 'fade-in' : ''}>
       {!selectedFileName ? (
         <div>
-          <div class="upload">
-          <input type="file" onChange={handleFileChange} />
-          <button id="caricamento"onClick={handleUpload}>Carica File</button>
+          <div className="upload-container">
+            <input type="file" onChange={handleFileChange} />
+            <button id="caricamento" onClick={handleUpload}>Carica File</button>
           </div>
           <h2>File nel database:</h2>
           <ul>
