@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './FileDetailsPage.css';
 
 const FileDetailsPage = ({ fileName, onBack }) => {
   const [fileContent, setFileContent] = useState([]);
@@ -27,16 +28,16 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       const indent = '  '.repeat(depth);
       if (typeof value === 'object') {
         return (
-          <div key={`${key}-${depth}`}>
+          <div key={`${key}-${depth}`} className='row'>
             {indent}{key}:
             <div style={{ marginLeft: '20px' }}>{formatData(value, depth + 1)}</div>
           </div>
         );
       } else if (!rowsToRemove.find(row => row.key === key && row.value === value)) {
         return (
-          <div key={`${key}-${depth}`}>
+          <div key={`${key}-${depth}`} className='row'>
             {indent}{key}: {value}
-            <button onClick={() => removeRow(key, value)}>Rimuovi riga</button>
+            <button id="remove" onClick={() => removeRow(key, value)}>Rimuovi riga</button>
           </div>
         );
       }
@@ -47,7 +48,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   return (
     <div>
       <h2>Dettagli del File: {fileName}</h2>
-      <button onClick={onBack} style={{ marginBottom: '20px' }}>Torna Indietro</button>
+      <button onClick={onBack} id="back">Torna Indietro</button>
       {fileContent.map((row, index) => (
         <div key={index}>
           {formatData(row)}
