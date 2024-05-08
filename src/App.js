@@ -1,3 +1,7 @@
+import { ReactComponent as CloudPlusFillIcon } from 'bootstrap-icons/icons/cloud-plus-fill.svg';
+import { ReactComponent as CloudArrowUpFillIcon } from 'bootstrap-icons/icons/cloud-arrow-up-fill.svg';
+import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FileDetailsPage from './FileDetailsPage';
@@ -83,17 +87,17 @@ function App() {
         <div>
           <div className="upload-container">
             <input type="file" onChange={handleFileChange} />
-            <button id="caricamento" onClick={handleUpload}>Carica File</button>
+            <button id="caricamento" onClick={handleUpload}><CloudArrowUpFillIcon /></button>
           </div>
           <h2>File nel database:</h2>
-          <ul>
+          <div className="file-container">
             {fileNames.map((fileName, index) => (
-              <li key={index} onClick={() => handleFileNameClick(fileName)} >
-                {fileName}
-                <button onClick={(event) => handleDelete(fileName, event)}>Elimina</button>
-              </li>
+              <div className="file-item" key={index} onClick={() => handleFileNameClick(fileName)} >
+                <span>{fileName}</span>
+                <button className="remove-btn" onClick={(event) => handleDelete(fileName, event)}><TrashIcon /></button>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       ) : (
         <FileDetailsPage fileName={selectedFileName} onBack={handleBack} />
