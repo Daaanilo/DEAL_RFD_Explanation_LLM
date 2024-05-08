@@ -1,0 +1,20 @@
+const { OpenAI } = require('openai');
+//const openai = new OpenAI({ apiKey: "INSERIRE KEY", dangerouslyAllowBrowser: true});
+
+const handleUserInput = async (input) => {
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: input }],
+    });
+
+    const assistantResponse = response.choices[0].message.content;
+    return assistantResponse;
+
+  } catch (error) {
+    alert('Errore: ' + error);
+  }
+};
+
+module.exports = { handleUserInput };

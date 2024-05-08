@@ -7,6 +7,7 @@ import { ReactComponent as BugIcon } from 'bootstrap-icons/icons/bug.svg';
 import { ReactComponent as RobotIcon } from 'bootstrap-icons/icons/robot.svg';
 import axios from 'axios';
 import './FileDetailsPage.css';
+const { handleUserInput } = require('./chatgptapi.js');
 
 const FileDetailsPage = ({ fileName, onBack }) => {
   const [fileContent, setFileContent] = useState([]);
@@ -14,6 +15,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTextGenerated, setIsTextGenerated] = useState(false);
+  const [responseAI, setResponseAI] = useState(""); // Stato per salvare la risposta generata dall'IA
 
   useEffect(() => {
     axios.get(`http://localhost:5000/files/${fileName}`)
@@ -41,7 +43,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = async () => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     if (selectedRows.length === 0) {
       alert('Selezionare una o più RFDs');
@@ -49,13 +51,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       if (window.confirm('Sei sicuro di voler generare il testo?')) {
         setIsLoading(true);
         const selectedCC = selectedRows.map(index => cc[index]);
-        // Scrivere la chiamata all'IA
-        alert(selectedCC);
+        const response = await handleUserInput("ciao"); // Chiamata alla funzione che gestisce l'input utente
+        setResponseAI(response); // Salvare la risposta generata dall'IA nello stato locale
         setIsTextGenerated(true);
         setIsLoading(false);
       }
     }
   };
+  
+
   
   // INFO DATASET
   let name = [];
@@ -274,11 +278,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
       <div className="card">
         <div className="card-header">TESTO GENERATO <RobotIcon /></div>
-          <div className="card-body">
-            {/* Visualizza la scritta solo se il testo è stato generato */}
-            {isTextGenerated && (
-              <p>Il testo è stato generato con successo!</p>
-            )}
+        <div className="card-body">
+          {isTextGenerated && (
+            <p>{responseAI}</p>
+          )}
         </div>
       </div>
 
