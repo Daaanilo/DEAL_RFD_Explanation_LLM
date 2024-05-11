@@ -1,28 +1,11 @@
-:root {
-  --primary-color: #007bff;
-  --secondary-color: #6c757d;
-  --accent-color: #17a2b8;
-  --light-color: #f8f9fa;
-  --dark-color: #343a40;
-}
-
-body, .container {
-  font-family: 'Roboto', sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-}
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
 .upload-container {
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .upload-container input[type="file"],
@@ -42,23 +25,6 @@ body, .container {
 .upload-container input[type="file"]:hover,
 .upload-container button:hover {
   background-color: #0056b3;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-ul li {
-  padding: 10px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.3s ease;
 }
 
 ul li button.delete-button,
@@ -100,16 +66,30 @@ ul li button.delete-button:hover,
   gap: 20px;
 }
 
-.file-item {
-  background-color: #f0f0f0;
+.desktop-icon {
+  text-align: center;
+  width: auto;
+  height: auto;
+  border: 1px solid #dcdcdc; 
+  border-radius: 10px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); 
   padding: 10px;
-  border-radius: 5px;
+  margin: 15px;
+  background-color: #f9f9f9;
+  transition: transform 0.2s; 
 }
 
-.file-item:hover {
-  background-color: #e0e0e0;
+.desktop-icon:hover {
+  transform: scale(1.1); 
+  cursor: pointer;
 }
 
-.file-item .remove-btn {
-  margin-left: 10px;
+.desktop-icon i {
+  font-size: 50px; 
+  color: #007bff; 
+}
+
+.desktop-icon p {
+  font-size: 14px; 
+  margin: 10px 0 0 0; 
 }

@@ -84,20 +84,25 @@ function App() {
   return (
     <div className={fadeIn ? 'fade-in' : ''}>
       {!selectedFileName ? (
+
         <div>
           <div className="upload-container">
             <input type="file" onChange={handleFileChange} />
             <button id="caricamento" onClick={handleUpload}><CloudArrowUpFillIcon /></button>
           </div>
+
           <h2>File nel database:</h2>
+
           <div className="file-container">
             {fileNames.map((fileName, index) => (
-              <div className="file-item" key={index} onClick={() => handleFileNameClick(fileName)} >
-                <span>{fileName}</span>
+              <div className="desktop-icon" key={index} onClick={() => handleFileNameClick(fileName)} >
+                <i class="fas fa-file"></i>
+                <p>{fileName}</p>
                 <button className="remove-btn" onClick={(event) => handleDelete(fileName, event)}><TrashIcon /></button>
               </div>
             ))}
           </div>
+
         </div>
       ) : (
         <FileDetailsPage fileName={selectedFileName} onBack={handleBack} />
