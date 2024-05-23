@@ -16,6 +16,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [isTextGenerated, setIsTextGenerated] = useState(false);
   const [responseAI, setResponseAI] = useState("");
   const [allRFDs, setAllRFDs] = useState([]);
+  const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
 
   const info = {
     name: [],
@@ -62,26 +63,22 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const extractLhsAndRhs = (data) => {
     const extractedRFDs = [];
-    
+  
     if (data && data.length) {
       data.forEach(item => {
-        if (item.execution && item.execution.result && item.execution.result.length) {
-          item.execution.result.forEach(execution => {
-            if (execution.data && execution.data.length) {
-              execution.data.forEach(resultData => {
-                if (resultData.lhs && resultData.rhs) {
-                  const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@${lhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
-                  const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@${rhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
-                  const rfdString = `${lhsColumns} -> ${rhsColumns}`;
-                  extractedRFDs.push(rfdString);
-                }
-              });
+        if (item.execution && item.execution.result && item.execution.result.data && item.execution.result.data.length) {
+          item.execution.result.data.forEach(resultData => {
+            if (resultData.lhs && resultData.rhs) {
+              const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@${lhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
+              const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@${rhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
+              const rfdString = `${lhsColumns} -> ${rhsColumns}`;
+              extractedRFDs.push(rfdString);
             }
           });
         }
       });
     } 
-    
+  
     setAllRFDs(extractedRFDs);
   };
   
@@ -106,7 +103,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const scrollToBottom = async () => {
     if (selectedRows.length === 0) {
-      alert('Selezionare una o più RFDs');
+      alert('Selezionare una o piÃ¹ RFDs');
     } else {
       if (window.confirm('Sei sicuro di voler generare il testo?')) {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -147,7 +144,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       return null;
     });
   };
-  const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
+  
 
   const toggleHeaderSelection = (value) => {
     const selectedIndex = selectedHeaderValues.indexOf(value);
@@ -321,4 +318,3 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       };
 
       export default FileDetailsPage;
-
