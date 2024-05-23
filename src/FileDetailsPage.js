@@ -20,11 +20,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTextGenerated, setIsTextGenerated] = useState(false);
-  const [responseAI, setResponseAI] = useState("");
+  const [responseAI, setResponseAI] = useState("Ciao come posso aiutarti?");
   const [allRFDs, setAllRFDs] = useState([]);
-  const [cardVisibility, setCardVisibility] = useState({ infoDataset: true, sizeAndFormat: true, columnAndRowNumber: true, executionInfo: true, graphs: true, rfd: true, error: true, generatedText: true });
-
-
+  const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
+  const [cardVisibility, setCardVisibility] = useState({ infoDataset: true, sizeAndFormat: true, columnAndRowNumber: true, executionInfo: true, graphs: true, rfd: true, error: true, generatedText: true, prompt: true  });
+ 
   const info = {
     name: [],
     header: [],
@@ -48,6 +48,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const header = [];
+ 
+  useEffect(() => {
+    console.log("Nuovo valore di responseAI:", responseAI);
+  }, [responseAI]);
 
   useEffect(() => {
     axios.get(`http://localhost:5000/files/${fileName}`)
@@ -154,7 +158,6 @@ const extractLhsAndRhs = (data) => {
       return null;
     });
   };
-  const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
 
   const toggleHeaderSelection = (value) => {
     const selectedIndex = selectedHeaderValues.indexOf(value);
@@ -345,6 +348,23 @@ const extractLhsAndRhs = (data) => {
               </div>
             )}
           </div>
+
+          <div className="card mb-3">
+        <div className="d-flex justify-content-between align-items-center card-header">
+          <span>PROMPT <RobotIcon/></span>
+           {cardVisibility.prompt ? <ToggleOnIcon onClick={() => toggleCardVisibility('prompt')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('prompt')} />}</div>
+            {cardVisibility.prompt && (
+              <div className="card-body">
+                <input
+                   type="text"
+                   value={responseAI}
+                   onChange={(e) => setResponseAI(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+            
 
           <div className="card mb-3">
         <div className="d-flex justify-content-between align-items-center card-header">
