@@ -114,7 +114,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         setIsLoading(true);
         const selectedRFDs = selectedRows.map(index => allRFDs[index]);
         //alert(selectedRFDs)
-        const response = await handleUserInput("ciao");
+        const response = await handleUserInput(
+          "Potresti spiegarmi il significato delle seguenti dipendenze RFD?"
+        + "Vorrei una comprensione approfondita delle variabili coinvolte e delle relative soglie di tolleranza. Per esempio, nel seguente elenco di dipendenze:"
+        + selectedRFDs
+        + "Vorrei una disamina approfondita delle variabili coinvolte in ciascuna dipendenza, insieme alle rispettive soglie di tolleranza. Grazie!"
+      );
         setResponseAI(response);
         setIsTextGenerated(true);
         setIsLoading(false);
