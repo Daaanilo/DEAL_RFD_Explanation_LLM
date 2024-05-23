@@ -24,6 +24,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [allRFDs, setAllRFDs] = useState([]);
   const [cardVisibility, setCardVisibility] = useState({ infoDataset: true, sizeAndFormat: true, columnAndRowNumber: true, executionInfo: true, graphs: true, rfd: true, error: true, generatedText: true });
 
+  const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
 
   const info = {
     name: [],
@@ -89,6 +90,27 @@ const extractLhsAndRhs = (data) => {
   setAllRFDs(extractedRFDs);
 };
 
+  const extractLhsAndRhs = (data) => {
+    const extractedRFDs = [];
+  
+    if (data && data.length) {
+      data.forEach(item => {
+        if (item.execution && item.execution.result && item.execution.result.data && item.execution.result.data.length) {
+          item.execution.result.data.forEach(resultData => {
+            if (resultData.lhs && resultData.rhs) {
+              const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@${lhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
+              const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@${rhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
+              const rfdString = `${lhsColumns} -> ${rhsColumns}`;
+              extractedRFDs.push(rfdString);
+            }
+          });
+        }
+      });
+    } 
+  
+    setAllRFDs(extractedRFDs);
+  };
+  
 
   const toggleRowSelection = (index) => {
     const selectedIndex = selectedRows.indexOf(index);
@@ -113,7 +135,7 @@ const extractLhsAndRhs = (data) => {
 
   const scrollToBottom = async () => {
     if (selectedRows.length === 0) {
-      alert('Selezionare una o più RFDs');
+      alert('Selezionare una o piÃ¹ RFDs');
     } else {
       if (window.confirm('Sei sicuro di voler generare il testo?')) {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -154,7 +176,7 @@ const extractLhsAndRhs = (data) => {
       return null;
     });
   };
-  const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
+  
 
   const toggleHeaderSelection = (value) => {
     const selectedIndex = selectedHeaderValues.indexOf(value);
@@ -371,3 +393,13 @@ const extractLhsAndRhs = (data) => {
 };
 
 export default FileDetailsPage;
+            <div className="fixed-button-container">
+              <button className="fixed-button" onClick={scrollToBottom}>
+                {isLoading ? "Caricamento..." : "Genera testo"}
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      export default FileDetailsPage;
