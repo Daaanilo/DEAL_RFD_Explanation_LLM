@@ -22,7 +22,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTextGenerated, setIsTextGenerated] = useState(false);
-  const [responseAI, setResponseAI] = useState("Ciao come posso aiutarti?");
+  const [responseAI, setResponseAI] = useState("Potresti spiegarmi il significato delle seguenti dipendenze RFD?"
+  + "Vorrei una comprensione approfondita delle variabili coinvolte e delle relative soglie di tolleranza. Per esempio, nel seguente elenco di dipendenze "
+  + "vorrei una disamina approfondita delle variabili coinvolte in ciascuna dipendenza, insieme alle rispettive soglie di tolleranza. Grazie!\n");
   const [allRFDs, setAllRFDs] = useState([]);
   const [cardVisibility, setCardVisibility] = useState({ infoDataset: true, sizeAndFormat: true, columnAndRowNumber: true, executionInfo: true, graphs: true, rfd: true, prompt: true, error: true, generatedText: true });
 
@@ -117,13 +119,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
         setIsLoading(true);
         const selectedRFDs = selectedRows.map(index => allRFDs[index]);
-        alert(selectedRFDs)
-        const response = await handleUserInput(
-          "Potresti spiegarmi il significato delle seguenti dipendenze RFD?"
-          + "Vorrei una comprensione approfondita delle variabili coinvolte e delle relative soglie di tolleranza. Per esempio, nel seguente elenco di dipendenze:"
-          + selectedRFDs
-          + "Vorrei una disamina approfondita delle variabili coinvolte in ciascuna dipendenza, insieme alle rispettive soglie di tolleranza. Grazie!"
-        );
+        alert(responseAI+selectedRFDs.join('\n'))
+        const response = await handleUserInput(responseAI+selectedRFDs.join('\n')
+        )
         setResponseAI(response);
         setIsTextGenerated(true);
         setIsLoading(false);
@@ -389,10 +387,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
            {cardVisibility.prompt ? <ToggleOnIcon onClick={() => toggleCardVisibility('prompt')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('prompt')} />}</div>
             {cardVisibility.prompt && (
               <div className="card-body">
-                <input
+                <textarea
                    type="text"
                    value={responseAI}
                    onChange={(e) => setResponseAI(e.target.value)}
+                   style={{width:"100%", height:"100px"}}
                 />
               </div>
             )}
