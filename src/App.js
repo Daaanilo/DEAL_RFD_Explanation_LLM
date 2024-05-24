@@ -1,7 +1,6 @@
 import { ReactComponent as CloudPlusFillIcon } from 'bootstrap-icons/icons/cloud-plus-fill.svg';
 import { ReactComponent as CloudArrowUpFillIcon } from 'bootstrap-icons/icons/cloud-arrow-up-fill.svg';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FileDetailsPage from './FileDetailsPage';
@@ -9,19 +8,19 @@ import './App.css';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [fileNames, setFileNames] = useState([]);
+  const [files, setFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState(null);
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
     axios.get('http://localhost:5000/files')
       .then(response => {
-        setFileNames(response.data);
+        setFiles(response.data);
         setFadeIn(true);
       })
       .catch(error => {
         console.error(error);
-        alert('Errore durante il recupero dei nomi dei file');
+        alert('Error retrieving file names');
       });
   }, []);
 
@@ -42,18 +41,18 @@ function App() {
         alert(response.data);
         axios.get('http://localhost:5000/files')
           .then(response => {
-            setFileNames(response.data);
+            setFiles(response.data);
           })
           .catch(error => {
             console.error(error);
-            alert('Errore durante il recupero dei nomi dei file');
+            alert('Error retrieving file names');
           });
       }).catch(error => {
         console.error(error);
-        alert('Errore durante il caricamento del file JSON');
+        alert('Error uploading JSON file');
       });
     } else {
-      alert('Seleziona un file JSON da caricare');
+      alert('Select a JSON file to upload');
     }
   };
 
@@ -61,18 +60,18 @@ function App() {
     setSelectedFileName(fileName);
   };
 
-  const handleDelete = (fileName, event) => {
+  const handleDelete = (fileId, event) => {
     event.stopPropagation();
-    const confirmation = window.confirm(`Sei sicuro di voler eliminare il file "${fileName}"?`);
+    const confirmation = window.confirm(`Are you sure you want to delete this file?`);
     if (confirmation) {
-      axios.delete(`http://localhost:5000/files/${fileName}`)
+      axios.delete(`http://localhost:5000/files/${fileId}`)
         .then(response => {
           alert(response.data.message);
-          setFileNames(fileNames.filter(name => name !== fileName));
+          setFiles(files.filter(file => file._id !== fileId));
         })
         .catch(error => {
           console.error(error);
-          alert('Errore durante l\'eliminazione del file');
+          alert('Error deleting file');
         });
     }
   };
@@ -84,25 +83,21 @@ function App() {
   return (
     <div className={fadeIn ? 'fade-in' : ''}>
       {!selectedFileName ? (
-
         <div>
           <div className="upload-container">
             <input type="file" onChange={handleFileChange} />
-            <button id="caricamento" onClick={handleUpload}><CloudArrowUpFillIcon /></button>
+            <button id="upload" onClick={handleUpload}><CloudArrowUpFillIcon /></button>
           </div>
-
-          <h2>File nel database:</h2>
-
+          <h2>Files in the database:</h2>
           <div className="file-container">
-            {fileNames.map((fileName, index) => (
-              <div className="desktop-icon" key={index} onClick={() => handleFileNameClick(fileName)} >
-                <i class="fas fa-file"></i>
-                <p>{fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(fileName, event)}><TrashIcon /></button>
+            {files.map((file, index) => (
+              <div className="desktop-icon" key={index} onClick={() => handleFileNameClick(file._id)} >
+                <i className="fas fa-file"></i>
+                <p>{file.fileName}</p>
+                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
               </div>
             ))}
           </div>
-
         </div>
       ) : (
         <FileDetailsPage fileName={selectedFileName} onBack={handleBack} />

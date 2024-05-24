@@ -62,8 +62,16 @@ ul li button.delete-button:hover,
 
 .file-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  justify-content: center;
   gap: 20px;
+  align-items: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h2 {
+  text-align: center;
 }
 
 .desktop-icon {
