@@ -14,8 +14,6 @@ import { ReactComponent as NotPressedIcon } from 'bootstrap-icons/icons/square.s
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
-import { Bar } from 'react-chartjs-2';
-import 'chart.js/auto';
 import './FileDetailsPage.css';
 const { handleUserInput } = require('./chatgptapi.js');
 
@@ -263,42 +261,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     ],
   };
 
-  const countAttributes = (rfdArray) => {
-    let lhsCount = 0;
-    let rhsCount = 0;
-
-    rfdArray.forEach(rfd => {
-      const [lhs, rhs] = rfd.split(' -> ');
-      lhsCount += lhs.split(' ').length;
-      rhsCount += rhs.split(' ').length;
-    });
-
-    return { lhsCount, rhsCount };
-  };
-
-  const { lhsCount, rhsCount } = countAttributes(allRFDs);
-
-  const chartData = {
-    labels: ['LHS', 'RHS'],
-    datasets: [
-      {
-        label: 'Number of Attributes',
-        data: [lhsCount, rhsCount],
-        backgroundColor: ['#36A2EB', '#FF6384'],
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
-
   return (
     <div className="file-details">
       <div className="title-back-container">
@@ -341,61 +303,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     </div>
                   )}
                 </div>
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span>INFO DATASET <DatabaseIcon /></span>
-            <div>
-              {cardVisibility.infoDataset ? (
-                <ToggleOnIcon onClick={() => toggleCardVisibility('infoDataset')} />
-              ) : (
-                <ToggleOffIcon onClick={() => toggleCardVisibility('infoDataset')} />
-              )}
-            </div>
-          </div>
-          {cardVisibility.infoDataset && (
-            <div className="card-body">
-              <div className="container">
-                <div className="card mb-3">
-                  <div className="card-header">Header</div>
-                  {header && header[0] && (
-                    <div className="card-body d-flex flex-row flex-wrap">
-                      {header[0].map((item, index) => (
-                        <div key={index} className="card mb-3">
-                          <div className="card-header d-flex justify-content-between align-items-center">
-                            <span>{item}</span>
-                            <div>
-                              {selectedHeaderValues.includes(item) ? (
-                                <NotPressedIcon onClick={() => toggleHeaderSelection(item)} />
-                              ) : (
-                                <PressedIcon onClick={() => toggleHeaderSelection(item)} />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="card mb-3">
-                      <div className="d-flex justify-content-between align-items-center card-header">
-                        <span>Size & Format <AspectRatioIcon /></span> {cardVisibility.sizeAndFormat ? <ToggleOnIcon onClick={() => toggleCardVisibility('sizeAndFormat')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('sizeAndFormat')} />}</div>
-                      {cardVisibility.sizeAndFormat && (
-                        <div className="card-body">
-                          {info.size.map((item, index) => (
-                            <div key={index}>
-                              <strong>Size:</strong> {item} <br />
-                              <strong>Format:</strong> {info.format[index]} <br />
-                              <strong>Separator:</strong> {info.separator[index]}
-                              <hr />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 <div className="row">
                   <div className="col-md-6">
                     <div className="card mb-3">
@@ -579,5 +487,4 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   );
 };
 
-export default FileDetailsPage;
 export default FileDetailsPage;
