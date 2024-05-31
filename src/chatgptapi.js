@@ -1,5 +1,5 @@
 const { OpenAI } = require('openai');
-const openai = new OpenAI({ apiKey: "INSERIRE KEY", dangerouslyAllowBrowser: true});
+//const openai = new OpenAI({ apiKey: "INSERIRE KEY", dangerouslyAllowBrowser: true});
 
 const handleUserInput = async (input) => {
 
@@ -13,7 +13,7 @@ const handleUserInput = async (input) => {
     return assistantResponse;
 
   } catch (error) {
-    alert('Errore: ' + error);
+    alert('Error: ' + error);
   }
 };
 

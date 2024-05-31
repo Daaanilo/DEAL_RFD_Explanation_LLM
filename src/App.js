@@ -13,6 +13,9 @@ function App() {
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
+
+    document.body.style.backgroundColor = '#eceff1';
+    
     axios.get('http://localhost:5000/files')
       .then(response => {
         setFiles(response.data);
@@ -22,6 +25,21 @@ function App() {
         console.error(error);
         alert('Error retrieving file names');
       });
+
+  /*
+    const handleMouseMove = (event) => {
+      const x = event.clientX / window.innerWidth * 100;
+      const y = event.clientY / window.innerHeight * 100;
+      document.body.style.background = `radial-gradient(75px circle at ${x}% ${y}%, #99bdf6 0%, #eceff1 100%)`;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  */
+
   }, []);
 
   const handleFileChange = (e) => {
