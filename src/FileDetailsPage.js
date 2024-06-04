@@ -226,35 +226,35 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     });  
     return filteredArray;
   };
-  
-  const countAttributes = (rfdArray, attributesHeader) => {
 
-    let lhsCount = 0, rhsCount = 0;
+  const countLHSAttributes = (rfdArray, attributesHeader) => {
+    const lhsCount = {};
     rfdArray.forEach(rfd => {
-      const [lhs, rhs] = rfd.split(' -> ');
-      attributesHeader.forEach(attribute => {
-        if (lhs.includes(attribute)) lhsCount++;
-        if (rhs.includes(attribute)) rhsCount++;
-      });
+      const lhs = rfd.split(' -> ')[0];
+      const attributes = lhs.match(/[^@]+@[\d.]+/g) || [];
+      const numAttributes = attributes.length;
+      if (!lhsCount[numAttributes]) {
+        lhsCount[numAttributes] = 0;
+      }
+      lhsCount[numAttributes] += 1;
     });
-    return { lhsCount, rhsCount };
+    return lhsCount;
+  };  
+  
+  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues), header[0]);
+  const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
+  const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
+  
+  const lhsAttributeChartData = {
+    labels: lhsAttributeLabels,
+    datasets: [{
+      label: 'LHS Attribute Count',
+      data: lhsAttributeData,
+      backgroundColor: '#FFA726',
+    }],
   };
   
-  const { lhsCount, rhsCount } = countAttributes(filterRFDs(allRFDs, selectedHeaderValues), header[0]);
-
-  
-  const chartData = {
-    labels: ['LHS', 'RHS'],
-    datasets: [
-      {
-        label: 'Number of Attributes',
-        data: [lhsCount, rhsCount],
-        backgroundColor: ['#36A2EB', '#FF6384'],
-      },
-    ],
-  };
-
-  const chartOptions = {
+  const lhsAttributeChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -263,7 +263,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       },
     },
   };
-
+  
+  
   const countVariableFrequency = (rfdArray, attributesHeader) => {
     const variableFrequency = {};
     rfdArray.forEach(rfd => {
@@ -641,21 +642,22 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       <div className="d-flex justify-content-between align-items-center card-header">
         <span>CHARTS <Chart /> </span>
         {cardVisibility.graphs ? <ToggleOnIcon onClick={() => toggleCardVisibility('graphs')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('graphs')} />}
-        </div>
-        {cardVisibility.graphs && (
-          <div className="card-body">
-            <div style={{ height: '300px' }}>
-              <Bar data={chartData} options={chartOptions} />
-            </div>
-            <div style={{ height: '300px' }}>
-              <Bar data={variableChartData} options={variableChartOptions} />
-            </div>
-            <div style={{ height: '300px' }}>
-              <Bar data={implicatingChartData} options={implicatingChartOptions} />
-            </div>
+      </div>
+      {cardVisibility.graphs && (
+        <div className="card-body">
+          <div style={{ height: '300px' }}>
+            <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
           </div>
-        )}
+          <div style={{ height: '300px' }}>
+            <Bar data={variableChartData} options={variableChartOptions} />
+          </div>
+          <div style={{ height: '300px' }}>
+            <Bar data={implicatingChartData} options={implicatingChartOptions} />
+          </div>
+        </div>
+      )}
     </div>
+
 
 
     <div className="card mb-3">
