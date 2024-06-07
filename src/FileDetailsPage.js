@@ -181,6 +181,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   // GENERATE TEXT
 
+  const generateText = () => {
+    const selectedRFDs = selectedRows.map(index => allRFDs[index]);
+    setPromptAI(initialPrompt + selectedRFDs.join('\n'));
+  };
+
   const scrollToBottom = async () => {
 
     if (selectedRows.length === 0) {
@@ -190,9 +195,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
     const selectedRFDs = selectedRows.map(index => allRFDs[index]);
     const support = promptAI;
-    setPromptAI(promptAI + selectedRFDs.join('\n'));
-  
-    await new Promise(resolve => setTimeout(resolve, 0));
   
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
@@ -208,7 +210,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     });
   
 
-    if (window.confirm('Are you sure you want to generate the text?')) {
+    if (window.confirm('Are you sure you want to summarize the text?')) {
       setIsLoading(true);
 
       const response = await handleUserInput(support ? support + selectedRFDs.join('\n') : promptAI + selectedRFDs.join('\n'));
@@ -556,7 +558,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                             <strong>Dataset Loading:</strong> {item}{info.unit[0]} <br />
                             <strong>Preprocessing:</strong> {info.preprocessing[index]}{info.unit[0]} <br />
                             <strong>Discovery:</strong> {info.discovery[index]}{info.unit[0]} <br />
-                            <strong>Total:</strong> {info.total[index]}{info.unit[0]} <br />
+                            <strong>Total:</strong> {info.total[index]} <br />
                             <hr />
                           </div>
                         ))}
@@ -674,9 +676,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           style={{ width: "100%", minHeight: "200px" }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-          <button className="select-btn" onClick={() => setPromptAI(initialPrompt)}>RESET</button>
+          <button className="select-btn" onClick={generateText}>GENERATE TEXT</button>
           <button className="select-btn" onClick={scrollToBottom}>
-            {isLoading ? "LOADING..." : "GENERATE TEXT"}
+            {isLoading ? "LOADING..." : "SUMMARIZE"}
           </button>
         </div>
       </div>
@@ -686,7 +688,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>GENERATED TEXT <RobotIcon /></span> {cardVisibility.generatedText ? <ToggleOnIcon onClick={() => toggleCardVisibility('generatedText')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('generatedText')} />}</div>
+        <span>SUMMARY <RobotIcon /></span> {cardVisibility.generatedText ? <ToggleOnIcon onClick={() => toggleCardVisibility('generatedText')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('generatedText')} />}</div>
           {cardVisibility.generatedText && (
             <div className="card-body">
               {isTextGenerated && (

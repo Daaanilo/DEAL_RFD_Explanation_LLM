@@ -32,11 +32,14 @@ body {
 }
 
 .back-btn {
-  margin-left: auto;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
 }
 
+
 .container {
-  max-width: 1200px;
+  max-width: 1600px !important;
   margin: 0 auto;
   padding: 20px;
 }

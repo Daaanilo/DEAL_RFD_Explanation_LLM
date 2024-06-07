@@ -1,6 +1,6 @@
-import { ReactComponent as CloudPlusFillIcon } from 'bootstrap-icons/icons/cloud-plus-fill.svg';
 import { ReactComponent as CloudArrowUpFillIcon } from 'bootstrap-icons/icons/cloud-arrow-up-fill.svg';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
+import { ReactComponent as SearchIcon } from 'bootstrap-icons/icons/search.svg';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import FileDetailsPage from './FileDetailsPage';
@@ -11,11 +11,11 @@ function App() {
   const [files, setFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState(null);
   const [fadeIn, setFadeIn] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-
     document.body.style.backgroundColor = '#eceff1';
-    
+
     axios.get('http://localhost:5000/files')
       .then(response => {
         setFiles(response.data);
@@ -25,21 +25,6 @@ function App() {
         console.error(error);
         alert('Error retrieving file names');
       });
-
-  /*
-    const handleMouseMove = (event) => {
-      const x = event.clientX / window.innerWidth * 100;
-      const y = event.clientY / window.innerHeight * 100;
-      document.body.style.background = `radial-gradient(75px circle at ${x}% ${y}%, #99bdf6 0%, #eceff1 100%)`;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  */
-
   }, []);
 
   const handleFileChange = (e) => {
@@ -98,17 +83,28 @@ function App() {
     setSelectedFileName(null);
   };
 
+  const filteredFiles = files.filter(file => file.fileName.toLowerCase().includes(searchTerm.toLowerCase()));
+
   return (
-    <div className={fadeIn ? 'fade-in' : ''}>
+    <div className={`app-container ${fadeIn ? 'fade-in' : ''}`}>
+      {!selectedFileName && (
+        <>
+          <div className="search-section">
+            <input
+              type="text"
+              placeholder="Search by file name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <SearchIcon />
+          </div>
+        </>
+      )}
+
       {!selectedFileName ? (
         <div>
-          <div className="upload-container">
-            <input type="file" onChange={handleFileChange} />
-            <button id="upload" onClick={handleUpload}><CloudArrowUpFillIcon /></button>
-          </div>
-          <h2>Files in the database:</h2>
           <div className="file-container">
-            {files.map((file, index) => (
+            {filteredFiles.map((file, index) => (
               <div className="desktop-icon" key={index} onClick={() => handleFileNameClick(file._id)} >
                 <i className="fas fa-file"></i>
                 <p>{file.fileName}</p>
@@ -119,6 +115,13 @@ function App() {
         </div>
       ) : (
         <FileDetailsPage fileName={selectedFileName} onBack={handleBack} />
+      )}
+
+      {!selectedFileName && (
+        <div className="upload-section">
+          <input id="file-upload" type="file" onChange={handleFileChange} />
+          <button id="upload" onClick={handleUpload}><CloudArrowUpFillIcon /></button>
+        </div>
       )}
     </div>
   );
