@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = 5000;
@@ -29,24 +30,53 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const filePath = req.file.path;
     const fileName = req.file.originalname;
     const rawData = fs.readFileSync(filePath);
     const jsonData = JSON.parse(rawData);
 
-    const newJSON = new JSONModel({ fileName, data: jsonData });
-    newJSON.save().then(() => {
-      fs.unlinkSync(filePath);
-      res.send('JSON file uploaded and saved successfully!');
-    }).catch(err => {
-      console.error('Error saving JSON file:', err);
-      res.status(500).send('Error saving JSON file');
+    const parts = [];
+    let currentPart = [];
+    jsonData.forEach(obj => {
+        if (obj.hasOwnProperty('dataset')) {
+            if (currentPart.length !== 0) {
+                parts.push(currentPart);
+                currentPart = [];
+            }
+        }
+        currentPart.push(obj);
     });
+    if (currentPart.length !== 0) {
+        parts.push(currentPart);
+    }
+
+    parts.forEach((part, index) => {
+        fs.writeFileSync(`${fileName.split('.')[0]}(${index + 1}).json`, JSON.stringify(part, null, 2));
+    });
+
+    await Promise.all(parts.map(async (part, index) => {
+        const filePath = `${fileName.split('.')[0]}(${index + 1}).json`;
+        const rawData = fs.readFileSync(filePath);
+        const jsonData = JSON.parse(rawData);
+        
+        const newJSON = new JSONModel({ fileName: `${fileName.split('.')[0]}(${index + 1}).json`, data: jsonData });
+        await newJSON.save();
+
+        console.log(`File ${fileName.split('.')[0]}(${index + 1}).json uploaded to MongoDB`);
+        
+        fs.unlinkSync(filePath);
+        console.log(`File ${fileName.split('.')[0]}(${index + 1}).json removed from uploads directory`);
+    }));
+
+    fs.unlinkSync(filePath);
+    console.log(`File ${fileName} removed from multer's temporary folder`);
+
+    res.send('JSON files uploaded and saved to MongoDB!');
   } catch (error) {
     console.error('Error uploading the file:', error);
-    res.status(500).send('Error uploading JSON file');
+    res.status(500).send('Error uploading JSON files');
   }
 });
 

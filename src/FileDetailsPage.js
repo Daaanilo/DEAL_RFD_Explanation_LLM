@@ -7,6 +7,7 @@ import { ReactComponent as Chart } from 'bootstrap-icons/icons/diagram-2.svg';
 import { ReactComponent as BugIcon } from 'bootstrap-icons/icons/bug.svg';
 import { ReactComponent as CpuIcon } from 'bootstrap-icons/icons/cpu.svg';
 import { ReactComponent as RobotIcon } from 'bootstrap-icons/icons/robot.svg';
+import { ReactComponent as PcIcon } from 'bootstrap-icons/icons/pc-horizontal.svg';
 import { ReactComponent as ToggleOffIcon } from 'bootstrap-icons/icons/toggle-off.svg';
 import { ReactComponent as ToggleOnIcon } from 'bootstrap-icons/icons/toggle-on.svg';
 import { ReactComponent as PressedIcon } from 'bootstrap-icons/icons/check-square-fill.svg';
@@ -30,12 +31,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   "I want an overall summary that explains the general concept of these dependencies, "+
   "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n";
   const [promptAI, setPromptAI] = useState("");
-
+ 
   const [cardVisibility, setCardVisibility] = useState({
     infoDataset: true,
     header: true,
     sizeAndFormat: true,
     columnAndRowNumber: true,
+    algorithm: true,
     executionInfo: true,
     system: true,
     executionParameters: true,
@@ -60,6 +62,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     col_number: [],
     row_number: [],
     blank_char: [],
+
+    //name: [],
+    language: [],
+    platform: [],
+    execution_type: [],
     
     os: [],
     os_version: [],
@@ -87,6 +94,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     memory_limit: [],
     general_error: []
   };
+
   const header = [];
 
   // RETRIEVING FILE
@@ -385,8 +393,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   return (
     <div className="file-details">
       <div className="title-back-container">
-        <button className="back-btn" onClick={onBack}>Go Back</button>
-        <h2 className="title">File Details: {fileName}</h2>
+      <button className="back-btn" onClick={onBack}> <i className="fas fa-arrow-alt-circle-left" style={{fontSize: "1.2em"}}></i></button>
+        <h2 className="title">File Details: <span>{fileName}</span></h2>
       </div>
       <div className="container">
         <div className="card mb-3">
@@ -406,16 +414,16 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                 <div className="card mb-3">
                   <div className="card-header">Header</div>
                   {header && header[0] && (
-                    <div className="card-body d-flex flex-row flex-wrap">
+                    <div className="card-body d-flex flex-row flex-wrap justify-content-around">
                       {header[0].map((item, index) => (
                         <div key={index} className="card mb-3">
-                          <div className="card-header d-flex justify-content-between align-items-center">
-                            <span>{item}</span>
+                          <div className="card-header d-flex justify-content-between align-items-center" style={{ backgroundColor: selectedHeaderValues.includes(item) ? '#2159ff' : '#9cceff' }}>
+                           <span class="text-outline">{item}</span>
                             <div>
                               {selectedHeaderValues.includes(item) ? (
                                 <NotPressedIcon onClick={() => toggleHeaderSelection(item)} />
                               ) : (
-                                <PressedIcon onClick={() => toggleHeaderSelection(item)} />
+                                <PressedIcon onClick={() => toggleHeaderSelection(item)}/>
                               )}
                             </div>
                           </div>
@@ -469,6 +477,38 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           )}
         </div>
 
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>ALGORITHM <PcIcon /></span>
+            <div>
+              {cardVisibility.algorithm ? (
+                <ToggleOnIcon onClick={() => toggleCardVisibility('algorithm')} />
+              ) : (
+                <ToggleOffIcon onClick={() => toggleCardVisibility('algorithm')} />
+              )}
+            </div>
+          </div>
+          {cardVisibility.algorithm && (
+            <div className="card-body">
+              <div className="row">
+                <div className="col-md-6">
+
+
+                     </div>
+
+                        {info.language.map((item, index) => (
+                          <div key={index}>
+                            <strong>Name:</strong> {info.name[1]} <br />
+                            <strong>Language:</strong> {info.language[index]} <br />
+                            <strong>Platform:</strong> {info.platform[index]} <br />
+                            <strong>Execution Type:</strong> {info.execution_type[index]}<br />
+                            <hr />
+                          </div>
+                        ))}
+              </div>
+            </div>
+          )}
+        </div>
         
         
         <div className="card mb-3">
@@ -533,82 +573,83 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
         
         <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span>RESULT<PcDisplayIcon /></span>
-            <div>
-              {cardVisibility.result ? (
+    <div className="d-flex justify-content-between align-items-center card-header">
+        <span>RESULT<PcDisplayIcon /></span>
+        <div>
+            {cardVisibility.result ? (
                 <ToggleOnIcon onClick={() => toggleCardVisibility('result')} />
-              ) : (
+            ) : (
                 <ToggleOffIcon onClick={() => toggleCardVisibility('result')} />
-              )}
-            </div>
-          </div>
-          {cardVisibility.result && (
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="card mb-3">
-                    <div className="d-flex justify-content-between align-items-center card-header">
-                      <span>Time Execution <BugIcon /></span> {cardVisibility.timeExecution ? <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />}
-                    </div>
-                    {cardVisibility.timeExecution && (
-                      <div className="card-body">
-                        {info.dataset_loading.map((item, index) => (
-                          <div key={index}>
-                            <strong>Dataset Loading:</strong> {item}{info.unit[0]} <br />
-                            <strong>Preprocessing:</strong> {info.preprocessing[index]}{info.unit[0]} <br />
-                            <strong>Discovery:</strong> {info.discovery[index]}{info.unit[0]} <br />
-                            <strong>Total:</strong> {info.total[index]} <br />
-                            <hr />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="card mb-3">
-                    <div className="d-flex justify-content-between align-items-center card-header">
-                      <span> Ram Usage <CpuIcon /></span> {cardVisibility.ramUsage ? <ToggleOnIcon onClick={() => toggleCardVisibility('ramUsage')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('ramUsage')} />}
-                    </div>
-                    {cardVisibility.ramUsage && (
-                      <div className="card-body">
-                        {info.max_ram_used.map((item, index) => (
-                          <div key={index}>
-                            <strong>Unit:</strong> {info.unit[1]} <br />
-                            <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
-                            <hr />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="card mb-3">
-                    <div className="d-flex justify-content-between align-items-center card-header">
-                      <span>Error <BugIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('error')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('error')} />}
-                    </div>
-                    {cardVisibility.error && (
-                      <div className="card-body">
-                        {info.time_limit.map((item, index) => (
-                          <div key={index}>
-                            <strong>Time Limit:</strong> {item} <br />
-                            <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
-                            <strong>General Error:</strong> {info.general_error[index]} <br />
-                            <hr />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          )}
+            )}
         </div>
+    </div>
+    {cardVisibility.result && (
+        <div className="card-body">
+            <div className="row flex-grow-1">
+                <div className="col-md-4 d-flex">
+                    <div className="card mb-3 w-100">
+                        <div className="d-flex justify-content-between align-items-center card-header">
+                            <span>Time Execution <BugIcon /></span> {cardVisibility.timeExecution ? <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />}
+                        </div>
+                        {cardVisibility.timeExecution && (
+                            <div className="card-body">
+                                {info.dataset_loading.map((item, index) => (
+                                    <div key={index}>
+                                        <strong>Dataset Loading:</strong> {item}{info.unit[0]} <br />
+                                        <strong>Preprocessing:</strong> {info.preprocessing[index]}{info.unit[0]} <br />
+                                        <strong>Discovery:</strong> {info.discovery[index]}{info.unit[0]} <br />
+                                        <strong>Total:</strong> {info.total[index]} <br />
+                                        <hr />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="col-md-4 d-flex">
+                    <div className="card mb-3 w-100">
+                        <div className="d-flex justify-content-between align-items-center card-header">
+                            <span>Ram Usage <CpuIcon /></span> {cardVisibility.ramUsage ? <ToggleOnIcon onClick={() => toggleCardVisibility('ramUsage')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('ramUsage')} />}
+                        </div>
+                        {cardVisibility.ramUsage && (
+                            <div className="card-body">
+                                {info.max_ram_used.map((item, index) => (
+                                    <div key={index}>
+                                        <strong>Unit:</strong> {info.unit[1]} <br />
+                                        <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
+                                        <hr />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="col-md-4 d-flex">
+                    <div className="card mb-3 w-100">
+                        <div className="d-flex justify-content-between align-items-center card-header">
+                            <span>Error <BugIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('error')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('error')} />}
+                        </div>
+                        {cardVisibility.error && (
+                            <div className="card-body">
+                                {info.time_limit.map((item, index) => (
+                                    <div key={index}>
+                                        <strong>Time Limit:</strong> {item} <br />
+                                        <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
+                                        <strong>General Error:</strong> {info.general_error[index]} <br />
+                                        <hr />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )}
+</div>
+
+
+
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">

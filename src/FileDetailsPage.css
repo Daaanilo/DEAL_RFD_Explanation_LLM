@@ -13,6 +13,12 @@
   padding: 0;
 }
 
+.text-outline {
+  color: transparent;
+  text-shadow: 
+    0.01px 0.01px 0.01px white;
+}
+
 body {
   font-family: 'Roboto', sans-serif;
   background-color: var(--light-color);
@@ -31,12 +37,15 @@ body {
   flex-grow: 1;
 }
 
+.title > span {
+  color: rgb(0, 110, 255);
+}
+
 .back-btn {
   position: fixed;
   bottom: 20px;
   right: 20px;
 }
-
 
 .container {
   max-width: 1600px !important;
