@@ -394,7 +394,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <div className="file-details">
       <div className="title-back-container">
       <button className="back-btn" onClick={onBack}> <i className="fas fa-arrow-alt-circle-left" style={{fontSize: "1.2em"}}></i></button>
-        <h2 className="title">File Details: <span>{fileName}</span></h2>
+        <h2 className="title">File Details: <span style={{color: 'black' }}>{fileName}</span></h2>
       </div>
       <div className="container">
         <div className="card mb-3">
@@ -417,16 +417,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     <div className="card-body d-flex flex-row flex-wrap justify-content-around">
                       {header[0].map((item, index) => (
                         <div key={index} className="card mb-3">
-                          <div className="card-header d-flex justify-content-between align-items-center" style={{ backgroundColor: selectedHeaderValues.includes(item) ? '#2159ff' : '#9cceff' }}>
-                           <span class="text-outline">{item}</span>
+                          
                             <div>
-                              {selectedHeaderValues.includes(item) ? (
-                                <NotPressedIcon onClick={() => toggleHeaderSelection(item)} />
-                              ) : (
-                                <PressedIcon onClick={() => toggleHeaderSelection(item)}/>
-                              )}
+                            <button
+                              type="button"
+                              className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
+                              onClick={() => toggleHeaderSelection(item)}
+                            >{item}</button>
                             </div>
-                          </div>
+                          
                         </div>
                       ))}
                     </div>
