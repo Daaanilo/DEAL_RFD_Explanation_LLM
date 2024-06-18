@@ -169,3 +169,8 @@ body {
 .card-body.error-body { background-color: #f8d7da; }
 
 .card-header, .card-body { border-bottom: none; }
+
+.btn{
+  width: 150px; 
+  height: 40px; 
+}
