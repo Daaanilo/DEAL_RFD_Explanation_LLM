@@ -72,13 +72,18 @@ body {
   padding: 20px;
 }
 
+.btn{
+  width: 150px; 
+  height: 40px; 
+}
+
 .select-btn {
   display: inline-block;
   padding: 12px 20px;
   font-size: 14px;
   text-align: center;
   text-decoration: none;
-  background-color: var(--primary-color);
+  background-color: #495057;
   border: none;
   color: #fff;
   border-radius: 5px;
@@ -89,7 +94,7 @@ body {
 }
 
 .select-btn:hover {
-  background-color: #0056b3;
+  background-color: #6c757d;
 }
 
 .remove-btn {

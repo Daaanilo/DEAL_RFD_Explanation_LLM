@@ -10,10 +10,9 @@ import { ReactComponent as RobotIcon } from 'bootstrap-icons/icons/robot.svg';
 import { ReactComponent as PcIcon } from 'bootstrap-icons/icons/pc-horizontal.svg';
 import { ReactComponent as ToggleOffIcon } from 'bootstrap-icons/icons/toggle-off.svg';
 import { ReactComponent as ToggleOnIcon } from 'bootstrap-icons/icons/toggle-on.svg';
-import { ReactComponent as PressedIcon } from 'bootstrap-icons/icons/check-square-fill.svg';
-import { ReactComponent as NotPressedIcon } from 'bootstrap-icons/icons/square.svg';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
+import { Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 import './FileDetailsPage.css';
 const { handleUserInput } = require('./chatgptapi.js');
@@ -97,6 +96,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const header = [];
 
+  const statistics = {
+    type: [],
+    mean: [],
+    median: [],
+    mode: [],
+    distribution: []
+  };
+  
   // RETRIEVING FILE
 
   useEffect(() => {
@@ -124,6 +131,18 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       const indent = '  '.repeat(depth);
       if (key === 'header') {
         header.push(value);
+      }
+      if (key === 'statistics' && typeof value === 'object' && value !== null) {
+        Object.entries(value).forEach(([statKey, statValue]) => {
+          if (statistics.hasOwnProperty(statKey) && typeof statistics[statKey] === 'object') {
+            Object.entries(statValue).forEach(([innerKey, innerValue]) => {
+              const uniqueValues = new Set(statistics[statKey][innerKey]);
+              if (!uniqueValues.has(innerValue)) {
+                statistics[statKey][innerKey] = innerValue;
+              }
+            });
+          }
+        });
       }
       if (typeof value === 'object' && value !== null) {
         return `${indent}${key}: ${formatData(value, depth + 1)}`;
@@ -229,6 +248,27 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   // CHARTS
+  
+  const getRandomColor = () => {
+    const h = Math.floor(Math.random() * 360);
+    const s = Math.floor(Math.random() * 20) + 80;
+    const l = Math.floor(Math.random() * 20) + 50;
+    return hslToHex(h, s, l);
+  };
+  
+  const hslToHex = (h, s, l) => {
+    s /= 100;
+    l /= 100;
+    
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(color * 255).toString(16).padStart(2, '0');
+    };
+  
+    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+  };
 
   const filterRFDs = (rfdArray, attributesHeader) => {
     const filteredArray = rfdArray.filter(rfd => {
@@ -260,7 +300,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'LHS Attribute Count',
       data: lhsAttributeData,
-      backgroundColor: '#FFA726',
+      backgroundColor: getRandomColor(),
     }],
   };
   
@@ -324,12 +364,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'LHS Frequency',
         data: lhsCounts,
-        backgroundColor: '#36A2EB',
+        backgroundColor: getRandomColor(),
       },
       {
         label: 'RHS Frequency',
         data: rhsCounts,
-        backgroundColor: '#FF6384',
+        backgroundColor: getRandomColor(),
       },
     ],
   };
@@ -365,7 +405,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'Implicating Attributes',
       data: Object.values(implicatingAttributes).map(set => set.size),
-      backgroundColor: '#4CAF50',
+      backgroundColor: getRandomColor(),
     }],
   };
 
@@ -390,11 +430,104 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   };
 
+  const statisticLabels = Object.keys(statistics.type);
+  const statisticMeans = statisticLabels.map(label => statistics.mean[label]);
+  const statisticMedians = statisticLabels.map(label => statistics.median[label]);
+  const statisticModes = statisticLabels.map(label => statistics.mode[label]);
+
+  const statisticsChartData = {
+    labels: statisticLabels,
+    datasets: [
+      {
+        label: 'Mean',
+        data: statisticMeans,
+        backgroundColor: getRandomColor(),
+      },
+      {
+        label: 'Median',
+        data: statisticMedians,
+        backgroundColor: getRandomColor(),
+      },
+      {
+        label: 'Mode',
+        data: statisticModes,
+        backgroundColor: getRandomColor(),
+      }
+    ],
+  };
+
+  const statisticsChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  const calculateRelativeFrequency = (distribution) => {
+    const relativeFrequency = {};
+  
+    Object.keys(distribution).forEach(attribute => {
+      const attributeCounts = distribution[attribute];
+      const total = Object.values(attributeCounts).reduce((sum, item) => sum + item.count, 0);
+      relativeFrequency[attribute] = {};
+  
+      Object.keys(attributeCounts).forEach(value => {
+        const count = attributeCounts[value].count;
+        relativeFrequency[attribute][value] = (count / total) * 100;
+      });
+    });
+  
+    return relativeFrequency;
+  };
+
+  const relativeFrequency = calculateRelativeFrequency(statistics.distribution);
+
+  
+  const getChartDataForAttribute = (relativeFrequency, attribute) => {
+    const labels = [];
+    const data = [];
+  
+    Object.keys(relativeFrequency[attribute]).forEach(value => {
+      labels.push(`${attribute}:${value}`);
+      data.push(relativeFrequency[attribute][value]);
+    });
+  
+    const backgroundColors = Array.from({ length: labels.length }, () => getRandomColor());
+  
+    return {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: backgroundColors,
+        label: 'Relative Frequency (%)'
+      }]
+    };
+  };
+  
+  const distributionChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label;
+            const value = context.raw.toFixed(2);
+            return `${label}: ${value}%`;
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className="file-details">
       <div className="title-back-container">
       <button className="back-btn" onClick={onBack}> <i className="fas fa-arrow-alt-circle-left" style={{fontSize: "1.2em"}}></i></button>
-        <h2 className="title">File Details: <span>{fileName}</span></h2>
+        <h2 className="title">File Details: <span style={{color: 'black' }}>{fileName}</span></h2>
       </div>
       <div className="container">
         <div className="card mb-3">
@@ -417,16 +550,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     <div className="card-body d-flex flex-row flex-wrap justify-content-around">
                       {header[0].map((item, index) => (
                         <div key={index} className="card mb-3">
-                          <div className="card-header d-flex justify-content-between align-items-center" style={{ backgroundColor: selectedHeaderValues.includes(item) ? '#2159ff' : '#9cceff' }}>
-                           <span class="text-outline">{item}</span>
+                          
                             <div>
-                              {selectedHeaderValues.includes(item) ? (
-                                <NotPressedIcon onClick={() => toggleHeaderSelection(item)} />
-                              ) : (
-                                <PressedIcon onClick={() => toggleHeaderSelection(item)}/>
-                              )}
+                            <button
+                              type="button"
+                              className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
+                              onClick={() => toggleHeaderSelection(item)}
+                            >{item}</button>
                             </div>
-                          </div>
+                          
                         </div>
                       ))}
                     </div>
@@ -697,6 +829,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div style={{ height: '300px' }}>
             <Bar data={implicatingChartData} options={implicatingChartOptions} />
           </div>
+          <div style={{ height: '300px' }}>
+            <Bar data={statisticsChartData} options={statisticsChartOptions} />
+          </div>
+          {Object.keys(relativeFrequency).map(attribute => (
+            <div key={attribute} style={{ height: '300px' }}>
+              <Pie data={getChartDataForAttribute(relativeFrequency, attribute)} options={distributionChartOptions} />
+            </div>
+          ))}
         </div>
       )}
     </div>
