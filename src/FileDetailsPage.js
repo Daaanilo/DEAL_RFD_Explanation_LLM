@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ReactComponent as DatabaseIcon } from 'bootstrap-icons/icons/database.svg';
 import { ReactComponent as AspectRatioIcon } from 'bootstrap-icons/icons/aspect-ratio.svg';
 import { ReactComponent as ColumnsIcon } from 'bootstrap-icons/icons/columns.svg';
@@ -44,7 +44,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     timeExecution: true,
     ramUsage: true,
     error: true,
-    graphs: true,
+    count: true,
+    frequency: true,
+    implicating: true,
+    triplem: true,
+    column: true,
     rfd: true,
     prompt: true,
     generatedText: true
@@ -166,8 +170,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         if (item.execution && item.execution.result && item.execution.result.data && item.execution.result.data.length) {
           item.execution.result.data.forEach(resultData => {
             if (resultData.lhs && resultData.rhs) {
-              const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@${lhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
-              const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@${rhsItem.comparison_relaxation.toFixed(1)}`).join(' ');
+              const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@[${lhsItem.comparison_relaxation.toFixed(1)}]`).join(', ');
+              const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@[${rhsItem.comparison_relaxation.toFixed(1)}]`).join(', ');
               const rfdString = `${lhsColumns} -> ${rhsColumns}`;
               extractedRFDs.push(rfdString);
             }
@@ -248,6 +252,92 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   // CHARTS
+
+  const convertToFloatArray = (data) => {
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map(value => {
+        if (value !== null && /^[a-zA-Z]$/.test(value) && value.endsWith('s')) {
+          return 1000;
+        } else if (value !== null && value.endsWith('s')) {
+          return parseFloat(value.slice(0, -1).replace(',', '.')) * 1000;
+        } else if (value !== null) {
+          return parseFloat(value.replace(',', '.'));
+        } else {
+          return 0;
+        }
+      });
+    } else {
+      console.error('Invalid data format or empty array');
+      return [];
+    }
+  };
+
+  const temp = {
+    dataset_loading: convertToFloatArray(info.dataset_loading),
+    preprocessing: convertToFloatArray(info.preprocessing),
+    discovery: convertToFloatArray(info.discovery),
+    total: convertToFloatArray(info.total),
+  };
+  
+  const left = temp.total.map((total, index) => {
+    const discovery = temp.discovery[index] || 0;
+    const preprocessing = temp.preprocessing[index] || 0;
+    const dataset_loading = temp.dataset_loading[index] || 0;
+    return total - (discovery + preprocessing + dataset_loading);
+  });
+  
+  const timeChartData = {
+    labels: temp.dataset_loading.map((_, index) => `Run ${index + 1}`),
+    datasets: [
+      {
+        label: 'Dataset Loading',
+        data: temp.dataset_loading,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Preprocessing',
+        data: temp.preprocessing,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Discovery',
+        data: temp.discovery,
+        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+        borderColor: 'rgba(255, 206, 86, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Left',
+        data: left,
+        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+        borderColor: 'rgba(255, 159, 64, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Total',
+        data: temp.total,
+        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+        borderColor: 'rgba(153, 102, 255, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+  
+  
+
+  const timeChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
   
   const getRandomColor = () => {
     const h = Math.floor(Math.random() * 360);
@@ -269,6 +359,16 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
     return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
   };
+
+  const gradientColors = [
+    'rgba(0, 92, 230, 1)',
+    'rgba(0, 153, 255, 1)',
+    'rgba(0, 204, 255, 1)',
+    'rgba(51, 204, 255, 1)',
+    'rgba(255, 153, 51, 1)',
+    'rgba(255, 102, 0, 1)',
+    'rgba(255, 51, 51, 1)',
+  ];
 
   const filterRFDs = (rfdArray, attributesHeader) => {
     const filteredArray = rfdArray.filter(rfd => {
@@ -300,7 +400,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'LHS Attribute Count',
       data: lhsAttributeData,
-      backgroundColor: getRandomColor(),
+      backgroundColor: 'rgba(0, 92, 230, 1)',
     }],
   };
   
@@ -321,7 +421,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       const [lhs, rhs] = rfd.split(' -> ');
       const lhsAttributes = attributesHeader.filter(attribute => lhs.includes(attribute));
       const rhsAttributes = attributesHeader.filter(attribute => rhs.includes(attribute));
-  
+      
       lhsAttributes.forEach(attribute => {
         const variable = attribute.split('@')[0];
         if (!variableFrequency[variable]) {
@@ -345,7 +445,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const variableLabels = Object.keys(variableFrequency);
   const lhsCounts = variableLabels.map(label => variableFrequency[label].lhs);
   const rhsCounts = variableLabels.map(label => variableFrequency[label].rhs);
-  
 
   const variableChartOptions = {
     responsive: true,
@@ -364,21 +463,22 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'LHS Frequency',
         data: lhsCounts,
-        backgroundColor: getRandomColor(),
+        backgroundColor: 'rgba(0, 153, 255, 1)',
       },
       {
         label: 'RHS Frequency',
         data: rhsCounts,
-        backgroundColor: getRandomColor(),
+        backgroundColor: 'rgba(0, 204, 255, 1)',
       },
     ],
   };
+
 
   const findImplicatingAttributes = (rfdArray, attributesHeader) => {
     const implicatingAttributes = {};
   
     const extractAttributes = (str) => {
-      return str.match(/[a-zA-Z\s]+/g).filter(attr => !attr.includes('@'));
+      return str.match(/[a-zA-Z1-9\s]+/g).filter(attr => !attr.includes('@'));
     };
   
     attributesHeader.forEach(attribute => {
@@ -405,7 +505,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'Implicating Attributes',
       data: Object.values(implicatingAttributes).map(set => set.size),
-      backgroundColor: getRandomColor(),
+      backgroundColor: 'rgba(51, 204, 255, 1)',
     }],
   };
 
@@ -441,20 +541,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Mean',
         data: statisticMeans,
-        backgroundColor: getRandomColor(),
+        backgroundColor: 'rgba(255, 153, 51, 1)',
       },
       {
         label: 'Median',
         data: statisticMedians,
-        backgroundColor: getRandomColor(),
+        backgroundColor: 'rgba(255, 102, 0, 1)',
       },
       {
         label: 'Mode',
         data: statisticModes,
-        backgroundColor: getRandomColor(),
+        backgroundColor: 'rgba(255, 51, 51, 1)',
       }
     ],
   };
+
 
   const statisticsChartOptions = {
     responsive: true,
@@ -484,29 +585,63 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const relativeFrequency = calculateRelativeFrequency(statistics.distribution);
+  const [showAllLabels, setShowAllLabels] = useState({});
 
+  const toggleShowAllLabels = (attribute) => {
+    setShowAllLabels(prevState => ({
+      ...prevState,
+      [attribute]: !prevState[attribute]
+    }));
+  };
+
+  const handleSliderChange = (attribute, value) => {
+    setShowAllLabels(prevState => ({
+      ...prevState,
+      [attribute]: value
+    }));
+  };
+
+  const interpolateColors = (colors, numColors) => {
+    const blend = (c1, c2, factor) => c1.map((v, i) => Math.round(v + factor * (c2[i] - v)));
+    let resultColors = [], totalSections = colors.length - 1, stepsPerSection = Math.ceil(numColors / totalSections);
   
-  const getChartDataForAttribute = (relativeFrequency, attribute) => {
-    const labels = [];
+    for (let i = 0; i < totalSections; i++) {
+      let colorStart = colors[i].match(/\d+/g).map(Number);
+      let colorEnd = colors[i + 1].match(/\d+/g).map(Number);
+      for (let step = 0; step <= stepsPerSection; step++) {
+        let factor = step / stepsPerSection;
+        resultColors.push(`rgba(${blend(colorStart, colorEnd, factor).join(', ')})`);
+        if (resultColors.length >= numColors) break;
+      }
+      if (resultColors.length >= numColors) break;
+    }
+  
+    return resultColors;
+  };
+  
+  const getChartDataForAttribute = useMemo(() => (attribute) => {
     const data = [];
-  
-    Object.keys(relativeFrequency[attribute]).forEach(value => {
-      labels.push(`${attribute}:${value}`);
+
+    const allValues = Object.keys(relativeFrequency[attribute]);
+
+    allValues.forEach((value) => {
       data.push(relativeFrequency[attribute][value]);
     });
-  
-    const backgroundColors = Array.from({ length: labels.length }, () => getRandomColor());
-  
+
+    const backgroundColors = interpolateColors(gradientColors, data.length);
+
     return {
-      labels: labels,
+      labels: allValues.map(value => `${attribute}:${value}`),
       datasets: [{
         data: data,
         backgroundColor: backgroundColors,
         label: 'Relative Frequency (%)'
       }]
     };
-  };
-  
+  }, [relativeFrequency]);
+
+
+
   const distributionChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -518,96 +653,127 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             const value = context.raw.toFixed(2);
             return `${label}: ${value}%`;
           }
-        }
+        },
+        backgroundColor: '#000000',
+        titleFont: { size: 0 },
+        bodyFont: { size: 14 },
+        padding: 10,
+        caretPadding: 5,
+        caretSize: 5,
+        cornerRadius: 4,
+        borderWidth: 1,
+        borderColor: '#cccccc',
+        displayColors: false,
+        titleMarginBottom: 0
+      },
+      legend: { display: false }
+    },
+    elements: {
+      arc: {
+        borderColor: 'rgba(0, 0, 0, 0.2)',
+        borderWidth: 0.1
       }
     }
   };
 
+
+
   return (
     <div className="file-details">
-      <div className="title-back-container">
-      <button className="back-btn" onClick={onBack}> <i className="fas fa-arrow-alt-circle-left" style={{fontSize: "1.2em"}}></i></button>
-        <h2 className="title">File Details: <span style={{color: 'black' }}>{fileName}</span></h2>
-      </div>
-      <div className="container">
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span>INFO DATASET <DatabaseIcon /></span>
+  <div className="title-back-container">
+    <button className="back-btn" onClick={onBack}> <i className="fas fa-arrow-alt-circle-left" style={{fontSize: "1.2em"}}></i></button>
+    <h2 className="title">File Details: <span style={{color: 'black' }}>{fileName}</span></h2>
+  </div>
+  <div className="container">
+  <div className="card mb-3">
+  <div className="card-header">Header</div>
+  {header && header[0] && (
+    <div className="card-body">
+      <div className="d-flex flex-row flex-wrap justify-content-around mb-3">
+        {header[0].map((item, index) => (
+          <div key={index} className="card mb-3">
             <div>
-              {cardVisibility.infoDataset ? (
-                <ToggleOnIcon onClick={() => toggleCardVisibility('infoDataset')} />
-              ) : (
-                <ToggleOffIcon onClick={() => toggleCardVisibility('infoDataset')} />
-              )}
+              <button
+                type="button"
+                className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
+                onClick={() => toggleHeaderSelection(item)}
+              >
+                {item}
+              </button>
             </div>
           </div>
-          {cardVisibility.infoDataset && (
+        ))}
+      </div>
+      <div className="d-flex align-items-center mb-3">
+        <div className="flex-grow-1">
+          <hr className="m-0" />
+        </div>
+        <div className="px-2">
+          <strong>Header types</strong>
+        </div>
+        <div className="flex-grow-1">
+          <hr className="m-0" />
+        </div>
+      </div>
+      <div className="d-flex flex-row flex-wrap justify-content-around">
+        {Object.keys(statistics.type).map((columnName, index) => (
+          <div key={index} className="card mb-3">
+            <div>
+              <button
+                type="button"
+                className={`btn ${selectedHeaderValues.includes(columnName) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
+              >
+                {statistics.type[columnName]}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
+    <div className="row">
+      <div className="col-md-6">
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>Details <AspectRatioIcon /></span> {cardVisibility.sizeAndFormat ? <ToggleOnIcon onClick={() => toggleCardVisibility('sizeAndFormat')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('sizeAndFormat')} />}
+          </div>
+          {cardVisibility.sizeAndFormat && (
             <div className="card-body">
-              <div className="container">
-                <div className="card mb-3">
-                  <div className="card-header">Header</div>
-                  {header && header[0] && (
-                    <div className="card-body d-flex flex-row flex-wrap justify-content-around">
-                      {header[0].map((item, index) => (
-                        <div key={index} className="card mb-3">
-                          
-                            <div>
-                            <button
-                              type="button"
-                              className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
-                              onClick={() => toggleHeaderSelection(item)}
-                            >{item}</button>
-                            </div>
-                          
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {info.size.map((item, index) => (
+                <div key={index}>
+                  <strong>Size:</strong> {item} <br />
+                  <strong>Format:</strong> {info.format[index]} <br />
+                  <strong>Separator:</strong> {info.separator[index]}
+                  <hr />
                 </div>
-
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="card mb-3">
-                      <div className="d-flex justify-content-between align-items-center card-header">
-                        <span>Details <AspectRatioIcon /></span> {cardVisibility.sizeAndFormat ? <ToggleOnIcon onClick={() => toggleCardVisibility('sizeAndFormat')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('sizeAndFormat')} />}</div>
-                      {cardVisibility.sizeAndFormat && (
-                        <div className="card-body">
-                          {info.size.map((item, index) => (
-                            <div key={index}>
-                              <strong>Size:</strong> {item} <br />
-                              <strong>Format:</strong> {info.format[index]} <br />
-                              <strong>Separator:</strong> {info.separator[index]}
-                              <hr />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <div className="card mb-3">
-                      <div className="d-flex justify-content-between align-items-center card-header">
-                        <span>Content Specifications <ColumnsIcon /></span>{cardVisibility.columnAndRowNumber ? <ToggleOnIcon onClick={() => toggleCardVisibility('columnAndRowNumber')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('columnAndRowNumber')} />}</div>
-                      {cardVisibility.columnAndRowNumber && (
-                        <div className="card-body">
-                          {info.col_number.map((item, index) => (
-                            <div key={index}>
-                              <strong>Column:</strong> {item} <br />
-                              <strong>Row:</strong> {info.row_number[index]} <br />
-                              <strong>Blank char:</strong> {info.blank_char[index]}
-                              <hr />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
+      </div>
+
+      <div className="col-md-6">
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>Content Specifications <ColumnsIcon /></span>{cardVisibility.columnAndRowNumber ? <ToggleOnIcon onClick={() => toggleCardVisibility('columnAndRowNumber')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('columnAndRowNumber')} />}
+          </div>
+          {cardVisibility.columnAndRowNumber && (
+            <div className="card-body">
+              {info.col_number.map((item, index) => (
+                <div key={index}>
+                  <strong>Column:</strong> {item} <br />
+                  <strong>Row:</strong> {info.row_number[index]} <br />
+                  <strong>Blank char:</strong> {info.blank_char[index]}
+                  <hr />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
 
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
@@ -643,205 +809,275 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
         
         
+
+    <div className="row">
+      <div className="col-md-6">
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
-            <span>EXECUTION INFO <PcDisplayIcon /></span>
-            <div>
-              {cardVisibility.executionInfo ? (
-                <ToggleOnIcon onClick={() => toggleCardVisibility('executionInfo')} />
-              ) : (
-                <ToggleOffIcon onClick={() => toggleCardVisibility('executionInfo')} />
-              )}
-            </div>
+            <span>System <PcDisplayIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('system')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('system')} />}
           </div>
-          {cardVisibility.executionInfo && (
+          {cardVisibility.system && (
             <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="card mb-3">
-                    <div className="d-flex justify-content-between align-items-center card-header">
-                      <span>System <PcDisplayIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('system')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('system')} />}
-                    </div>
-                    {cardVisibility.system && (
-                      <div className="card-body">
-                        {info.os.map((item, index) => (
-                          <div key={index}>
-                            <strong>OS:</strong> {item} <br />
-                            <strong>OS Version:</strong> {info.os_version[index]} <br />
-                            <strong>Processor:</strong> {info.processor[index]} <br />
-                            <strong>Core/Thread:</strong> {info.core[index]}/{info.thread[index]}<br />
-                            <strong>RAM:</strong> {info.ram[index]} <br />
-                            <hr />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+              {info.os.map((item, index) => (
+                <div key={index}>
+                  <strong>OS:</strong> {item} <br />
+                  <strong>OS Version:</strong> {info.os_version[index]} <br />
+                  <strong>Processor:</strong> {info.processor[index]} <br />
+                  <strong>Core/Thread:</strong> {info.core[index]}/{info.thread[index]}<br />
+                  <strong>RAM:</strong> {info.ram[index]} <br />
+                  <hr />
                 </div>
-                <div className="col-md-6">
-                  <div className="card mb-3">
-                    <div className="d-flex justify-content-between align-items-center card-header">
-                      <span>Execution Parameters <CpuIcon /></span> {cardVisibility.executionParameters ? <ToggleOnIcon onClick={() => toggleCardVisibility('executionParameters')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('executionParameters')} />}
-                    </div>
-                    {cardVisibility.executionParameters && (
-                      <div className="card-body">
-                        {info.execution_command.map((item, index) => (
-                          <div key={index}>
-                            <strong>Execution Command:</strong> {item} <br />
-                            <strong>Max Execution Time:</strong> {info.max_execution_time[index]} <br />
-                            <strong>Max Ram Usage:</strong> {info.max_ram_usage[index]} <br />
-                            <strong>Start Time:</strong> {info.start_time[index]} <br />
-                            <strong>End Time:</strong> {info.end_time[index]} <br />
-                            <hr />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
-        
+      </div>
+      <div className="col-md-6">
         <div className="card mb-3">
-    <div className="d-flex justify-content-between align-items-center card-header">
-        <span>RESULT<PcDisplayIcon /></span>
-        <div>
-            {cardVisibility.result ? (
-                <ToggleOnIcon onClick={() => toggleCardVisibility('result')} />
-            ) : (
-                <ToggleOffIcon onClick={() => toggleCardVisibility('result')} />
-            )}
-        </div>
-    </div>
-    {cardVisibility.result && (
-        <div className="card-body">
-            <div className="row flex-grow-1">
-                <div className="col-md-4 d-flex">
-                    <div className="card mb-3 w-100">
-                        <div className="d-flex justify-content-between align-items-center card-header">
-                            <span>Time Execution <BugIcon /></span> {cardVisibility.timeExecution ? <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />}
-                        </div>
-                        {cardVisibility.timeExecution && (
-                            <div className="card-body">
-                                {info.dataset_loading.map((item, index) => (
-                                    <div key={index}>
-                                        <strong>Dataset Loading:</strong> {item}{info.unit[0]} <br />
-                                        <strong>Preprocessing:</strong> {info.preprocessing[index]}{info.unit[0]} <br />
-                                        <strong>Discovery:</strong> {info.discovery[index]}{info.unit[0]} <br />
-                                        <strong>Total:</strong> {info.total[index]} <br />
-                                        <hr />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>Execution Parameters <CpuIcon /></span> {cardVisibility.executionParameters ? <ToggleOnIcon onClick={() => toggleCardVisibility('executionParameters')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('executionParameters')} />}
+          </div>
+          {cardVisibility.executionParameters && (
+            <div className="card-body">
+              {info.execution_command.map((item, index) => (
+                <div key={index}>
+                  <strong>Execution Command:</strong> {item} <br />
+                  <strong>Max Execution Time:</strong> {info.max_execution_time[index]} <br />
+                  <strong>Max Ram Usage:</strong> {info.max_ram_usage[index]} <br />
+                  <strong>Start Time:</strong> {info.start_time[index]} <br />
+                  <strong>End Time:</strong> {info.end_time[index]} <br />
+                  <hr />
                 </div>
-                <div className="col-md-4 d-flex">
-                    <div className="card mb-3 w-100">
-                        <div className="d-flex justify-content-between align-items-center card-header">
-                            <span>Ram Usage <CpuIcon /></span> {cardVisibility.ramUsage ? <ToggleOnIcon onClick={() => toggleCardVisibility('ramUsage')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('ramUsage')} />}
-                        </div>
-                        {cardVisibility.ramUsage && (
-                            <div className="card-body">
-                                {info.max_ram_used.map((item, index) => (
-                                    <div key={index}>
-                                        <strong>Unit:</strong> {info.unit[1]} <br />
-                                        <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
-                                        <hr />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                <div className="col-md-4 d-flex">
-                    <div className="card mb-3 w-100">
-                        <div className="d-flex justify-content-between align-items-center card-header">
-                            <span>Error <BugIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('error')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('error')} />}
-                        </div>
-                        {cardVisibility.error && (
-                            <div className="card-body">
-                                {info.time_limit.map((item, index) => (
-                                    <div key={index}>
-                                        <strong>Time Limit:</strong> {item} <br />
-                                        <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
-                                        <strong>General Error:</strong> {info.general_error[index]} <br />
-                                        <hr />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
+              ))}
             </div>
+          )}
         </div>
-    )}
-</div>
+      </div>
+    </div>
+
+    <div className="row flex-grow-1">
+  <div className="col-md-4 d-flex">
+    <div className="card mb-3 w-100">
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span>Time Execution <BugIcon /></span> {cardVisibility.timeExecution ? <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />}
+      </div>
+      {cardVisibility.timeExecution && (
+        <div className="card-body">
+          {info.dataset_loading.map((item, index) => (
+            <div key={index}>
+              <strong>Dataset Loading:</strong> {item && (item.endsWith('s') ? parseFloat(item) * 1000 : parseFloat(item))}ms<br />
+              <strong>Preprocessing:</strong> {info.preprocessing[index] && (info.preprocessing[index].endsWith('s') ? parseFloat(info.preprocessing[index]) * 1000 : parseFloat(info.preprocessing[index]))}ms<br />
+              <strong>Discovery:</strong> {info.discovery[index] && (info.discovery[index].endsWith('s') ? parseFloat(info.discovery[index]) * 1000 : parseFloat(info.discovery[index]))}ms<br />
+              <strong>Left:</strong> {left > 1000 ? (left / 1000).toFixed(2).replace('.', ',') + 's' : left + 'ms'}<br />
+              <strong>Total:</strong> {info.total[index]} <br />
+              <hr />
+            </div>
+          ))}
+          <div style={{ height: '200px', marginTop: '20px' }}>
+            <Bar data={timeChartData} options={timeChartOptions} />
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+      <div className="col-md-4 d-flex">
+        <div className="card mb-3 w-100">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>Ram Usage <CpuIcon /></span> {cardVisibility.ramUsage ? <ToggleOnIcon onClick={() => toggleCardVisibility('ramUsage')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('ramUsage')} />}
+          </div>
+          {cardVisibility.ramUsage && (
+            <div className="card-body">
+              {info.max_ram_used.map((item, index) => (
+                <div key={index}>
+                  <strong>Unit:</strong> {info.unit[1]} <br />
+                  <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
+                  <hr />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="col-md-4 d-flex">
+        <div className="card mb-3 w-100">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>Error <BugIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('error')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('error')} />}
+          </div>
+          {cardVisibility.error && (
+            <div className="card-body">
+              {info.time_limit.map((item, index) => (
+                <div key={index}>
+                  <strong>Time Limit:</strong> {item} <br />
+                  <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
+                  <strong>General Error:</strong> {info.general_error[index]} <br />
+                  <hr />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  
+
+
 
 
 
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>RFDs </span>{cardVisibility.rfd ? <ToggleOnIcon onClick={() => toggleCardVisibility('rfd')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('rfd')} />}</div>
+        <span>ATTRIBUTE COUNT <Chart /> </span>
+        {cardVisibility.count ? <ToggleOnIcon onClick={() => toggleCardVisibility('count')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('count')} />}
+      </div>
+      {cardVisibility.count && (
+        <div className="card-body">
+          <div style={{ height: '300px' }}>
+            <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
+          </div>
+        </div>
+      )}
+    </div>
+
+
+
+    <div className="card mb-3">
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span>FREQUENCY <Chart /> </span>
+        {cardVisibility.frequency ? <ToggleOnIcon onClick={() => toggleCardVisibility('frequency')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('frequency')} />}
+      </div>
+      {cardVisibility.frequency && (
+        <div className="card-body">
+          <div style={{ height: '300px' }}>
+            <Bar data={variableChartData} options={variableChartOptions} />
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div className="card mb-3">
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span>IMPLICATING ATTRIBUTES <Chart /> </span>
+        {cardVisibility.implicating ? <ToggleOnIcon onClick={() => toggleCardVisibility('implicating')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('implicating')} />}
+      </div>
+      {cardVisibility.implicating && (
+        <div className="card-body">
+          <div style={{ height: '300px' }}>
+            <Bar data={implicatingChartData} options={implicatingChartOptions} />
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div className="card mb-3">
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span>MEAN, MEDIAN, MODE <Chart /> </span>
+        {cardVisibility.triplem ? <ToggleOnIcon onClick={() => toggleCardVisibility('triplem')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('triplem')} />}
+      </div>
+      {cardVisibility.triplem && (
+        <div className="card-body">
+          <div style={{ height: '300px' }}>
+            <Bar data={statisticsChartData} options={statisticsChartOptions} />
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div className="card mb-3" style={{ marginTop: 0 }}>
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span>CHARTS</span>
+        {cardVisibility.column ? (
+          <ToggleOnIcon onClick={() => toggleCardVisibility('column')} />
+        ) : (
+          <ToggleOffIcon onClick={() => toggleCardVisibility('column')} />
+        )}
+      </div>
+      {cardVisibility.column && (
+        <div className="card-body d-flex flex-wrap justify-content-center">
+          {Object.keys(relativeFrequency).map((attribute) => {
+            const maxLabelsToShow = showAllLabels[attribute] ?? Math.min(Object.keys(relativeFrequency[attribute]).length/*, 5*/);
+            const labels = Object.keys(relativeFrequency[attribute]).slice(0, maxLabelsToShow).map(value => {
+              const percentage = relativeFrequency[attribute][value].toFixed(2);
+
+              return `${value}: ${percentage}%`;
+            });
+            
+            return (
+              <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
+                <h3 className="attribute-title">{attribute}</h3>
+                <div className="chart-container">
+                  <Pie data={getChartDataForAttribute(attribute)} options={distributionChartOptions} />
+                </div>
+                {/*
+                <input
+                  type="range"
+                  min="1"
+                  max={Object.keys(relativeFrequency[attribute]).length}
+                  value={showAllLabels[attribute] ?? Math.min(Object.keys(relativeFrequency[attribute]).length, 5)}
+                  onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
+                  className="form-range mt-2"
+                  style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
+                />
+                <div className="text-center mt-1">
+                  Showing {maxLabelsToShow} of {Object.keys(relativeFrequency[attribute]).length} values
+                </div>
+                */}
+                <div className="label-boxes-container mt-2">
+                  <div className="label-boxes">
+                    {labels.map((label, index) => (
+                      <div key={index} className="label-box">
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div style={{ height: '30px' }}></div>
+    </div>
+
+    <div className="card mb-3">
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span>RFDs </span>
+        {cardVisibility.rfd ? (
+          <ToggleOnIcon onClick={() => toggleCardVisibility('rfd')} />
+        ) : (
+          <ToggleOffIcon onClick={() => toggleCardVisibility('rfd')} />
+        )}
+      </div>
       {cardVisibility.rfd && (
         <div className="card-body">
-          <button className="select-btn" onClick={toggleSelectAll} >
+          <button className="select-btn" onClick={toggleSelectAll}>
             {selectedRows.length === allRFDs.length ? "Deselect all" : "Select all"}
           </button>
-          <ul style={{ whiteSpace: 'pre-wrap' }}>
+          <div style={{ height: '15px' }}></div>
+
+          <div style={{ whiteSpace: 'pre-wrap' }}>
             {allRFDs.map((rfd, index) => {
               const containsSelectedHeader = selectedHeaderValues.some(value => rfd.includes(value));
               if (containsSelectedHeader) {
                 return null;
               }
               return (
-                <li key={index}>
+                <div key={index} style={{ marginBottom: '10px' }}>
                   <input
                     type="checkbox"
+                    className="larger-checkbox"
                     checked={selectedRows.includes(index)}
                     onChange={() => toggleRowSelection(index)}
                   />
-                  {rfd}
-                </li>
+                  <span style={{ marginLeft: '10px' }}>{rfd}</span>
+                </div>
               );
             })}
-          </ul>
+          </div>
         </div>
       )}
     </div>
-
-    <div className="card mb-3">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span>CHARTS <Chart /> </span>
-        {cardVisibility.graphs ? <ToggleOnIcon onClick={() => toggleCardVisibility('graphs')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('graphs')} />}
-      </div>
-      {cardVisibility.graphs && (
-        <div className="card-body">
-          <div style={{ height: '300px' }}>
-            <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
-          </div>
-          <div style={{ height: '300px' }}>
-            <Bar data={variableChartData} options={variableChartOptions} />
-          </div>
-          <div style={{ height: '300px' }}>
-            <Bar data={implicatingChartData} options={implicatingChartOptions} />
-          </div>
-          <div style={{ height: '300px' }}>
-            <Bar data={statisticsChartData} options={statisticsChartOptions} />
-          </div>
-          {Object.keys(relativeFrequency).map(attribute => (
-            <div key={attribute} style={{ height: '300px' }}>
-              <Pie data={getChartDataForAttribute(relativeFrequency, attribute)} options={distributionChartOptions} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-
+    
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">

@@ -174,3 +174,38 @@ body {
   width: 150px; 
   height: 40px; 
 }
+
+.larger-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
+.col-lg-6 {
+  margin-top: 50px;
+}
+
+.label-boxes-container {
+  width: 95%;
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.label-boxes {
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.label-box {
+  display: inline-block;
+  padding: 5px;
+  margin-right: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.attribute-title {
+  text-align: center;
+  margin-bottom: 25px;
+}
