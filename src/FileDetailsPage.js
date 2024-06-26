@@ -42,6 +42,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     executionParameters: true,
     result: true,
     timeExecution: true,
+    timeLeft: true,
     ramUsage: true,
     error: true,
     count: true,
@@ -200,7 +201,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
   const toggleHeaderSelection = (value) => {
-    setSelectedHeaderValues(selectedHeaderValues.includes(value) ? selectedHeaderValues.filter(item => item !== value) : [...selectedHeaderValues, value]);
+    setSelectedHeaderValues(prevSelected => {
+      if (prevSelected.includes(value)) {
+        return prevSelected.filter(item => item !== value);
+      } else {
+        return [...prevSelected, value];
+      }
+    });
   };
 
   fileContent.forEach(row => formatData(row));
@@ -292,48 +299,47 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Dataset Loading',
         data: temp.dataset_loading,
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(0, 92, 230, 0.2)',
+        borderColor: 'rgba(0, 92, 230, 1)',
         borderWidth: 1,
       },
       {
         label: 'Preprocessing',
         data: temp.preprocessing,
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(0, 153, 255, 0.2)',
+        borderColor: 'rgba(0, 153, 255, 1)',
         borderWidth: 1,
       },
       {
         label: 'Discovery',
         data: temp.discovery,
-        backgroundColor: 'rgba(255, 206, 86, 0.2)',
-        borderColor: 'rgba(255, 206, 86, 1)',
+        backgroundColor: 'rgba(0, 204, 255, 0.2)',
+        borderColor: 'rgba(0, 204, 255, 1)',
         borderWidth: 1,
       },
       {
         label: 'Left',
         data: left,
-        backgroundColor: 'rgba(255, 159, 64, 0.2)',
-        borderColor: 'rgba(255, 159, 64, 1)',
+        backgroundColor: 'rgba(51, 204, 255, 0.2)',
+        borderColor: 'rgba(51, 204, 255, 1)',
         borderWidth: 1,
       },
       {
         label: 'Total',
         data: temp.total,
-        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-        borderColor: 'rgba(153, 102, 255, 1)',
+        backgroundColor: 'rgba(51, 255, 51, 0.2)',
+        borderColor: 'rgba(51, 255, 51, 1)',
         borderWidth: 1,
       },
     ],
   };
   
-  
-
   const timeChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    indexAxis: 'y',
     scales: {
-      y: {
+      x: {
         beginAtZero: true,
       },
     },
@@ -361,14 +367,30 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const gradientColors = [
-    'rgba(0, 92, 230, 1)',
-    'rgba(0, 153, 255, 1)',
-    'rgba(0, 204, 255, 1)',
-    'rgba(51, 204, 255, 1)',
-    'rgba(255, 153, 51, 1)',
+    'rgba(255, 0, 0, 1)',
+    'rgba(255, 51, 0, 1)',
     'rgba(255, 102, 0, 1)',
-    'rgba(255, 51, 51, 1)',
-  ];
+    'rgba(255, 153, 0, 1)',
+    'rgba(255, 204, 0, 1)',
+    'rgba(255, 255, 0, 1)',
+    'rgba(204, 255, 0, 1)',
+    'rgba(153, 255, 0, 1)',
+    'rgba(102, 255, 0, 1)',
+    'rgba(51, 255, 0, 1)',
+    'rgba(0, 255, 0, 1)',
+    'rgba(0, 255, 51, 1)',
+    'rgba(0, 255, 102, 1)',
+    'rgba(0, 255, 153, 1)',
+    'rgba(0, 255, 204, 1)',
+    'rgba(0, 255, 255, 1)',
+    'rgba(0, 204, 255, 1)',
+    'rgba(0, 153, 255, 1)',
+    'rgba(0, 102, 255, 1)',
+    'rgba(0, 51, 255, 1)',
+    'rgba(0, 0, 255, 1)'
+]
+
+
 
   const filterRFDs = (rfdArray, attributesHeader) => {
     const filteredArray = rfdArray.filter(rfd => {
@@ -585,71 +607,49 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const relativeFrequency = calculateRelativeFrequency(statistics.distribution);
-  const [showAllLabels, setShowAllLabels] = useState({});
+  const [chartDataLimit, setChartDataLimit] = useState({});
 
-  const toggleShowAllLabels = (attribute) => {
-    setShowAllLabels(prevState => ({
-      ...prevState,
-      [attribute]: !prevState[attribute]
-    }));
-  };
 
   const handleSliderChange = (attribute, value) => {
-    setShowAllLabels(prevState => ({
+    setChartDataLimit(prevState => ({
       ...prevState,
       [attribute]: value
     }));
   };
 
-  const interpolateColors = (colors, numColors) => {
-    const blend = (c1, c2, factor) => c1.map((v, i) => Math.round(v + factor * (c2[i] - v)));
-    let resultColors = [], totalSections = colors.length - 1, stepsPerSection = Math.ceil(numColors / totalSections);
-  
-    for (let i = 0; i < totalSections; i++) {
-      let colorStart = colors[i].match(/\d+/g).map(Number);
-      let colorEnd = colors[i + 1].match(/\d+/g).map(Number);
-      for (let step = 0; step <= stepsPerSection; step++) {
-        let factor = step / stepsPerSection;
-        resultColors.push(`rgba(${blend(colorStart, colorEnd, factor).join(', ')})`);
-        if (resultColors.length >= numColors) break;
-      }
-      if (resultColors.length >= numColors) break;
-    }
-  
-    return resultColors;
-  };
-  
   const getChartDataForAttribute = useMemo(() => (attribute) => {
-    const data = [];
-
+    const dataLimit = chartDataLimit[attribute] || Math.min(Object.keys(relativeFrequency[attribute]).length, 10);
     const allValues = Object.keys(relativeFrequency[attribute]);
-
-    allValues.forEach((value) => {
-      data.push(relativeFrequency[attribute][value]);
-    });
-
-    const backgroundColors = interpolateColors(gradientColors, data.length);
-
+    const sortedValues = allValues.sort((a, b) => relativeFrequency[attribute][b] - relativeFrequency[attribute][a]);
+    const displayedValues = sortedValues.slice(0, dataLimit);
+    const otherValues = sortedValues.slice(dataLimit);
+  
+    const data = displayedValues.map(value => relativeFrequency[attribute][value]);
+    const otherData = otherValues.reduce((acc, value) => acc + relativeFrequency[attribute][value], 0);
+  
+    if (otherData > 0) {
+      data.push(otherData);
+      displayedValues.push('others');
+    }
+    
     return {
-      labels: allValues.map(value => `${attribute}:${value}`),
+      labels: displayedValues.map(value => `${attribute}:${value}`),
       datasets: [{
         data: data,
-        backgroundColor: backgroundColors,
+        backgroundColor: gradientColors,
         label: 'Relative Frequency (%)'
       }]
     };
-  }, [relativeFrequency]);
-
-
-
-  const distributionChartOptions = {
+  }, [relativeFrequency, chartDataLimit]);
+  
+  const distributionChartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       tooltip: {
         callbacks: {
           label: function(context) {
-            const label = context.label;
+            const label = context.label.split(':')[1].trim();
             const value = context.raw.toFixed(2);
             return `${label}: ${value}%`;
           }
@@ -670,68 +670,53 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
     elements: {
       arc: {
-        borderColor: 'rgba(0, 0, 0, 0.2)',
-        borderWidth: 0.1
+        borderColor: '#000000',
+        borderWidth: 0.2
       }
     }
-  };
-
-
+  }), []);
 
   return (
     <div className="file-details">
-  <div className="title-back-container">
-    <button className="back-btn" onClick={onBack}> <i className="fas fa-arrow-alt-circle-left" style={{fontSize: "1.2em"}}></i></button>
-    <h2 className="title">File Details: <span style={{color: 'black' }}>{fileName}</span></h2>
-  </div>
-  <div className="container">
-  <div className="card mb-3">
-  <div className="card-header">Header</div>
-  {header && header[0] && (
-    <div className="card-body">
-      <div className="d-flex flex-row flex-wrap justify-content-around mb-3">
-        {header[0].map((item, index) => (
-          <div key={index} className="card mb-3">
-            <div>
-              <button
-                type="button"
-                className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
-                onClick={() => toggleHeaderSelection(item)}
-              >
-                {item}
-              </button>
+      <div className="title-back-container">
+        <button className="back-btn" onClick={onBack}>
+          <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
+        </button>
+        <h2 className="title">File Details: <span style={{ color: 'black' }}>{info.name[0]}</span></h2>
+      </div>
+      <div className="container">
+        <div className="card mb-3">
+          <div className="card-header">Header</div>
+          {header && header[0] && (
+            <div className="card-body">
+              <div className="row mb-3">
+                {header[0].map((item, index) => (
+                  <div key={index} className="col">
+                    <div>
+                      <button
+                        type="button"
+                        className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle active' : 'btn btn-secondary'}`}
+                        onClick={() => toggleHeaderSelection(item)}
+                      >
+                        {item}
+                      </button>
+                    </div>
+                    <div style={{ height: '10px' }}></div>
+                    <div>
+                      <button
+                        type="button"
+                        className={`btn ${selectedHeaderValues.includes(statistics.type[item]) ? 'btn-group-toggle active' : 'btn btn-secondary'}`}
+                      >
+                        {statistics.type[item]}
+                      </button>
+                    </div>
+                    <div style={{ height: '10px' }}></div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="d-flex align-items-center mb-3">
-        <div className="flex-grow-1">
-          <hr className="m-0" />
+          )}
         </div>
-        <div className="px-2">
-          <strong>Header types</strong>
-        </div>
-        <div className="flex-grow-1">
-          <hr className="m-0" />
-        </div>
-      </div>
-      <div className="d-flex flex-row flex-wrap justify-content-around">
-        {Object.keys(statistics.type).map((columnName, index) => (
-          <div key={index} className="card mb-3">
-            <div>
-              <button
-                type="button"
-                className={`btn ${selectedHeaderValues.includes(columnName) ? 'btn-group-toggle' : 'btn btn-secondary active'}`}
-              >
-                {statistics.type[columnName]}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
 
     <div className="row">
       <div className="col-md-6">
@@ -873,13 +858,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               <hr />
             </div>
           ))}
-          <div style={{ height: '200px', marginTop: '20px' }}>
-            <Bar data={timeChartData} options={timeChartOptions} />
-          </div>
+
         </div>
       )}
     </div>
   </div>
+
+          
       <div className="col-md-4 d-flex">
         <div className="card mb-3 w-100">
           <div className="d-flex justify-content-between align-items-center card-header">
@@ -918,12 +903,31 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
       </div>
     </div>
+
+    <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span>TIME EXECUTION <PcIcon /></span>
+            <div>
+              {cardVisibility.timeExecution ? (
+                <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} />
+              ) : (
+                <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />
+              )}
+            </div>
+          </div>
+          {cardVisibility.timeExecution && (
+            <div className="card-body">
+              <div className="row">
+                <div className="col-md-6">
+                     </div>
+                     <div style={{ height: '200px', marginTop: '20px' }}>
+            <Bar data={timeChartData} options={timeChartOptions} />
+          </div>
+              </div>
+            </div>
+          )}
+        </div>
   
-
-
-
-
-
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
@@ -938,8 +942,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
       )}
     </div>
-
-
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
@@ -995,48 +997,68 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {cardVisibility.column && (
         <div className="card-body d-flex flex-wrap justify-content-center">
           {Object.keys(relativeFrequency).map((attribute) => {
-            const maxLabelsToShow = showAllLabels[attribute] ?? Math.min(Object.keys(relativeFrequency[attribute]).length/*, 5*/);
-            const labels = Object.keys(relativeFrequency[attribute]).slice(0, maxLabelsToShow).map(value => {
-              const percentage = relativeFrequency[attribute][value].toFixed(2);
-
-              return `${value}: ${percentage}%`;
+            const dataForAttribute = getChartDataForAttribute(attribute);
+            const labels = dataForAttribute.labels.map((label, index) => {
+              const value = dataForAttribute.datasets[0].data[index];
+              const percentage = value.toFixed(2);
+              return `${label.split(':')[1]}: ${percentage}%`;
             });
-            
+
+            const backgroundColors = dataForAttribute.datasets[0].backgroundColor;
+            const maxValues = Object.keys(relativeFrequency[attribute]).length;
+
             return (
               <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
-                <h3 className="attribute-title">{attribute}</h3>
-                <div className="chart-container">
-                  <Pie data={getChartDataForAttribute(attribute)} options={distributionChartOptions} />
-                </div>
-                {/*
-                <input
-                  type="range"
-                  min="1"
-                  max={Object.keys(relativeFrequency[attribute]).length}
-                  value={showAllLabels[attribute] ?? Math.min(Object.keys(relativeFrequency[attribute]).length, 5)}
-                  onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
-                  className="form-range mt-2"
-                  style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
-                />
-                <div className="text-center mt-1">
-                  Showing {maxLabelsToShow} of {Object.keys(relativeFrequency[attribute]).length} values
-                </div>
-                */}
-                <div className="label-boxes-container mt-2">
+                <h3 className="attribute-title text-center">{attribute}</h3>
+                <div className="label-boxes-container mt-2 mx-auto">
                   <div className="label-boxes">
                     {labels.map((label, index) => (
                       <div key={index} className="label-box">
-                        {label}
+                        <div className="color-box" style={{ backgroundColor: backgroundColors[index] }}></div>
+                        {' ' + label}
                       </div>
                     ))}
                   </div>
                 </div>
+                <div style={{ height: '10px' }}></div>
+                <div className="chart-container text-center">
+                  <Pie data={dataForAttribute} options={distributionChartOptions} />
+                </div>
+                <select
+                  value={chartDataLimit[attribute] ?? (maxValues >= 10 ? 10 : Math.min(maxValues, 10))}
+                  onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
+                  className="form-select mt-2 mx-auto"
+                  style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
+                >
+                  {maxValues < 5 && (
+                    <option value={maxValues}>{maxValues} values</option>
+                  )}
+                  {(maxValues >= 5 && maxValues < 10) && (
+                    <>
+                      <option value="5">5 values</option>
+                      <option value={maxValues}>{maxValues} values</option>
+                    </>
+                  )}
+                  {maxValues >= 10 && maxValues < 20 && (
+                    <>
+                      <option value="5">5 values</option>
+                      <option value="10">10 values</option>
+                      <option value={maxValues}>{maxValues} values</option>
+                    </>
+                  )}
+                  {maxValues >= 20 && (
+                    <>
+                      <option value="5">5 values</option>
+                      <option value="10">10 values</option>
+                      <option value="20">20 values</option>
+                    </>
+                  )}
+                </select>
               </div>
             );
           })}
         </div>
       )}
-      <div style={{ height: '30px' }}></div>
     </div>
 
     <div className="card mb-3">
