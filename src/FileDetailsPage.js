@@ -45,6 +45,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     executionParameters: true,
     result: true,
     timeExecution: true,
+    timeExecution2: true,
     timeLeft: true,
     ramUsage: true,
     error: true,
@@ -309,37 +310,29 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Dataset Loading',
         data: percentages.dataset_loading,
-        backgroundColor: '#0052CC', // Blu scuro
-        borderColor: '#0052CC',
-        borderWidth: 1,
+        backgroundColor: 'rgba(255, 0, 0, 1)',
       },
       {
         label: 'Preprocessing',
         data: percentages.preprocessing,
-        backgroundColor: '#FF5630', 
-        borderColor: '#00A3BF',
-        borderWidth: 1,
+        backgroundColor: 'rgba(153, 255, 0, 1)',
       },
       {
         label: 'Discovery',
         data: percentages.discovery,
-        backgroundColor: '#36B37E', // Verde
-        borderColor: '#36B37E',
-        borderWidth: 1,
+        backgroundColor: 'rgba(0, 255, 153, 1)',
       },
       {
         label: 'Left',
         data: percentages.left,
-        backgroundColor: '#00A3BF', // Rosso-arancio
-        borderColor: '#FF5630',
-        borderWidth: 1,
+        backgroundColor: 'rgba(0, 92, 230, 1)',
       }
     ],
   };
   
   const timeChartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // Importante per controllare manualmente le dimensioni
+    maintainAspectRatio: false, 
     indexAxis: 'x',
     scales: {
       x: {
@@ -1043,50 +1036,51 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
 
 
+      <div className="row">
+  <div className="col-md-6">
     <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">TIME EXECUTION <PcIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution')} checked={cardVisibility.timeExecution} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span className="details-text">TIME EXECUTION <PcIcon /></span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution2')} checked={cardVisibility.timeExecution2} />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
-          {cardVisibility.timeExecution && (
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                     </div>
-                     <div style={{ height: '500px', marginTop: '20px' }}>
+        </div>
+      </div>
+      {cardVisibility.timeExecution2 && (
+        <div className="card-body d-flex flex-column align-items-center">
+          <div style={{ height: '600px', width: '80%' }}>
             <Bar data={timeChartData} options={timeChartOptions} />
           </div>
-              </div>
-            </div>
-          )}
         </div>
-  
-
+      )}
+    </div>
+  </div>
+   
+  <div className="col-md-6">
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">ATTRIBUTE COUNT <Chart /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('count')} checked={cardVisibility.count} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('count')} checked={cardVisibility.count} />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
+        </div>
+      </div>
       {cardVisibility.count && (
-        <div className="card-body">
-          <div style={{ height: '300px' }}>
+        <div className="card-body d-flex flex-column align-items-center">
+          <div style={{ height: '600px', width: '80%' }}>
             <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
           </div>
         </div>
       )}
     </div>
+  </div>
+</div>
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">

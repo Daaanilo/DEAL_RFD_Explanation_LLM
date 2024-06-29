@@ -10,6 +10,13 @@
   --primary-color-dark: #4a90e2;
 }
 
+.fas.fa-file {
+  padding: 5px;
+  border-radius: 4px;
+  color: rgb(0, 110, 255);
+}
+
+
 body {
   background-color: var(--background-color-light);
   color: var(--text-color-light);

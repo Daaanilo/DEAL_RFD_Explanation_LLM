@@ -1,4 +1,4 @@
-:root {
+timeChartData:root {
   --primary-color: #007bff;
   --accent-color: #17a2b8;
   --light-color: #f8f8f8;
@@ -148,6 +148,7 @@ body {
   font-weight: bold;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
   transition: all 0.3s ease;
+  z-index: 100;
 }
 
 .back-btn:hover {
