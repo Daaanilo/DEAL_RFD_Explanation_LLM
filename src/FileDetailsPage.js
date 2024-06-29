@@ -310,25 +310,25 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Dataset Loading',
         data: percentages.dataset_loading,
-        backgroundColor: 'rgba(255, 0, 0, 1)',
+        backgroundColor: 'rgba(255, 0, 0, 0.5)', 
       },
       {
         label: 'Preprocessing',
         data: percentages.preprocessing,
-        backgroundColor: 'rgba(153, 255, 0, 1)',
+        backgroundColor: 'rgba(153, 255, 0, 0.5)', 
       },
       {
         label: 'Discovery',
         data: percentages.discovery,
-        backgroundColor: 'rgba(0, 255, 153, 1)',
+        backgroundColor: 'rgba(0, 255, 153, 0.5)', 
       },
       {
         label: 'Left',
         data: percentages.left,
-        backgroundColor: 'rgba(0, 92, 230, 1)',
+        backgroundColor: 'rgba(0, 92, 230, 0.5)', 
       }
     ],
-  };
+};
   
   const timeChartOptions = {
     responsive: true,
@@ -404,27 +404,27 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const gradientColors = [
-    'rgba(255, 0, 0, 1)',
-    'rgba(255, 51, 0, 1)',
-    'rgba(255, 102, 0, 1)',
-    'rgba(255, 153, 0, 1)',
-    'rgba(255, 204, 0, 1)',
-    'rgba(255, 255, 0, 1)',
-    'rgba(204, 255, 0, 1)',
-    'rgba(153, 255, 0, 1)',
-    'rgba(102, 255, 0, 1)',
-    'rgba(51, 255, 0, 1)',
-    'rgba(0, 255, 0, 1)',
-    'rgba(0, 255, 51, 1)',
-    'rgba(0, 255, 102, 1)',
-    'rgba(0, 255, 153, 1)',
-    'rgba(0, 255, 204, 1)',
-    'rgba(0, 255, 255, 1)',
-    'rgba(0, 204, 255, 1)',
-    'rgba(0, 153, 255, 1)',
-    'rgba(0, 102, 255, 1)',
-    'rgba(0, 51, 255, 1)',
-    'rgba(0, 0, 255, 1)'
+    'rgba(255, 0, 0, 0.5)',
+    'rgba(255, 51, 0, 0.5)',
+    'rgba(255, 102, 0, 0.5)',
+    'rgba(255, 153, 0, 0.5)',
+    'rgba(255, 204, 0, 0.5)',
+    'rgba(255, 255, 0, 0.5)',
+    'rgba(204, 255, 0, 0.5)',
+    'rgba(153, 255, 0, 0.5)',
+    'rgba(102, 255, 0, 0.5)',
+    'rgba(51, 255, 0, 0.5)',
+    'rgba(0, 255, 0, 0.5)',
+    'rgba(0, 255, 51, 0.5)',
+    'rgba(0, 255, 102, 0.5)',
+    'rgba(0, 255, 153, 0.5)',
+    'rgba(0, 255, 204, 0.5)',
+    'rgba(0, 255, 255, 0.5)',
+    'rgba(0, 204, 255, 0.5)',
+    'rgba(0, 153, 255, 0.5)',
+    'rgba(0, 102, 255, 0.5)',
+    'rgba(0, 51, 255, 0.5)',
+    'rgba(0, 0, 255, 0.5)'
 ]
 
 
@@ -460,7 +460,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'LHS quantity',
       data: lhsAttributeData,
-      backgroundColor: 'rgba(0, 92, 230, 1',
+      backgroundColor: 'rgba(0, 92, 230, 0.5)',
     }],
   };
   
@@ -527,12 +527,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'LHS Frequency',
         data: lhsCounts,
-        backgroundColor: 'rgba(0, 153, 255, 1)',
+        backgroundColor: 'rgba(0, 153, 255, 0.5)',
       },
       {
         label: 'RHS Frequency',
         data: rhsCounts,
-        backgroundColor: 'rgba(0, 204, 255, 1)',
+        backgroundColor: 'rgba(0, 204, 255, 0.5)',
       },
     ],
   };
@@ -569,7 +569,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'Implicating Attributes',
       data: Object.values(implicatingAttributes).map(set => set.size),
-      backgroundColor: 'rgba(51, 204, 255, 1)',
+      backgroundColor: 'rgba(51, 204, 255, 0.5)',
     }],
   };
 
@@ -605,17 +605,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Mean',
         data: statisticMeans,
-        backgroundColor: 'rgba(255, 153, 51, 1)',
+        backgroundColor: 'rgba(255, 153, 51, 0.5)',
       },
       {
         label: 'Median',
         data: statisticMedians,
-        backgroundColor: 'rgba(255, 102, 0, 1)',
+        backgroundColor: 'rgba(255, 102, 0, 0.5)',
       },
       {
         label: 'Mode',
         data: statisticModes,
-        backgroundColor: 'rgba(255, 51, 51, 1)',
+        backgroundColor: 'rgba(255, 51, 51, 0.5)',
       }
     ],
   };
@@ -1043,8 +1043,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
 
 
-      <div className="row">
-  <div className="col-md-6">
+  <div className="row">
+  <div className="col-md-12">
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">TIME EXECUTION <PcIcon /></span>
@@ -1058,7 +1058,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
       {cardVisibility.timeExecution2 && (
         <div className="card-body d-flex flex-column align-items-center">
-          <div style={{ height: '600px', width: '100%' }}>
+          <div style={{ width: '100%',height: '500px'}}>
             <Bar data={timeChartData} options={timeChartOptions} />
           </div>
         </div>
@@ -1066,7 +1066,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
   </div>
    
-  <div className="col-md-6">
+  <div className="col-md-12">
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">ATTRIBUTE COUNT <Chart /></span>
@@ -1080,7 +1080,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
       {cardVisibility.count && (
         <div className="card-body d-flex flex-column align-items-center">
-          <div style={{ height: '600px', width: '80%' }}>
+          <div style={{ width: '100%'}}>
             <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
           </div>
         </div>
@@ -1089,7 +1089,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   </div>
 </div>
 
-    <div className="card mb-3">
+    <div className="card mb-12">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">FREQUENCY <Chart /></span>
             <div className="toggle-button-cover">
