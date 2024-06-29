@@ -120,7 +120,7 @@ h2 {
 
 .upload-section input[type="file"],
 .upload-section button {
-  background-color: var(--primary-color);
+  background-color: var(--primary-color-light);
   color: #fff;
   border: none;
   padding: 10px 20px;

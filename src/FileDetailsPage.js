@@ -333,12 +333,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const timeChartOptions = {
     responsive: true,
     maintainAspectRatio: false, 
-    indexAxis: 'x',
+    indexAxis: 'y', 
     scales: {
-      x: {
+      y: { 
         stacked: true,
       },
-      y: {
+      x: { 
         stacked: true,
         beginAtZero: true,
         max: 100,
@@ -351,8 +351,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
     layout: {
       padding: {
-        top: 20,
-        bottom: 20,
+        top: 120,
+        bottom: 120,
         left: 20,
         right: 20
       }
@@ -379,6 +379,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       }
     }
   };
+  
+  
   
   const getRandomColor = () => {
     const h = Math.floor(Math.random() * 360);
@@ -434,30 +436,31 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return filteredArray;
   };
 
-  const countLHSAttributes = (rfdArray, attributesHeader) => {
+  const countLHSAttributes = (rfdArray) => {
     const lhsCount = {};
     rfdArray.forEach(rfd => {
       const lhs = rfd.split(' -> ')[0];
-      const attributes = lhs.match(/[^@]+@[\d.]+/g) || [];
+      const attributes = lhs.split(',').map(attr => attr.trim()).filter(attr => attr !== '');
       const numAttributes = attributes.length;
       if (!lhsCount[numAttributes]) {
         lhsCount[numAttributes] = 0;
       }
       lhsCount[numAttributes] += 1;
     });
-    return lhsCount;
-  };  
   
-  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues), header[0]);
+    return lhsCount;
+  };
+  
+  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues));
   const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
   const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
   
   const lhsAttributeChartData = {
-    labels: lhsAttributeLabels,
+    labels: lhsAttributeLabels.map(label => `${label} attribute(s)`),
     datasets: [{
-      label: 'LHS Attribute Count',
+      label: 'LHS quantity',
       data: lhsAttributeData,
-      backgroundColor: 'rgba(0, 92, 230, 1)',
+      backgroundColor: 'rgba(0, 92, 230, 1',
     }],
   };
   
@@ -467,8 +470,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     scales: {
       y: {
         beginAtZero: true,
-      },
-    },
+        title: {
+          display: true,
+          text: 'LHS number'
+        }
+      }
+    }
   };
   
   
@@ -1051,7 +1058,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
       {cardVisibility.timeExecution2 && (
         <div className="card-body d-flex flex-column align-items-center">
-          <div style={{ height: '600px', width: '80%' }}>
+          <div style={{ height: '600px', width: '100%' }}>
             <Bar data={timeChartData} options={timeChartOptions} />
           </div>
         </div>
