@@ -17,8 +17,8 @@ timeChartData:root {
 }
 
 .dark-mode .card {
-  background-color: var(--dark-mode-bg);
-  color: var(--dark-mode-text);
+  background-color: #343a40;
+  color: #f8f8f8;
 }
 
 * {

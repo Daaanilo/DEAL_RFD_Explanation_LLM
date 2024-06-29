@@ -310,22 +310,30 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Dataset Loading',
         data: percentages.dataset_loading,
-        backgroundColor: 'rgba(255, 0, 0, 0.5)', 
+        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       },
       {
         label: 'Preprocessing',
         data: percentages.preprocessing,
-        backgroundColor: 'rgba(153, 255, 0, 0.5)', 
+        backgroundColor: 'rgba(153, 255, 0, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       },
       {
         label: 'Discovery',
         data: percentages.discovery,
-        backgroundColor: 'rgba(0, 255, 153, 0.5)', 
+        backgroundColor: 'rgba(0, 255, 153, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       },
       {
         label: 'Left',
         data: percentages.left,
-        backgroundColor: 'rgba(0, 92, 230, 0.5)', 
+        backgroundColor: 'rgba(0, 92, 230, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       }
     ],
 };
@@ -425,8 +433,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     'rgba(0, 0, 255, 0.5)'
 ]
 
-
-
   const filterRFDs = (rfdArray, attributesHeader) => {
     const filteredArray = rfdArray.filter(rfd => {
       return !attributesHeader.some(attribute => rfd.includes(attribute));
@@ -459,6 +465,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       label: 'LHS quantity',
       data: lhsAttributeData,
       backgroundColor: 'rgba(0, 92, 230, 0.5)',
+      borderColor: 'rgba(0, 0, 0, 1)',
+      borderWidth: 1,
     }],
   };
   
@@ -477,63 +485,93 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
   
   
-  const countVariableFrequency = (rfdArray, attributesHeader) => {
+
+
+
+
+
+
+
+
+  const countVariableFrequency = (rfdArray) => {
     const variableFrequency = {};
+    
     rfdArray.forEach(rfd => {
       const [lhs, rhs] = rfd.split(' -> ');
-      const lhsAttributes = attributesHeader.filter(attribute => lhs.includes(attribute));
-      const rhsAttributes = attributesHeader.filter(attribute => rhs.includes(attribute));
+      const lhsAttributes = lhs.split(', ');
+      const rhsAttributes = rhs.split(', ');
       
-      lhsAttributes.forEach(attribute => {
-        const variable = attribute.split('@')[0];
-        if (!variableFrequency[variable]) {
-          variableFrequency[variable] = { lhs: 0, rhs: 0 };
-        }
-        variableFrequency[variable].lhs += 1;
-      });
-  
-      rhsAttributes.forEach(attribute => {
-        const variable = attribute.split('@')[0];
-        if (!variableFrequency[variable]) {
-          variableFrequency[variable] = { lhs: 0, rhs: 0 };
-        }
-        variableFrequency[variable].rhs += 1;
-      });
+      const processAttributes = (attributes, side) => {
+        attributes.forEach(attribute => {
+          const [col, value] = attribute.split('@');
+          if (!variableFrequency[col]) {
+            variableFrequency[col] = {};
+          }
+          if (!variableFrequency[col][value]) {
+            variableFrequency[col][value] = { lhs: 0, rhs: 0 };
+          }
+          variableFrequency[col][value][side] += 1;
+        });
+      };
+      
+      processAttributes(lhsAttributes, 'lhs');
+      processAttributes(rhsAttributes, 'rhs');
     });
+    
     return variableFrequency;
   };
   
-  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues), header[0]);
-  const variableLabels = Object.keys(variableFrequency);
-  const lhsCounts = variableLabels.map(label => variableFrequency[label].lhs);
-  const rhsCounts = variableLabels.map(label => variableFrequency[label].rhs);
-
+  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues));
+  
+  const prepareChartData = (variableFrequency) => {
+    const labels = Object.keys(variableFrequency);
+    const datasets = [];
+    
+    labels.forEach(col => {
+      const values = Object.keys(variableFrequency[col]);
+      values.forEach(value => {
+        datasets.push(
+          {
+            label: `${col}@${value} LHS`,
+            data: labels.map(l => l === col ? variableFrequency[col][value].lhs : 0),
+            backgroundColor: gradientColors,
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 1,
+          },
+          {
+            label: `${col}@${value} RHS`,
+            data: labels.map(l => l === col ? variableFrequency[col][value].rhs : 0),
+            backgroundColor: gradientColors,
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 1,
+          }
+        );
+      });
+    });
+    
+    return { labels, datasets };
+  };
+  
   const variableChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
     scales: {
+      x: {
+        stacked: true,
+      },
       y: {
+        stacked: true,
         beginAtZero: true,
       },
     },
   };
   
-
-  const variableChartData = {
-    labels: variableLabels,
-    datasets: [
-      {
-        label: 'LHS Frequency',
-        data: lhsCounts,
-        backgroundColor: 'rgba(0, 153, 255, 0.5)',
-      },
-      {
-        label: 'RHS Frequency',
-        data: rhsCounts,
-        backgroundColor: 'rgba(0, 204, 255, 0.5)',
-      },
-    ],
-  };
+  const variableChartData = prepareChartData(variableFrequency);
 
 
   const findImplicatingAttributes = (rfdArray, attributesHeader) => {
@@ -568,6 +606,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       label: 'Implicating Attributes',
       data: Object.values(implicatingAttributes).map(set => set.size),
       backgroundColor: 'rgba(51, 204, 255, 0.5)',
+      borderColor: 'rgba(0, 0, 0, 1)',
+      borderWidth: 1,
     }],
   };
 
@@ -604,16 +644,22 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         label: 'Mean',
         data: statisticMeans,
         backgroundColor: 'rgba(255, 153, 51, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       },
       {
         label: 'Median',
         data: statisticMedians,
         backgroundColor: 'rgba(255, 102, 0, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       },
       {
         label: 'Mode',
         data: statisticModes,
         backgroundColor: 'rgba(255, 51, 51, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
       }
     ],
   };
@@ -701,7 +747,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         caretPadding: 5,
         caretSize: 5,
         cornerRadius: 4,
-        borderWidth: 1,
+        borderWidth: 0.5,
         borderColor: '#cccccc',
         displayColors: false,
         titleMarginBottom: 0
@@ -1226,7 +1272,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
   <div className="d-flex justify-content-between align-items-center card-header">
-    <span className="details-text">RFDs </span>
+  <span className="details-text">RFDs (total: {allRFDs.length} filtered: {filterRFDs(allRFDs, selectedHeaderValues).length})</span>
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
