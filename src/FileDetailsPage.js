@@ -309,55 +309,59 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Dataset Loading',
         data: percentages.dataset_loading,
-        backgroundColor: 'rgba(0, 92, 230, 0.2)',
-        borderColor: 'rgba(0, 92, 230, 1)',
+        backgroundColor: '#0052CC', // Blu scuro
+        borderColor: '#0052CC',
         borderWidth: 1,
       },
       {
         label: 'Preprocessing',
         data: percentages.preprocessing,
-        backgroundColor: 'rgba(0, 153, 255, 0.2)',
-        borderColor: 'rgba(0, 153, 255, 1)',
+        backgroundColor: '#FF5630', 
+        borderColor: '#00A3BF',
         borderWidth: 1,
       },
       {
         label: 'Discovery',
         data: percentages.discovery,
-        backgroundColor: 'rgba(0, 204, 255, 0.2)',
-        borderColor: 'rgba(0, 204, 255, 1)',
+        backgroundColor: '#36B37E', // Verde
+        borderColor: '#36B37E',
         borderWidth: 1,
       },
       {
         label: 'Left',
         data: percentages.left,
-        backgroundColor: 'rgba(51, 204, 255, 0.2)',
-        borderColor: 'rgba(51, 204, 255, 1)',
+        backgroundColor: '#00A3BF', // Rosso-arancio
+        borderColor: '#FF5630',
         borderWidth: 1,
-      },
-      {
-        label: 'Total',
-        data: temp.total.map(() => 100),
-        backgroundColor: 'rgba(51, 255, 51, 0.2)',
-        borderColor: 'rgba(51, 255, 51, 1)',
-        borderWidth: 1,
-      },
+      }
     ],
   };
   
   const timeChartOptions = {
     responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: 'y',
+    maintainAspectRatio: false, // Importante per controllare manualmente le dimensioni
+    indexAxis: 'x',
     scales: {
       x: {
+        stacked: true,
+      },
+      y: {
+        stacked: true,
         beginAtZero: true,
-        suggestedMin: 0,
-        suggestedMax: 100,
+        max: 100,
         ticks: {
           callback: function(value) {
             return value + '%';
           }
         }
+      }
+    },
+    layout: {
+      padding: {
+        top: 20,
+        bottom: 20,
+        left: 20,
+        right: 20
       }
     },
     plugins: {
@@ -369,7 +373,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               label += ': ';
             }
             if (tooltipItem.raw !== undefined) {
-              label += tooltipItem.raw + '%';
+              let value = tooltipItem.raw;
+              if (typeof value === 'number') {
+                label += value.toFixed(2) + '%';
+              } else {
+                label += value + '%';
+              }
             }
             return label;
           }
@@ -1050,7 +1059,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               <div className="row">
                 <div className="col-md-6">
                      </div>
-                     <div style={{ height: '200px', marginTop: '20px' }}>
+                     <div style={{ height: '500px', marginTop: '20px' }}>
             <Bar data={timeChartData} options={timeChartOptions} />
           </div>
               </div>
