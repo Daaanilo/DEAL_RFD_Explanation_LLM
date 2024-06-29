@@ -351,8 +351,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
     layout: {
       padding: {
-        top: 120,
-        bottom: 120,
         left: 20,
         right: 20
       }
@@ -1058,7 +1056,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
       {cardVisibility.timeExecution2 && (
         <div className="card-body d-flex flex-column align-items-center">
-          <div style={{ width: '100%',height: '500px'}}>
+          <div style={{ width: '100%',height: '300px'}}>
             <Bar data={timeChartData} options={timeChartOptions} />
           </div>
         </div>
@@ -1080,7 +1078,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
       {cardVisibility.count && (
         <div className="card-body d-flex flex-column align-items-center">
-          <div style={{ width: '100%'}}>
+          <div style={{ width: '100%', height:'300px'}}>
             <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
           </div>
         </div>
