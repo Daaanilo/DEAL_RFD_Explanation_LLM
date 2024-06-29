@@ -781,7 +781,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                 <strong>Size:</strong> {item} <br />
                 <strong>Format:</strong> {info.format[index]} <br />
                 <strong>Separator:</strong> {info.separator[index]}
-                <hr />
               </div>
             ))
           ) : (
@@ -789,7 +788,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                 <strong>Size:</strong> N/A <br />
                 <strong>Format:</strong> N/A <br />
                 <strong>Separator:</strong> N/A
-                <hr />
             </div>
           )}
         </div>
@@ -822,7 +820,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               <strong>Column:</strong> {item} <br />
               <strong>Row:</strong> {info.row_number[index]} <br />
               <strong>Blank char:</strong> {info.blank_char[index]}
-              <hr />
             </div>
           ))
         ) : (
@@ -830,7 +827,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <strong>Column:</strong> N/A <br />
             <strong>Row:</strong> N/A <br />
             <strong>Blank char:</strong> N/A
-            <hr />
           </div>
         )}
       </div>
@@ -843,7 +839,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
   <div className="d-flex justify-content-between align-items-center card-header">
-    <span className="details-text">ALGORITHM <PcIcon /></span>
+    <span className="details-text">Algorithm <PcIcon /></span>
     <div className="toggle-button-cover">
       <div id="button-3" className="button r">
         <input
@@ -868,7 +864,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                             <strong>Language:</strong> {info.language[index]} <br />
                             <strong>Platform:</strong> {info.platform[index]} <br />
                             <strong>Execution Type:</strong> {info.execution_type[index]}<br />
-                            <hr />
                           </div>
                         ))}
               </div>
@@ -901,7 +896,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                   <strong>Processor:</strong> {info.processor[index]} <br />
                   <strong>Core/Thread:</strong> {info.core[index]}/{info.thread[index]}<br />
                   <strong>RAM:</strong> {info.ram[index]} <br />
-                  <hr />
                 </div>
               ))}
             </div>
@@ -929,7 +923,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                   <strong>Max Ram Usage:</strong> {info.max_ram_usage[index]} <br />
                   <strong>Start Time:</strong> {info.start_time[index]} <br />
                   <strong>End Time:</strong> {info.end_time[index]} <br />
-                  <hr />
                 </div>
               ))}
             </div>
@@ -963,13 +956,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     <strong>Discovery:</strong> {info.discovery[index] && (info.discovery[index].endsWith('s') ? parseFloat(info.discovery[index]) * 1000 : parseFloat(info.discovery[index]))}ms<br />
                     <strong>Left:</strong> {left > 1000 ? (left / 1000).toFixed(2).replace('.', ',') + 's' : left + 'ms'}<br />
                     <strong>Total:</strong> {info.total[index]} <br />
-                    <hr />
                   </div>
                 ))
               ) : (
                 <div>
                   <strong>Data not available</strong>
-                  <hr />
                 </div>
               )}
             </div>
@@ -994,14 +985,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                   <div key={index}>
                     <strong>Unit:</strong> {info.unit[index]} <br />
                     <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
-                    <hr />
                   </div>
                 ))
               ) : (
                 <div>
                     <strong>Unit:</strong> N/A <br />
                     <strong>Max Ram Used:</strong> N/A <br />
-                  <hr />
                 </div>
               )}
             </div>
@@ -1028,7 +1017,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     <strong>Time Limit:</strong> {item} <br />
                     <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
                     <strong>General Error:</strong> {info.general_error[index]} <br />
-                    <hr />
                   </div>
                 ))
               ) : (
@@ -1036,7 +1024,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     <strong>Time Limit:</strong> N/A <br />
                     <strong>Memory Limit:</strong> N/A <br />
                     <strong>General Error:</strong> N/A <br />
-                  <hr />
                 </div>
               )}
             </div>

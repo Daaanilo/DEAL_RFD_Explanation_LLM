@@ -53,9 +53,6 @@ body {
   font-weight: bold;
   color: #ffffff;
   -webkit-text-stroke: 1px black;
-  text-shadow: 2px 2px 0 #000,
-               4px 4px 0 #555,
-               6px 6px 0 #aaa;
 }
 
 
@@ -68,8 +65,6 @@ body {
   display: inline-block;
   padding: 0 5px;
   font-weight: bold;
-  -webkit-text-stroke-width: 0.5px;
-  -webkit-text-stroke-color: var(--primary-color);
 }
 
 .details-header {
