@@ -1,10 +1,24 @@
 :root {
   --primary-color: #007bff;
   --accent-color: #17a2b8;
-  --light-color: #f8f9fa;
+  --light-color: #f8f8f8;
   --dark-color: #343a40;
   --success-color: #28a745;
   --danger-color: #dc3545;
+  --dark-mode-bg: #343a40;
+  --dark-mode-text: #f8f8f8;
+  --dark-mode-page-bg: #000000;
+}
+
+.dark-mode {
+  --light-color: var(--dark-mode-bg);
+  --dark-color: var(--dark-mode-text);
+  background-color: var(--dark-mode-page-bg);
+}
+
+.dark-mode .card {
+  background-color: var(--dark-mode-bg);
+  color: var(--dark-mode-text);
 }
 
 * {
@@ -35,16 +49,35 @@ body {
   margin: 0;
   text-align: center;
   flex-grow: 1;
+  font-size: 3em;
+  font-weight: bold;
+  color: #ffffff;
+  -webkit-text-stroke: 1px black;
+  text-shadow: 2px 2px 0 #000,
+               4px 4px 0 #555,
+               6px 6px 0 #aaa;
 }
+
 
 .title > span {
   color: rgb(0, 110, 255);
 }
 
-.back-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
+.details-text {
+  position: relative;
+  display: inline-block;
+  padding: 0 5px;
+  font-weight: bold;
+  -webkit-text-stroke-width: 0.5px;
+  -webkit-text-stroke-color: var(--primary-color);
+}
+
+.details-header {
+  text-shadow: 0 0 3px #000000, 0 0 3px #000000
+}
+
+.selected {
+  text-shadow: none;
 }
 
 .container {
@@ -73,19 +106,13 @@ body {
   padding: 20px;
 }
 
-.btn{
-  width: 150px; 
-  height: 40px; 
-  margin-bottom: 0;
-}
-
 .select-btn {
   display: inline-block;
   padding: 12px 20px;
   font-size: 14px;
   text-align: center;
   text-decoration: none;
-  background-color: #495057;
+  background-color: #858f99;
   border: none;
   color: #fff;
   border-radius: 5px;
@@ -96,7 +123,7 @@ body {
 }
 
 .select-btn:hover {
-  background-color: #6c757d;
+  background-color: #52595f;
 }
 
 .remove-btn {
@@ -112,18 +139,27 @@ body {
 }
 
 .back-btn {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 60px;
+  height: 60px;
   background-color: var(--accent-color);
   color: #fff;
   border: none;
-  padding: 15px 25px;
-  border-radius: 5px;
+  padding: 15px 20px 15px;
+  border-radius: 50px;
   cursor: pointer;
   font-weight: bold;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
 }
 
 .back-btn:hover {
+  width: 80px;
+  height: 80px;
   background-color: #0056b3;
+  transform: scale(1.1);
 }
 
 .fixed-button-container {
@@ -174,12 +210,22 @@ body {
 
 .btn{
   width: 150px; 
-  height: 40px; 
+  height: 40px;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 10px;
 }
 
 .larger-checkbox {
   width: 20px;
   height: 20px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.larger-checkbox:checked {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transform: scale(1.1);
 }
 
 .col-lg-6 {
@@ -213,14 +259,163 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fff;
   font-size: 12px;
   color: #666;
   line-height: 1.5;
+}
+
+.dark-mode .label-box {
+  color: #ccc;
 }
 
 .color-box {
   width: 35px;
   height: 10px;
   margin-right: 5px;
+}
+
+.horizontal-scroll {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-color: var(--primary-color) var(--light-color);
+  margin: 0 10px;
+}
+
+.btn {
+  background-position: right center;
+  background-size: 200% auto;
+  -webkit-animation: pulse 2s infinite;
+  animation: pulse512 1.5s infinite;
+ }
+ 
+ @keyframes pulse512 {
+  0% {
+   box-shadow: 0 0 0 0 #053eda66;
+  }
+ 
+  70% {
+   box-shadow: 0 0 0 10px rgb(218 103 68 / 0%);
+  }
+ 
+  100% {
+   box-shadow: 0 0 0 0 rgb(218 103 68 / 0%);
+  }
+ }
+
+.no-pulse {
+  animation: none;
+}
+
+
+
+
+.button-cover {
+  height: 24px;
+  margin: 10px;
+  background-color: #fff;
+  box-shadow: 0 6px 12px -3px #c5d6d6;
+  border: 1px solid #000;
+  border-radius: 3px;
+  position: relative;
+}
+
+.button-cover:before {
+  content: counter(button-counter);
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  color: #d7e3e3;
+  font-size: 9px;
+  line-height: 1;
+  padding: 3px;
+}
+
+.button {
+  position: relative;
+  width: 54px;
+  height: 24px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #000;
+  border-radius: 50%;
+}
+
+
+.button-cover,
+.knobs,
+.layer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+
+.checkbox {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.knobs {
+  z-index: 2;
+}
+
+.layer {
+  width: 100%;
+  background-color: #d0d5ff;
+  transition: 0.3s ease all;
+  z-index: 1;
+}
+
+.button.r,
+.button.r .layer {
+  border-radius: 100px;
+}
+
+#button-3 .knobs:before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1;
+  padding: 3px;
+  background-color: #0010a1;
+  border: 1px solid #000;
+  border-radius: 50%;
+  transition: 0.3s ease all, left 0.3s cubic-bezier(0.18, 0.89, 0.35, 1.15);
+}
+
+#button-3 .checkbox:active + .knobs:before {
+  width: 40px;
+  border-radius: 100px;
+}
+
+#button-3 .checkbox:checked:active + .knobs:before {
+  margin-left: -22px;
+}
+
+#button-3 .checkbox:checked + .knobs:before {
+  content: "";
+  left: 32px;
+  background-color: #03a9f4;
+}
+
+#button-3 .checkbox:checked ~ .layer {
+  background-color: #ebf7fc;
 }

@@ -1,0 +1,74 @@
+.toggle-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sun {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  color: #666;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, .5));
+  transform: scale(0);
+  transition: 1s ease;
+}
+
+.moon {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  color: #666;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, .5));
+  transition: 1s ease;
+}
+
+.toggle {
+  position: absolute;
+  display: block;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  box-shadow:
+      inset 0 8px 60px rgba(0, 0, 0, .1),
+      inset 0 8px 8px rgba(0, 0, 0, .1),
+      inset 0 -4px 4px rgba(0, 0, 0, .1);
+  z-index: -1;
+  transition: 1s;
+  background: #f8f8f8;
+}
+
+/*
+.animateBg {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  background: #f8f8f8;
+  z-index: -2;
+  clip-path: circle(0% at 50% 50%);
+  transition: 1.5s ease-out;
+}
+*/
+
+.dark-mode .sun {
+  transform: scale(1) rotate(360deg); 
+}
+
+.dark-mode .moon {
+  transform: rotate(360deg) scale(0);
+}
+
+.dark-mode .toggle {
+  background: #363537;
+}
+
+.dark-mode .animateBg {
+  clip-path: circle(150% at 50% 50%);
+}

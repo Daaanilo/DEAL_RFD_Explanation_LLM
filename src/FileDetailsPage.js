@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { ReactComponent as DatabaseIcon } from 'bootstrap-icons/icons/database.svg';
 import { ReactComponent as AspectRatioIcon } from 'bootstrap-icons/icons/aspect-ratio.svg';
 import { ReactComponent as ColumnsIcon } from 'bootstrap-icons/icons/columns.svg';
@@ -8,16 +8,19 @@ import { ReactComponent as BugIcon } from 'bootstrap-icons/icons/bug.svg';
 import { ReactComponent as CpuIcon } from 'bootstrap-icons/icons/cpu.svg';
 import { ReactComponent as RobotIcon } from 'bootstrap-icons/icons/robot.svg';
 import { ReactComponent as PcIcon } from 'bootstrap-icons/icons/pc-horizontal.svg';
-import { ReactComponent as ToggleOffIcon } from 'bootstrap-icons/icons/toggle-off.svg';
-import { ReactComponent as ToggleOnIcon } from 'bootstrap-icons/icons/toggle-on.svg';
+import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
+import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
+import { DarkModeContext } from './DarkModeProvider';
 import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
-import { Pie } from 'react-chartjs-2';
+import { Bar, Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 import './FileDetailsPage.css';
+import './DarkModeProvider.css';
 const { handleUserInput } = require('./chatgptapi.js');
 
 const FileDetailsPage = ({ fileName, onBack }) => {
+  const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
+
   const [fileContent, setFileContent] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -193,7 +196,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     });
   };
   
-
   const toggleSelectAll = () => {
     const visibleRFDsIndexes = allRFDs.map((_, index) => index).filter(index => !selectedHeaderValues.some(value => allRFDs[index].includes(value)));
     setSelectedRows(selectedRows.length === visibleRFDsIndexes.length ? [] : visibleRFDsIndexes);
@@ -292,41 +294,49 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     const dataset_loading = temp.dataset_loading[index] || 0;
     return total - (discovery + preprocessing + dataset_loading);
   });
+
+  const totalSum = temp.total.reduce((acc, value) => acc + value, 0);
+  const percentages = {
+    dataset_loading: temp.dataset_loading.map(value => ((value / totalSum) * 100).toFixed(2)),
+    preprocessing: temp.preprocessing.map(value => ((value / totalSum) * 100).toFixed(2)),
+    discovery: temp.discovery.map(value => ((value / totalSum) * 100).toFixed(2)),
+    left: left.map(value => ((value / totalSum) * 100).toFixed(2)),
+  };
   
   const timeChartData = {
-    labels: temp.dataset_loading.map((_, index) => `Run ${index + 1}`),
+    labels: temp.dataset_loading.map((_, index) => `Time ${index + 1}`),
     datasets: [
       {
         label: 'Dataset Loading',
-        data: temp.dataset_loading,
+        data: percentages.dataset_loading,
         backgroundColor: 'rgba(0, 92, 230, 0.2)',
         borderColor: 'rgba(0, 92, 230, 1)',
         borderWidth: 1,
       },
       {
         label: 'Preprocessing',
-        data: temp.preprocessing,
+        data: percentages.preprocessing,
         backgroundColor: 'rgba(0, 153, 255, 0.2)',
         borderColor: 'rgba(0, 153, 255, 1)',
         borderWidth: 1,
       },
       {
         label: 'Discovery',
-        data: temp.discovery,
+        data: percentages.discovery,
         backgroundColor: 'rgba(0, 204, 255, 0.2)',
         borderColor: 'rgba(0, 204, 255, 1)',
         borderWidth: 1,
       },
       {
         label: 'Left',
-        data: left,
+        data: percentages.left,
         backgroundColor: 'rgba(51, 204, 255, 0.2)',
         borderColor: 'rgba(51, 204, 255, 1)',
         borderWidth: 1,
       },
       {
         label: 'Total',
-        data: temp.total,
+        data: temp.total.map(() => 100),
         backgroundColor: 'rgba(51, 255, 51, 0.2)',
         borderColor: 'rgba(51, 255, 51, 1)',
         borderWidth: 1,
@@ -341,8 +351,31 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     scales: {
       x: {
         beginAtZero: true,
-      },
+        suggestedMin: 0,
+        suggestedMax: 100,
+        ticks: {
+          callback: function(value) {
+            return value + '%';
+          }
+        }
+      }
     },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(tooltipItem) {
+            let label = tooltipItem.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (tooltipItem.raw !== undefined) {
+              label += tooltipItem.raw + '%';
+            }
+            return label;
+          }
+        }
+      }
+    }
   };
   
   const getRandomColor = () => {
@@ -677,108 +710,158 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   }), []);
 
   return (
-    <div className="file-details">
-      <div className="title-back-container">
-        <button className="back-btn" onClick={onBack}>
-          <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
-        </button>
-        <h2 className="title">File Details: <span style={{ color: 'black' }}>{info.name[0]}</span></h2>
+
+<div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
+  <div className="title-back-container">
+    <button className="back-btn" onClick={onBack}>
+      <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
+    </button>
+    <div className="toggle-button" onClick={toggleDarkMode}>
+      <SunIcon name="sun" className="sun"></SunIcon>
+      <MoonIcon name="moon" className="moon"></MoonIcon>
+      <div className="toggle"></div>
+      <div className="animateBg"></div>
+    </div>
+    <h2 className="title">File Details: <span style={{ color: '#005AC1' }}>{info.name[0]}</span></h2>
+  </div>
+  <div className="container">
+    <div className="card mb-3">
+      <div className="card-header">
+        <span className="details-text">Header </span>
       </div>
-      <div className="container">
-        <div className="card mb-3">
-          <div className="card-header">Header</div>
-          {header && header[0] && (
-            <div className="card-body">
-              <div className="row mb-3">
-                {header[0].map((item, index) => (
-                  <div key={index} className="col">
-                    <div>
-                      <button
-                        type="button"
-                        className={`btn ${selectedHeaderValues.includes(item) ? 'btn-group-toggle active' : 'btn btn-secondary'}`}
-                        onClick={() => toggleHeaderSelection(item)}
-                      >
-                        {item}
-                      </button>
-                    </div>
-                    <div style={{ height: '10px' }}></div>
-                    <div>
-                      <button
-                        type="button"
-                        className={`btn ${selectedHeaderValues.includes(statistics.type[item]) ? 'btn-group-toggle active' : 'btn btn-secondary'}`}
-                      >
-                        {statistics.type[item]}
-                      </button>
-                    </div>
-                    <div style={{ height: '10px' }}></div>
-                  </div>
-                ))}
+      {header && header[0] && (
+        <div className="card-body">
+          <div className="horizontal-scroll">
+            {header[0].map((item, index) => (
+              <div key={index} className="item-container">
+                <button
+                  type="button"
+                  className={`btn ${selectedHeaderValues.includes(item) ? 'btn-primary active' : 'btn btn-secondary'}`}
+                  onClick={() => toggleHeaderSelection(item)}
+                  style={{
+                    background: selectedHeaderValues.includes(item) ? 'white' : 'linear-gradient(30deg, #5799E5, #005AC1)',
+                    color: selectedHeaderValues.includes(item) ? 'black' : '',
+                  }}
+                >
+                  <span className={`details-header ${selectedHeaderValues.includes(item) ? 'selected' : ''}`}>{item}</span>
+                </button>
+                <div style={{ height: '5px' }}></div>
+                <button
+                  type="button"
+                  className={`btn ${selectedHeaderValues.includes(statistics.type[item]) ? 'btn-group-toggle active' : 'btn btn-secondary'} no-pulse`}
+                  style={{ background: '#E1E1E1' }}
+                >
+                  <span className="details-header">{statistics.type[item]}</span>
+                </button>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
+      )}
+    </div>
 
     <div className="row">
-      <div className="col-md-6">
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span>Details <AspectRatioIcon /></span> {cardVisibility.sizeAndFormat ? <ToggleOnIcon onClick={() => toggleCardVisibility('sizeAndFormat')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('sizeAndFormat')} />}
+  <div className="col-md-6">
+    <div className="card mb-3">
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span className="details-text">Details <AspectRatioIcon /></span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('sizeAndFormat')} checked={cardVisibility.sizeAndFormat} />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
-          {cardVisibility.sizeAndFormat && (
-            <div className="card-body">
-              {info.size.map((item, index) => (
-                <div key={index}>
-                  <strong>Size:</strong> {item} <br />
-                  <strong>Format:</strong> {info.format[index]} <br />
-                  <strong>Separator:</strong> {info.separator[index]}
-                  <hr />
-                </div>
-              ))}
+        </div>
+      </div>
+      {cardVisibility.sizeAndFormat && (
+        <div className="card-body">
+          {info.size.length > 0 ? (
+            info.size.map((item, index) => (
+              <div key={index}>
+                <strong>Size:</strong> {item} <br />
+                <strong>Format:</strong> {info.format[index]} <br />
+                <strong>Separator:</strong> {info.separator[index]}
+                <hr />
+              </div>
+            ))
+          ) : (
+            <div>
+                <strong>Size:</strong> N/A <br />
+                <strong>Format:</strong> N/A <br />
+                <strong>Separator:</strong> N/A
+                <hr />
             </div>
           )}
         </div>
-      </div>
+      )}
+    </div>
+  </div>
 
       <div className="col-md-6">
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span>Content Specifications <ColumnsIcon /></span>{cardVisibility.columnAndRowNumber ? <ToggleOnIcon onClick={() => toggleCardVisibility('columnAndRowNumber')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('columnAndRowNumber')} />}
-          </div>
-          {cardVisibility.columnAndRowNumber && (
-            <div className="card-body">
-              {info.col_number.map((item, index) => (
-                <div key={index}>
-                  <strong>Column:</strong> {item} <br />
-                  <strong>Row:</strong> {info.row_number[index]} <br />
-                  <strong>Blank char:</strong> {info.blank_char[index]}
-                  <hr />
-                </div>
-              ))}
-            </div>
-          )}
+  <div className="card mb-3">
+    <div className="d-flex justify-content-between align-items-center card-header">
+      <span className="details-text">Content Specifications <ColumnsIcon /></span>
+      <div className="toggle-button-cover">
+        <div id="button-3" className="button r">
+          <input
+            className="checkbox"
+            type="checkbox"
+            onChange={() => toggleCardVisibility('columnAndRowNumber')}
+            checked={cardVisibility.columnAndRowNumber}
+          />
+          <div className="knobs"></div>
+          <div className="layer"></div>
         </div>
       </div>
     </div>
-
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span>ALGORITHM <PcIcon /></span>
-            <div>
-              {cardVisibility.algorithm ? (
-                <ToggleOnIcon onClick={() => toggleCardVisibility('algorithm')} />
-              ) : (
-                <ToggleOffIcon onClick={() => toggleCardVisibility('algorithm')} />
-              )}
+    {cardVisibility.columnAndRowNumber && (
+      <div className="card-body">
+        {info.col_number.length > 0 ? (
+          info.col_number.map((item, index) => (
+            <div key={index}>
+              <strong>Column:</strong> {item} <br />
+              <strong>Row:</strong> {info.row_number[index]} <br />
+              <strong>Blank char:</strong> {info.blank_char[index]}
+              <hr />
             </div>
+          ))
+        ) : (
+          <div>
+            <strong>Column:</strong> N/A <br />
+            <strong>Row:</strong> N/A <br />
+            <strong>Blank char:</strong> N/A
+            <hr />
           </div>
-          {cardVisibility.algorithm && (
+        )}
+      </div>
+    )}
+  </div>
+  </div>
+  </div>
+
+
+
+    <div className="card mb-3">
+  <div className="d-flex justify-content-between align-items-center card-header">
+    <span className="details-text">ALGORITHM <PcIcon /></span>
+    <div className="toggle-button-cover">
+      <div id="button-3" className="button r">
+        <input
+          className="checkbox"
+          type="checkbox"
+          onChange={() => toggleCardVisibility('algorithm')}
+          checked={cardVisibility.algorithm}
+        />
+        <div className="knobs"></div>
+        <div className="layer"></div>
+      </div>
+    </div>
+  </div>
+  {cardVisibility.algorithm && (
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
-
-
                      </div>
-
                         {info.language.map((item, index) => (
                           <div key={index}>
                             <strong>Name:</strong> {info.name[1]} <br />
@@ -791,7 +874,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               </div>
             </div>
           )}
-        </div>
+</div>
+
         
         
 
@@ -799,7 +883,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       <div className="col-md-6">
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
-            <span>System <PcDisplayIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('system')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('system')} />}
+            <span className="details-text">System <PcDisplayIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('system')} checked={cardVisibility.system} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
           </div>
           {cardVisibility.system && (
             <div className="card-body">
@@ -820,7 +911,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       <div className="col-md-6">
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
-            <span>Execution Parameters <CpuIcon /></span> {cardVisibility.executionParameters ? <ToggleOnIcon onClick={() => toggleCardVisibility('executionParameters')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('executionParameters')} />}
+            <span className="details-text">Execution Parameters <CpuIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('executionParameters')} checked={cardVisibility.executionParameters} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
           </div>
           {cardVisibility.executionParameters && (
             <div className="card-body">
@@ -840,79 +938,124 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
     </div>
 
-    <div className="row flex-grow-1">
-  <div className="col-md-4 d-flex">
-    <div className="card mb-3 w-100">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span>Time Execution <BugIcon /></span> {cardVisibility.timeExecution ? <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />}
-      </div>
-      {cardVisibility.timeExecution && (
-        <div className="card-body">
-          {info.dataset_loading.map((item, index) => (
-            <div key={index}>
-              <strong>Dataset Loading:</strong> {item && (item.endsWith('s') ? parseFloat(item) * 1000 : parseFloat(item))}ms<br />
-              <strong>Preprocessing:</strong> {info.preprocessing[index] && (info.preprocessing[index].endsWith('s') ? parseFloat(info.preprocessing[index]) * 1000 : parseFloat(info.preprocessing[index]))}ms<br />
-              <strong>Discovery:</strong> {info.discovery[index] && (info.discovery[index].endsWith('s') ? parseFloat(info.discovery[index]) * 1000 : parseFloat(info.discovery[index]))}ms<br />
-              <strong>Left:</strong> {left > 1000 ? (left / 1000).toFixed(2).replace('.', ',') + 's' : left + 'ms'}<br />
-              <strong>Total:</strong> {info.total[index]} <br />
-              <hr />
-            </div>
-          ))}
 
-        </div>
-      )}
-    </div>
-  </div>
 
-          
-      <div className="col-md-4 d-flex">
-        <div className="card mb-3 w-100">
+    <div className="row d-flex">
+    <div className="col-md-4">
+        <div className={`card mb-3 w-100 ${cardVisibility.timeExecution ? 'h-100' : ''}`}>
           <div className="d-flex justify-content-between align-items-center card-header">
-            <span>Ram Usage <CpuIcon /></span> {cardVisibility.ramUsage ? <ToggleOnIcon onClick={() => toggleCardVisibility('ramUsage')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('ramUsage')} />}
+            <span className="details-text">Time Execution <BugIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution')} checked={cardVisibility.timeExecution} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+          </div>
+          {cardVisibility.timeExecution && (
+            <div className="card-body">
+              {info.dataset_loading.length > 0 && info.preprocessing.length > 0 && info.discovery.length > 0 ? (
+                info.dataset_loading.map((item, index) => (
+                  <div key={index}>
+                    <strong>Dataset Loading:</strong> {item && (item.endsWith('s') ? parseFloat(item) * 1000 : parseFloat(item))}ms<br />
+                    <strong>Preprocessing:</strong> {info.preprocessing[index] && (info.preprocessing[index].endsWith('s') ? parseFloat(info.preprocessing[index]) * 1000 : parseFloat(info.preprocessing[index]))}ms<br />
+                    <strong>Discovery:</strong> {info.discovery[index] && (info.discovery[index].endsWith('s') ? parseFloat(info.discovery[index]) * 1000 : parseFloat(info.discovery[index]))}ms<br />
+                    <strong>Left:</strong> {left > 1000 ? (left / 1000).toFixed(2).replace('.', ',') + 's' : left + 'ms'}<br />
+                    <strong>Total:</strong> {info.total[index]} <br />
+                    <hr />
+                  </div>
+                ))
+              ) : (
+                <div>
+                  <strong>Data not available</strong>
+                  <hr />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div><div className="col-md-4">
+        <div className={`card mb-3 w-100 ${cardVisibility.ramUsage ? 'h-100' : ''}`}>
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span className="details-text">Ram Usage <CpuIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('ramUsage')} checked={cardVisibility.ramUsage} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
           </div>
           {cardVisibility.ramUsage && (
             <div className="card-body">
-              {info.max_ram_used.map((item, index) => (
-                <div key={index}>
-                  <strong>Unit:</strong> {info.unit[1]} <br />
-                  <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
+              {info.max_ram_used.length > 0 && info.unit.length > 0 ? (
+                info.max_ram_used.map((item, index) => (
+                  <div key={index}>
+                    <strong>Unit:</strong> {info.unit[index]} <br />
+                    <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
+                    <hr />
+                  </div>
+                ))
+              ) : (
+                <div>
+                    <strong>Unit:</strong> N/A <br />
+                    <strong>Max Ram Used:</strong> N/A <br />
                   <hr />
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
       </div>
-      <div className="col-md-4 d-flex">
-        <div className="card mb-3 w-100">
+      <div className="col-md-4">
+        <div className={`card mb-3 w-100 ${cardVisibility.error ? 'h-100' : ''}`}>
           <div className="d-flex justify-content-between align-items-center card-header">
-            <span>Error <BugIcon /></span> {cardVisibility.system ? <ToggleOnIcon onClick={() => toggleCardVisibility('error')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('error')} />}
+            <span className="details-text">Error <BugIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('error')} checked={cardVisibility.error} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
           </div>
           {cardVisibility.error && (
             <div className="card-body">
-              {info.time_limit.map((item, index) => (
-                <div key={index}>
-                  <strong>Time Limit:</strong> {item} <br />
-                  <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
-                  <strong>General Error:</strong> {info.general_error[index]} <br />
+              {info.time_limit.length > 0 && info.memory_limit.length > 0 && info.general_error.length > 0 ? (
+                info.time_limit.map((item, index) => (
+                  <div key={index}>
+                    <strong>Time Limit:</strong> {item} <br />
+                    <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
+                    <strong>General Error:</strong> {info.general_error[index]} <br />
+                    <hr />
+                  </div>
+                ))
+              ) : (
+                <div>
+                    <strong>Time Limit:</strong> N/A <br />
+                    <strong>Memory Limit:</strong> N/A <br />
+                    <strong>General Error:</strong> N/A <br />
                   <hr />
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
       </div>
-    </div>
+        <div style={{ marginBottom: '20px' }}></div>
+      </div>
+
 
     <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
-            <span>TIME EXECUTION <PcIcon /></span>
-            <div>
-              {cardVisibility.timeExecution ? (
-                <ToggleOnIcon onClick={() => toggleCardVisibility('timeExecution')} />
-              ) : (
-                <ToggleOffIcon onClick={() => toggleCardVisibility('timeExecution')} />
-              )}
+            <span className="details-text">TIME EXECUTION <PcIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution')} checked={cardVisibility.timeExecution} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
             </div>
           </div>
           {cardVisibility.timeExecution && (
@@ -931,9 +1074,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>ATTRIBUTE COUNT <Chart /> </span>
-        {cardVisibility.count ? <ToggleOnIcon onClick={() => toggleCardVisibility('count')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('count')} />}
-      </div>
+        <span className="details-text">ATTRIBUTE COUNT <Chart /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('count')} checked={cardVisibility.count} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+          </div>
       {cardVisibility.count && (
         <div className="card-body">
           <div style={{ height: '300px' }}>
@@ -945,9 +1094,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>FREQUENCY <Chart /> </span>
-        {cardVisibility.frequency ? <ToggleOnIcon onClick={() => toggleCardVisibility('frequency')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('frequency')} />}
-      </div>
+        <span className="details-text">FREQUENCY <Chart /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('frequency')} checked={cardVisibility.frequency} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+          </div>
       {cardVisibility.frequency && (
         <div className="card-body">
           <div style={{ height: '300px' }}>
@@ -959,9 +1114,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>IMPLICATING ATTRIBUTES <Chart /> </span>
-        {cardVisibility.implicating ? <ToggleOnIcon onClick={() => toggleCardVisibility('implicating')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('implicating')} />}
-      </div>
+        <span className="details-text">IMPLICATING ATTRIBUTES <Chart /> </span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('implicating')} checked={cardVisibility.implicating} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+          </div>
       {cardVisibility.implicating && (
         <div className="card-body">
           <div style={{ height: '300px' }}>
@@ -973,9 +1134,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>MEAN, MEDIAN, MODE <Chart /> </span>
-        {cardVisibility.triplem ? <ToggleOnIcon onClick={() => toggleCardVisibility('triplem')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('triplem')} />}
-      </div>
+        <span className="details-text">MEAN, MEDIAN, MODE <Chart /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('triplem')} checked={cardVisibility.triplem} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+          </div>
       {cardVisibility.triplem && (
         <div className="card-body">
           <div style={{ height: '300px' }}>
@@ -987,13 +1154,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3" style={{ marginTop: 0 }}>
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>CHARTS</span>
-        {cardVisibility.column ? (
-          <ToggleOnIcon onClick={() => toggleCardVisibility('column')} />
-        ) : (
-          <ToggleOffIcon onClick={() => toggleCardVisibility('column')} />
-        )}
-      </div>
+        <span className="details-text">CHARTS</span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('column')} checked={cardVisibility.column} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div></div>
       {cardVisibility.column && (
         <div className="card-body d-flex flex-wrap justify-content-center">
           {Object.keys(relativeFrequency).map((attribute) => {
@@ -1062,50 +1230,68 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
 
     <div className="card mb-3">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span>RFDs </span>
-        {cardVisibility.rfd ? (
-          <ToggleOnIcon onClick={() => toggleCardVisibility('rfd')} />
-        ) : (
-          <ToggleOffIcon onClick={() => toggleCardVisibility('rfd')} />
-        )}
+  <div className="d-flex justify-content-between align-items-center card-header">
+    <span className="details-text">RFDs </span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+            </div>
+  {cardVisibility.rfd && (
+    <div className="card-body">
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <input
+          type="checkbox"
+          className="select-btn larger-checkbox"
+          checked={selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues).length}
+          onChange={toggleSelectAll}
+        />
+        <label style={{ marginLeft: '10px' }}>
+          {selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues).length ? "Deselect all" : "Select all"}
+        </label>
       </div>
-      {cardVisibility.rfd && (
-        <div className="card-body">
-          <button className="select-btn" onClick={toggleSelectAll}>
-            {selectedRows.length === allRFDs.length ? "Deselect all" : "Select all"}
-          </button>
-          <div style={{ height: '15px' }}></div>
+      <div style={{ height: '15px' }}></div>
 
-          <div style={{ whiteSpace: 'pre-wrap' }}>
-            {allRFDs.map((rfd, index) => {
-              const containsSelectedHeader = selectedHeaderValues.some(value => rfd.includes(value));
-              if (containsSelectedHeader) {
-                return null;
-              }
-              return (
-                <div key={index} style={{ marginBottom: '10px' }}>
-                  <input
-                    type="checkbox"
-                    className="larger-checkbox"
-                    checked={selectedRows.includes(index)}
-                    onChange={() => toggleRowSelection(index)}
-                  />
-                  <span style={{ marginLeft: '10px' }}>{rfd}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <div style={{ whiteSpace: 'pre-wrap' }}>
+        {allRFDs.map((rfd, index) => {
+          const containsSelectedHeader = selectedHeaderValues.some(value => rfd.includes(value));
+          if (containsSelectedHeader) {
+            return null;
+          }
+          return (
+            <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="checkbox"
+                className="larger-checkbox"
+                checked={selectedRows.includes(index)}
+                onChange={() => toggleRowSelection(index)}
+              />
+              <label style={{ marginLeft: '10px' }}>
+                {rfd}
+              </label>
+            </div>
+          );
+        })}
+      </div>
     </div>
+  )}
+</div>
     
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>PROMPT <CpuIcon /></span>
-        {cardVisibility.prompt ? <ToggleOnIcon onClick={() => toggleCardVisibility('prompt')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('prompt')} />}
-      </div>
+        <span className="details-text">PROMPT <CpuIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('prompt')} checked={cardVisibility.prompt} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+            </div>
       {cardVisibility.prompt && (
         <div className="card-body">
         <textarea
@@ -1127,7 +1313,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span>SUMMARY <RobotIcon /></span> {cardVisibility.generatedText ? <ToggleOnIcon onClick={() => toggleCardVisibility('generatedText')} /> : <ToggleOffIcon onClick={() => toggleCardVisibility('generatedText')} />}</div>
+        <span className="details-text">SUMMARY <RobotIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('generatedText')} checked={cardVisibility.generatedText} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+            </div>
           {cardVisibility.generatedText && (
             <div className="card-body">
               {isTextGenerated && (

@@ -1,70 +1,177 @@
+import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
+import FileDetailsPage from './FileDetailsPage';
+import './App.css';
+import './DarkModeProvider.css';
+import { DarkModeContext } from './DarkModeProvider';
 import { ReactComponent as CloudArrowUpFillIcon } from 'bootstrap-icons/icons/cloud-arrow-up-fill.svg';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
 import { ReactComponent as SearchIcon } from 'bootstrap-icons/icons/search.svg';
 import { ReactComponent as PinIcon } from 'bootstrap-icons/icons/pin-fill.svg';
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import FileDetailsPage from './FileDetailsPage';
-import './App.css';
+import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil-square.svg';
+import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
+import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
 
 function App() {
+  const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [files, setFiles] = useState([]);
   const [selectedFileName, setSelectedFileName] = useState(null);
-  const [fadeIn, setFadeIn] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadButtonColor, setUploadButtonColor] = useState('#007bff');
   const [pinnedFiles, setPinnedFiles] = useState([]);
+  const [newFileName, setNewFileName] = useState('');
 
   useEffect(() => {
-    document.body.style.backgroundColor = '#eceff1';
+    document.body.style.backgroundColor = darkMode ? 'black' : '#f8f8f8';
 
     axios.get('http://localhost:5000/files')
       .then(response => {
         setFiles(response.data);
-        setFadeIn(true);
       })
       .catch(error => {
         console.error(error);
         alert('Error retrieving file names');
       });
-  }, []);
+  }, [darkMode]);
 
-  const handleUpload = () => {
+
+  const promptForNewFileName = () => {
     if (selectedFile) {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+      let newName = window.prompt('Enter the file name:', selectedFile.name);
+      
+      while (newName !== null && newName.trim() === '') {
+        alert('File name cannot be empty');
+        newName = window.prompt('Enter the file name:', selectedFile.name);
+      }
+      
+      if (newName === null) {
+        return;
+      }
   
-      axios.post('http://localhost:5000/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then(response => {
-        alert(response.data);
-        setSelectedFile(null);
-        setUploadButtonColor('#007bff');
-        axios.get('http://localhost:5000/files')
-          .then(response => {
-            setFiles(response.data);
-          })
-          .catch(error => {
-            console.error(error);
-            alert('Error retrieving file names');
-          });
-      }).catch(error => {
-        console.error(error);
-        alert('Error uploading JSON file');
-      });
+      let fileNameToUpload = newName.trim();
+  
+      if (!fileNameToUpload.endsWith('.json')) {
+        fileNameToUpload += '.json';
+      }
+  
+      if (fileNameToUpload === selectedFile.name) {
+        handleUpload();
+        return;
+      }
+  
+      const confirmUseNewName = window.confirm(`Do you want to use "${fileNameToUpload}" as the file name?`);
+  
+      if (confirmUseNewName) {
+        setNewFileName(fileNameToUpload);
+        handleUpload(fileNameToUpload);
+      }
+  
     } else {
       alert('Select a JSON file to upload');
     }
-  };
+  };  
+
+  const handleUpload = async (finalFileName = null) => {
   
+    let existingFileNames = [];
+    try {
+      const response = await axios.get('http://localhost:5000/files');
+      existingFileNames = response.data.map(file => file.fileName);
+    } catch (error) {
+      console.error(error);
+      alert('Error retrieving file names');
+      return;
+    }
+  
+    let fileNameToUpload = finalFileName ? finalFileName : selectedFile.name;
+  
+    while (existingFileNames.includes(fileNameToUpload) || fileNameToUpload === '') {
+      let newFileNameToUpload = window.prompt(`File name "${fileNameToUpload}" already exists. Please enter a new file name:`);
+      if (newFileNameToUpload === null) {
+        return;
+      }
+      if (newFileNameToUpload.trim() === '') {
+        alert('File name cannot be empty');
+      }
+      else {
+        let trimmedFileName = newFileNameToUpload.trim();
+        if (!trimmedFileName.endsWith('.json')) {
+          trimmedFileName += '.json';
+        }
+        fileNameToUpload = trimmedFileName;
+      }
+    }
+  
+    const formData = new FormData();
+    formData.append('file', selectedFile, fileNameToUpload);
+  
+    try {
+      const response = await axios.post('http://localhost:5000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      alert(response.data);
+      const filesResponse = await axios.get('http://localhost:5000/files');
+      setFiles(filesResponse.data);
+    } catch (error) {
+      console.error(error);
+      alert('Error uploading JSON file');
+    }
+  };
+
+  const handleEditFileName = async (fileId, currentFileName) => {
+    let newName = window.prompt('Enter the new file name:', currentFileName);
+    if (newName === null) {
+      return;
+    }
+  
+    newName = newName.trim();
+  
+    if (newName === '' || newName === '.json') {
+      alert('File name cannot be empty.');
+      return;
+    }
+
+    if (!newName.toLowerCase().endsWith('.json')) {
+      alert('File name must end with ".json"');
+      return;
+    }
+  
+    try {
+      const response = await axios.get('http://localhost:5000/files');
+      const existingFileNames = response.data.map(file => file.fileName);
+  
+      if (existingFileNames.includes(newName)) {
+        alert(`File name "${newName}" already exists. Please choose a different name.`);
+        return;
+      }
+  
+      const trimmedNewName = newName.trim();
+      const updatedFiles = files.map(file => {
+        if (file._id === fileId) {
+          return { ...file, fileName: trimmedNewName };
+        }
+        return file;
+      });
+  
+      setFiles(updatedFiles);
+  
+      const putResponse = await axios.put(`http://localhost:5000/files/${fileId}`, { fileName: trimmedNewName });
+      alert(putResponse.data.message);
+    } catch (error) {
+      console.error(error);
+      alert('Error updating file name');
+    }
+  };
+
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
     setUploadButtonColor('#4caf50');
   };
-  
+
   const handleFileNameClick = (fileName) => {
     setSelectedFileName(fileName);
   };
@@ -127,16 +234,16 @@ function App() {
 
   const filteredFiles = files.filter(file => file.fileName.toLowerCase().includes(searchTerm.toLowerCase()));
   const pinnedFilesList = filteredFiles.filter(file => pinnedFiles.includes(file._id));
-  const otherFilesList = filteredFiles.filter(file => !pinnedFiles.includes(file._id));
+  const otherFilesList = filteredFiles.filter(file => !pinnedFiles.includes(file._id));  
 
   return (
-    <div className={`app-container ${fadeIn ? 'fade-in' : ''}`}>
+    <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
 
       {!selectedFileName && (
         <>
-          <section class="wrapper">
-            <div class="top">JSONInsight</div>
-            <div class="bottom" aria-hidden="true">JSONInsight</div>
+          <section className="wrapper">
+            <div className="top">JSONInsight</div>
+            <div className="bottom" aria-hidden="true">JSONInsight</div>
           </section>
 
           <div className="search-section">
@@ -154,7 +261,7 @@ function App() {
       {!selectedFileName ? (
         <div>
           <div className="file-container">
-            {pinnedFilesList.map((file, index) => (
+          {pinnedFilesList.map((file, index) => (
               <div
                 key={file._id}
                 className={`desktop-icon ${file._id}`}
@@ -163,13 +270,18 @@ function App() {
                 onDragStart={(e) => handleDragStart(e, file._id)}
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}>
+                onDrop={(e) => handleDrop(e, index)}
+              >
                 <i className="fas fa-file"></i>
                 <p>{file.fileName}</p>
                 <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
                 <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
                   <PinIcon fill="#f00" />
                 </button>
+                <button className="edit-btn" onClick={(event) => event.stopPropagation()} onMouseDown={() => handleEditFileName(file._id, file.fileName)}>
+                  <PencilIcon fill={darkMode ? "#fff" : "#000"} />
+                </button>
+                <p>{file.timestamp}</p>
               </div>
             ))}
             {otherFilesList.map((file, index) => (
@@ -186,8 +298,12 @@ function App() {
                 <p>{file.fileName}</p>
                 <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
                 <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon fill={pinnedFiles.includes(file._id) ? "#f00" : "#000"} />
+                  <PinIcon fill={darkMode ? "#fff" : (pinnedFiles.includes(file._id) ? "#f00" : "#000")} />
                 </button>
+                <button className="edit-btn" onClick={(event) => event.stopPropagation()} onMouseDown={() => handleEditFileName(file._id, file.fileName)}>
+                  <PencilIcon fill={darkMode ? "#fff" : "#000"} />
+                </button>
+                <p>{file.timestamp}</p>
               </div>
             ))}
           </div>
@@ -199,9 +315,17 @@ function App() {
       {!selectedFileName && (
         <div className="upload-section">
           <input id="file-upload" type="file" onChange={handleFileChange} />
-          <button id="upload" style={{ backgroundColor: uploadButtonColor }} onClick={handleUpload}><CloudArrowUpFillIcon /></button>
+          <button id="upload" style={{ backgroundColor: uploadButtonColor }} onClick={promptForNewFileName}><CloudArrowUpFillIcon /></button>
         </div>
       )}
+
+      <div className="toggle-button" onClick={toggleDarkMode}>
+        <SunIcon name="sun" className="sun" />
+        <MoonIcon name="moon" className="moon" />
+        <div className="toggle"></div>
+        <div className="animateBg"></div>
+      </div>
+
     </div>
   );
 }
