@@ -521,34 +521,41 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return variableFrequency;
   };
   
-  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues));
-  
   const prepareChartData = (variableFrequency) => {
     const labels = Object.keys(variableFrequency);
     const datasets = [];
     
-    labels.forEach(col => {
-      const values = Object.keys(variableFrequency[col]);
-      values.forEach(value => {
-        datasets.push(
-          {
-            label: `${col}@${value} LHS`,
-            data: labels.map(l => l === col ? variableFrequency[col][value].lhs : 0),
-            backgroundColor: gradientColors,
-            borderColor: 'rgba(0, 0, 0, 1)',
-            borderWidth: 1,
-          },
-          {
-            label: `${col}@${value} RHS`,
-            data: labels.map(l => l === col ? variableFrequency[col][value].rhs : 0),
-            backgroundColor: gradientColors,
-            borderColor: 'rgba(0, 0, 0, 1)',
-            borderWidth: 1,
-          }
-        );
-      });
-    });
     
+    const getColor = (index) => gradientColors[index % gradientColors.length];
+  
+   
+    const allValues = new Set();
+    labels.forEach(col => {
+      Object.keys(variableFrequency[col]).forEach(value => allValues.add(value));
+    });
+    const uniqueValues = Array.from(allValues).sort();
+  
+    uniqueValues.forEach((value, index) => {
+      datasets.push(
+        {
+          label: `${value} LHS`,
+          data: labels.map(col => variableFrequency[col][value]?.lhs || 0),
+          backgroundColor: getColor(index * 2),
+          borderColor: 'rgba(0, 0, 0, 0.5)',
+          borderWidth: 1,
+          stack: 'lhs'
+        },
+        {
+          label: `${value} RHS`,
+          data: labels.map(col => variableFrequency[col][value]?.rhs || 0),
+          backgroundColor: getColor(index * 2 + 1),
+          borderColor: 'rgba(0, 0, 0, 0.5)',
+          borderWidth: 1,
+          stack: 'rhs'
+        }
+      );
+    });
+  
     return { labels, datasets };
   };
   
@@ -558,6 +565,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        callbacks: {
+          title: (context) => context[0].label,
+          label: (context) => {
+            const value = context.parsed.y;
+            return `${context.dataset.label}: ${value}`;
+          }
+        }
       }
     },
     scales: {
@@ -571,8 +587,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
   };
   
+  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues));
   const variableChartData = prepareChartData(variableFrequency);
-
 
   const findImplicatingAttributes = (rfdArray, attributesHeader) => {
     const implicatingAttributes = {};
@@ -1272,7 +1288,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
   <div className="d-flex justify-content-between align-items-center card-header">
-  <span className="details-text">RFDs (total: {allRFDs.length} filtered: {filterRFDs(allRFDs, selectedHeaderValues).length})</span>
+  <span className="details-text">RFDs (total: {allRFDs.length} - filtered: {filterRFDs(allRFDs, selectedHeaderValues).length})</span>
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
