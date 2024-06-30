@@ -466,7 +466,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       data: lhsAttributeData,
       backgroundColor: 'rgba(0, 92, 230, 0.5)',
       borderColor: 'rgba(0, 0, 0, 1)',
-      borderWidth: 1,
+      borderWidth: 0.5,
     }],
   };
   
@@ -485,14 +485,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
   
   
-
-
-
-
-
-
-
-
   const countVariableFrequency = (rfdArray) => {
     const variableFrequency = {};
     
@@ -521,14 +513,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return variableFrequency;
   };
   
-  const prepareChartData = (variableFrequency) => {
+  
+  const prepareChartData = (variableFrequency, header) => {
     const labels = Object.keys(variableFrequency);
     const datasets = [];
-    
-    
-    const getColor = (index) => gradientColors[index % gradientColors.length];
   
-   
+    const getColor = (index) => gradientColors[index % 2 === 0 ? index / 2 : (gradientColors.length - 1) - (index - 1) / 2];
+  
+    labels.sort((a, b) => {
+      return header.indexOf(a) - header.indexOf(b);
+    });
+  
     const allValues = new Set();
     labels.forEach(col => {
       Object.keys(variableFrequency[col]).forEach(value => allValues.add(value));
@@ -541,16 +536,16 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           label: `${value} LHS`,
           data: labels.map(col => variableFrequency[col][value]?.lhs || 0),
           backgroundColor: getColor(index * 2),
-          borderColor: 'rgba(0, 0, 0, 0.5)',
-          borderWidth: 1,
+          borderColor: 'rgba(0, 0, 0, 1)',
+          borderWidth: 0.5,
           stack: 'lhs'
         },
         {
           label: `${value} RHS`,
           data: labels.map(col => variableFrequency[col][value]?.rhs || 0),
           backgroundColor: getColor(index * 2 + 1),
-          borderColor: 'rgba(0, 0, 0, 0.5)',
-          borderWidth: 1,
+          borderColor: 'rgba(0, 0, 0, 1)',
+          borderWidth: 0.5,
           stack: 'rhs'
         }
       );
@@ -586,16 +581,19 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       },
     },
   };
-  
+
   const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues));
-  const variableChartData = prepareChartData(variableFrequency);
+  const variableChartData = prepareChartData(variableFrequency, header[0]);
+
+
 
   const findImplicatingAttributes = (rfdArray, attributesHeader) => {
     const implicatingAttributes = {};
   
     const extractAttributes = (str) => {
-      return str.match(/[a-zA-Z1-9\s]+/g).filter(attr => !attr.includes('@'));
+      return str.match(/[a-zA-Z][a-zA-Z0-9\s]*/g).filter(attr => !attr.includes('@'));
     };
+    
   
     attributesHeader.forEach(attribute => {
       implicatingAttributes[attribute] = new Set();
@@ -623,7 +621,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       data: Object.values(implicatingAttributes).map(set => set.size),
       backgroundColor: 'rgba(51, 204, 255, 0.5)',
       borderColor: 'rgba(0, 0, 0, 1)',
-      borderWidth: 1,
+      borderWidth: 0.5,
     }],
   };
 

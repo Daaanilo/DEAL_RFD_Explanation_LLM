@@ -136,8 +136,7 @@ function App() {
     }
 
     if (!newName.toLowerCase().endsWith('.json')) {
-      alert('File name must end with ".json"');
-      return;
+      newName += '.json';
     }
   
     try {
