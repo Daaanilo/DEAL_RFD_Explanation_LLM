@@ -1,5 +1,5 @@
 const { OpenAI } = require('openai');
-const openai = new OpenAI({ apiKey: "INSERIRE KEY", dangerouslyAllowBrowser: true});
+const openai = new OpenAI({ apiKey: "sk-proj-CW8O86Ex57hya7AbceT2T3BlbkFJIyfY1LgD6zTky4xMVhZY", dangerouslyAllowBrowser: true});
 
 const handleUserInput = async (input) => {
 
