@@ -235,7 +235,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   
     const selectedRFDs = selectedRows.map(index => allRFDs[index]);
-    const support = promptAI;
   
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
@@ -249,12 +248,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       };
       checkIfScrolled();
     });
-  
 
+    
     if (window.confirm('Are you sure you want to summarize the text?')) {
       setIsLoading(true);
 
-      const response = await handleUserInput(support ? support + selectedRFDs.join('\n') : promptAI + selectedRFDs.join('\n'));
+      const response = await handleUserInput(promptAI.includes(selectedRFDs.join('\n')) ? promptAI : promptAI + selectedRFDs.join('\n'));
       setResponseAI(response);
       setIsTextGenerated(true);
       setIsLoading(false);
