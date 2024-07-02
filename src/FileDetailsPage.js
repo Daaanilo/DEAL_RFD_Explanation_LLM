@@ -34,11 +34,42 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [responseAI2, setResponseAI2] = useState();
   
 
-  const initialPrompt = "I would like a thorough understanding of the RFD dependencies listed below, "+
-  "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
-  "I want an overall summary that explains the general concept of these dependencies, "+
-  "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n";
-  const [promptAI, setPromptAI] = useState("");
+
+  const prompts = {
+
+    'Prompt 1': "I would like a thorough understanding of the RFD dependencies listed below, "+
+        "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
+        "I want an overall summary that explains the general concept of these dependencies, "+
+        "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n",
+    'Prompt 2': 'Questo è il testo base per il Prompt 2',
+    'Prompt 3': 'Questo è il testo base per il Prompt 3'
+  };
+
+  const [selectedPrompt, setSelectedPrompt] = useState('Prompt 1');
+
+  const [promptAI, setPromptAI] = useState(prompts[selectedPrompt]);
+
+  const [customPromptAI, setCustomPromptAI] = useState('');
+
+  const [basePrompt, setBasePrompt] = useState('');
+
+  useEffect(() => {
+    const newBasePrompt = prompts[selectedPrompt];
+    setBasePrompt(newBasePrompt);
+    if (newBasePrompt !== basePrompt) {
+
+      const selectedRFDs = selectedRows.map(index => allRFDs[index]);
+
+      const newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
+
+      setCustomPromptAI(newPrompt);
+
+      setPromptAI(newPrompt);
+
+    }
+
+  }, [selectedPrompt, selectedRows]);
+  
  
   const [cardVisibility, setCardVisibility] = useState({
     infoDataset: true,
@@ -202,14 +233,39 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const toggleRowSelection = (index) => {
     setSelectedRows(prevSelectedRows => {
       const selectedIndex = prevSelectedRows.indexOf(index);
+
       const updatedSelectedRows = selectedIndex === -1 ? [...prevSelectedRows, index] : prevSelectedRows.filter(i => i !== index);
+      updateCustomPrompt(index, selectedIndex === -1);
+
       return updatedSelectedRows;
     });
   };
   
   const toggleSelectAll = () => {
-    const visibleRFDsIndexes = allRFDs.map((_, index) => index).filter(index => !selectedHeaderValues.some(value => allRFDs[index].includes(value)));
-    setSelectedRows(selectedRows.length === visibleRFDsIndexes.length ? [] : visibleRFDsIndexes);
+    const visibleRFDsIndexes = allRFDs
+      .map((_, index) => index)
+      .filter(index => !selectedHeaderValues.some(value => allRFDs[index].includes(value)));
+
+    setSelectedRows(prevSelectedRows => {
+      const newSelectedRows = prevSelectedRows.length === visibleRFDsIndexes.length ? [] : visibleRFDsIndexes;
+
+
+      setCustomPromptAI(prevPrompt => {
+        const promptLines = prevPrompt.split('\n');
+        const baseLines = promptLines.filter(line => !allRFDs.includes(line));
+
+        if (newSelectedRows.length === 0) {
+
+          return baseLines.join('\n');
+        } else {
+
+          const selectedRFDs = newSelectedRows.map(index => allRFDs[index]);
+          return [...baseLines, ...selectedRFDs].join('\n');
+        }
+      });
+
+      return newSelectedRows;
+    });
   };
 
   const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
@@ -232,10 +288,36 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   // GENERATE TEXT
 
+  const handlePromptChange = (event) => {
+    setSelectedPrompt(event.target.value);
+    };
+  
+  const handleTextareaChange = (e) => {
+    setCustomPromptAI(e.target.value);
+  };
+  
   const generateText = () => {
     const selectedRFDs = selectedRows.map(index => allRFDs[index]);
-    setPromptAI(initialPrompt + selectedRFDs.join('\n'));
+  
+    setPromptAI(customPromptAI + '\n' + selectedRFDs.join('\n'));
+  
   };
+  
+  const updateCustomPrompt = (index, isAdding) => {
+    const rfdToToggle = allRFDs[index];
+  
+    setCustomPromptAI(prevPrompt => {
+      const promptLines = prevPrompt.split('\n');
+      if (isAdding) {
+        if (!promptLines.includes(rfdToToggle)) {
+        return prevPrompt + '\n' + rfdToToggle;
+        }
+      } else {
+        return promptLines.filter(line => line !== rfdToToggle).join('\n');
+      }
+        return prevPrompt;
+    });
+  }
 
   const scrollToBottom = async () => {
 
@@ -1528,10 +1610,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             </div>
       {cardVisibility.prompt && (
         <div className="card-body">
+          <select
+className="form-select mt-2"
+style={{ display: 'block', marginLeft: '0', width: '200px' }}
+value={selectedPrompt}
+onChange={handlePromptChange}
+>
+{Object.keys(prompts).map((prompt, index) => (
+<option key={index} value={prompt}>
+{prompt}
+</option>
+))}
+</select>
+
         <textarea
           type="text"
-          value={promptAI}
-          onChange={(e) => setPromptAI(e.target.value)}
+          value={customPromptAI}
+          onChange={handleTextareaChange}
           style={{ width: "100%", minHeight: "200px" }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
