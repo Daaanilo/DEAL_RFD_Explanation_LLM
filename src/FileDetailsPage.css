@@ -415,3 +415,56 @@ body {
 #button-3 .checkbox:checked ~ .layer {
   background-color: #ebf7fc;
 }
+
+
+.pagination-bar {
+  display: inline-block;
+  background-color: #c9c9c9;
+  padding: 10px;
+  border-radius: 50px;
+  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.pagination-button {
+  background-color: transparent;
+  color: var(--light-color);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.pagination-button:hover {
+  background-color: #52595f;
+  color: white;
+}
+
+.pagination-button:disabled {
+  background-color: #d6d6d6;
+  color: #858f99;
+  cursor: not-allowed;
+}
+
+.current-page {
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 50%;
+  background-color: #52595f;
+  color: white;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination-dots {
+  padding: 5px 10px;
+}

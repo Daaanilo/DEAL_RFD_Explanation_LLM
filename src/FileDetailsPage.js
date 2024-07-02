@@ -49,10 +49,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     timeLeft: true,
     ramUsage: true,
     error: true,
-    count: true,
+    cardinality: true,
     frequency: true,
     implicating: true,
     triplem: true,
+    minmax: true,
     column: true,
     rfd: true,
     prompt: true,
@@ -110,6 +111,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     mean: [],
     median: [],
     mode: [],
+    min: [],
+    max: [],
     distribution: []
   };
   
@@ -477,7 +480,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'LHS number'
+          text: 'LHS cardinality'
         }
       }
     }
@@ -650,7 +653,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const statisticMedians = statisticLabels.map(label => statistics.median[label]);
   const statisticModes = statisticLabels.map(label => statistics.mode[label]);
 
-  const statisticsChartData = {
+  const tripleMChartData = {
     labels: statisticLabels,
     datasets: [
       {
@@ -678,12 +681,50 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
 
-  const statisticsChartOptions = {
+  const tripleMChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
       y: {
+        type: 'logarithmic',
         beginAtZero: true,
+        min: 0,
+      },
+    },
+  };
+
+
+  const statisticMin = statisticLabels.map(label => statistics.min[label]);
+  const statisticMax = statisticLabels.map(label => statistics.max[label]);  
+
+  const minMaxChartData = {
+    labels: statisticLabels,
+    datasets: [
+      {
+        label: 'Min',
+        data: statisticMin,
+        backgroundColor: 'rgba(51, 153, 255, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
+      },
+      {
+        label: 'Max',
+        data: statisticMax,
+        backgroundColor: 'rgba(0, 102, 204, 0.5)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
+      },
+    ],
+  };
+
+  const minMaxChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        type: 'logarithmic',
+        beginAtZero: true,
+        min: 0,
       },
     },
   };
@@ -774,6 +815,41 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       }
     }
   }), []);
+
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const chartsPerPage = 2;
+  const totalCharts = Object.keys(relativeFrequency).length;
+  const totalPages = Math.ceil(totalCharts / chartsPerPage);
+
+  const getPaginatedCharts = () => {
+    const start = (currentPage - 1) * chartsPerPage;
+    return Object.keys(relativeFrequency).slice(start, start + chartsPerPage);
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const renderPaginationButtons = () => {
+    const pages = [];
+
+    if (currentPage > 1) pages.push(<button key="first" onClick={() => handlePageChange(1)} className="pagination-button">1</button>);
+    if (currentPage > 3) pages.push(<span key="dots1" className="pagination-dots">...</span>);
+    if (currentPage > 2) pages.push(<button key="prev" onClick={() => handlePageChange(currentPage - 1)} className="pagination-button">{currentPage - 1}</button>);
+
+    pages.push(<span key="current" className="pagination-button current-page">{currentPage}</span>);
+
+    if (currentPage < totalPages - 1) pages.push(<button key="next" onClick={() => handlePageChange(currentPage + 1)} className="pagination-button">{currentPage + 1}</button>);
+    if (currentPage < totalPages - 2) pages.push(<span key="dots2" className="pagination-dots">...</span>);
+    if (currentPage < totalPages) pages.push(<button key="last" onClick={() => handlePageChange(totalPages)} className="pagination-button">{totalPages}</button>);
+
+    return pages;
+  };
+
+
 
   return (
 
@@ -1100,6 +1176,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
 
 
+
   <div className="row">
   <div className="col-md-12">
     <div className="card mb-3">
@@ -1122,20 +1199,22 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       )}
     </div>
   </div>
+
+  
    
   <div className="col-md-12">
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">ATTRIBUTE COUNT <Chart /></span>
+        <span className="details-text">LHS CARDINALITY <Chart /></span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
-            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('count')} checked={cardVisibility.count} />
+            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('cardinality')} checked={cardVisibility.cardinality} />
             <div className="knobs"></div>
             <div className="layer"></div>
           </div>
         </div>
       </div>
-      {cardVisibility.count && (
+      {cardVisibility.cardinality && (
         <div className="card-body d-flex flex-column align-items-center">
           <div style={{ width: '100%', height:'300px'}}>
             <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
@@ -1200,88 +1279,124 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {cardVisibility.triplem && (
         <div className="card-body">
           <div style={{ height: '300px' }}>
-            <Bar data={statisticsChartData} options={statisticsChartOptions} />
+            <Bar data={tripleMChartData} options={tripleMChartOptions} />
           </div>
         </div>
       )}
     </div>
 
-    <div className="card mb-3" style={{ marginTop: 0 }}>
+    <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">CHARTS</span>
+        <span className="details-text">MIN, MAX <Chart /></span>
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('column')} checked={cardVisibility.column} />
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('minmax')} checked={cardVisibility.minmax} />
                 <div className="knobs"></div>
                 <div className="layer"></div>
               </div>
-            </div></div>
-      {cardVisibility.column && (
-        <div className="card-body d-flex flex-wrap justify-content-center">
-          {Object.keys(relativeFrequency).map((attribute) => {
-            const dataForAttribute = getChartDataForAttribute(attribute);
-            const labels = dataForAttribute.labels.map((label, index) => {
-              const value = dataForAttribute.datasets[0].data[index];
-              const percentage = value.toFixed(2);
-              return `${label.split(':')[1]}: ${percentage}%`;
-            });
-
-            const backgroundColors = dataForAttribute.datasets[0].backgroundColor;
-            const maxValues = Object.keys(relativeFrequency[attribute]).length;
-
-            return (
-              <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
-                <h3 className="attribute-title text-center">{attribute}</h3>
-                <div className="label-boxes-container mt-2 mx-auto">
-                  <div className="label-boxes">
-                    {labels.map((label, index) => (
-                      <div key={index} className="label-box">
-                        <div className="color-box" style={{ backgroundColor: backgroundColors[index] }}></div>
-                        {' ' + label}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ height: '10px' }}></div>
-                <div className="chart-container text-center">
-                  <Pie data={dataForAttribute} options={distributionChartOptions} />
-                </div>
-                <select
-                  value={chartDataLimit[attribute] ?? (maxValues >= 10 ? 10 : Math.min(maxValues, 10))}
-                  onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
-                  className="form-select mt-2 mx-auto"
-                  style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
-                >
-                  {maxValues < 5 && (
-                    <option value={maxValues}>{maxValues} values</option>
-                  )}
-                  {(maxValues >= 5 && maxValues < 10) && (
-                    <>
-                      <option value="5">5 values</option>
-                      <option value={maxValues}>{maxValues} values</option>
-                    </>
-                  )}
-                  {maxValues >= 10 && maxValues < 20 && (
-                    <>
-                      <option value="5">5 values</option>
-                      <option value="10">10 values</option>
-                      <option value={maxValues}>{maxValues} values</option>
-                    </>
-                  )}
-                  {maxValues >= 20 && (
-                    <>
-                      <option value="5">5 values</option>
-                      <option value="10">10 values</option>
-                      <option value="20">20 values</option>
-                    </>
-                  )}
-                </select>
-              </div>
-            );
-          })}
+            </div>
+          </div>
+      {cardVisibility.minmax && (
+        <div className="card-body">
+          <div style={{ height: '300px' }}>
+            <Bar data={minMaxChartData} options={minMaxChartOptions} />
+          </div>
         </div>
       )}
     </div>
+
+
+    <div className="card mb-3" style={{ marginTop: 0 }}>
+        <div className="d-flex justify-content-between align-items-center card-header">
+          <span className="details-text">CHARTS</span>
+          <div className="toggle-button-cover">
+            <div id="button-3" className="button r">
+              <input
+                className="checkbox"
+                type="checkbox"
+                onChange={() => toggleCardVisibility('column')}
+                checked={cardVisibility.column}
+              />
+              <div className="knobs"></div>
+              <div className="layer"></div>
+            </div>
+          </div>
+        </div>
+        {cardVisibility.column && (
+          <>
+            <div className="card-body d-flex flex-wrap justify-content-center">
+              {getPaginatedCharts().map((attribute) => {
+                const dataForAttribute = getChartDataForAttribute(attribute);
+                const labels = dataForAttribute.labels.map((label, index) => {
+                  const value = dataForAttribute.datasets[0].data[index];
+                  const percentage = value.toFixed(2);
+                  return `${label.split(':')[1]}: ${percentage}%`;
+                });
+
+                const backgroundColors = dataForAttribute.datasets[0].backgroundColor;
+                const maxValues = Object.keys(relativeFrequency[attribute]).length;
+
+                return (
+                  <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
+                    <h3 className="attribute-title text-center">{attribute}</h3>
+                    <div className="label-boxes-container mt-2 mx-auto">
+                      <div className="label-boxes">
+                        {labels.map((label, index) => (
+                          <div key={index} className="label-box">
+                            <div className="color-box" style={{ backgroundColor: backgroundColors[index] }}></div>
+                            {' ' + label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ height: '10px' }}></div>
+                    <div className="chart-container text-center">
+                      <Pie data={dataForAttribute} options={distributionChartOptions} />
+                    </div>
+                    <select
+                      value={chartDataLimit[attribute] ?? (maxValues >= 10 ? 10 : Math.min(maxValues, 10))}
+                      onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
+                      className="form-select mt-2 mx-auto"
+                      style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
+                    >
+                      {maxValues < 5 && <option value={maxValues}>{maxValues} values</option>}
+                      {maxValues >= 5 && maxValues < 10 && (
+                        <>
+                          <option value="5">5 values</option>
+                          <option value={maxValues}>{maxValues} values</option>
+                        </>
+                      )}
+                      {maxValues >= 10 && maxValues < 20 && (
+                        <>
+                          <option value="5">5 values</option>
+                          <option value="10">10 values</option>
+                          <option value={maxValues}>{maxValues} values</option>
+                        </>
+                      )}
+                      {maxValues >= 20 && (
+                        <>
+                          <option value="5">5 values</option>
+                          <option value="10">10 values</option>
+                          <option value="20">20 values</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="pagination-container d-flex justify-content-center mt-3">
+              <div className="pagination-bar">
+                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="pagination-button">{'<'}</button>
+                {renderPaginationButtons()}
+                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-button">{'>'}</button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+
 
     <div className="card mb-3">
   <div className="d-flex justify-content-between align-items-center card-header">
