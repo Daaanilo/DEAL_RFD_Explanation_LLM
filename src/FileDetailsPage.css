@@ -60,6 +60,19 @@ body {
   color: rgb(0, 110, 255);
 }
 
+
+.section {
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+  font-size: 2em;
+  font-weight: bold;
+  color: #ffffff;
+  -webkit-text-stroke: 1px black;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
 .details-text {
   position: relative;
   display: inline-block;
