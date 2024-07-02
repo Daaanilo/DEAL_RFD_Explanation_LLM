@@ -300,6 +300,31 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   // CHARTS
 
+  const gradientColors = [
+    'rgba(255, 128, 128, 1)',
+    'rgba(255, 159, 128, 1)',
+    'rgba(255, 191, 128, 1)',
+    'rgba(255, 223, 128, 1)',
+    'rgba(255, 255, 128, 1)',
+    'rgba(223, 255, 128, 1)',
+    'rgba(191, 255, 128, 1)',
+    'rgba(159, 255, 128, 1)',
+    'rgba(128, 255, 128, 1)',
+    'rgba(128, 255, 159, 1)',
+    'rgba(128, 255, 191, 1)',
+    'rgba(128, 255, 223, 1)',
+    'rgba(128, 255, 255, 1)',
+    'rgba(128, 223, 255, 1)',
+    'rgba(128, 191, 255, 1)',
+    'rgba(128, 159, 255, 1)',
+    'rgba(128, 128, 255, 1)',
+    'rgba(159, 128, 255, 1)',
+    'rgba(191, 128, 255, 1)',
+    'rgba(223, 128, 255, 1)',
+    'rgba(255, 128, 255, 1)'
+  ];
+  
+
   const convertToFloatArray = (data) => {
     if (Array.isArray(data) && data.length > 0) {
       return data.map(value => {
@@ -348,28 +373,28 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Dataset Loading',
         data: percentages.dataset_loading,
-        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+        backgroundColor: gradientColors[0],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
       {
         label: 'Preprocessing',
         data: percentages.preprocessing,
-        backgroundColor: 'rgba(153, 255, 0, 0.5)',
+        backgroundColor: gradientColors[5],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
       {
         label: 'Discovery',
         data: percentages.discovery,
-        backgroundColor: 'rgba(0, 255, 153, 0.5)',
+        backgroundColor: gradientColors[10],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
       {
         label: 'Left',
         data: percentages.left,
-        backgroundColor: 'rgba(0, 92, 230, 0.5)',
+        backgroundColor: gradientColors[15],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       }
@@ -427,60 +452,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const isAllZerosOrNull = (arr) => arr.every(item => item === 0 || item === null || item === '');
   const shouldDisplayCard = !isAllZerosOrNull(temp.dataset_loading) || !isAllZerosOrNull(temp.preprocessing) || !isAllZerosOrNull(temp.discovery) || !isAllZerosOrNull(temp.total);
-  
 
   
-  const getRandomColor = () => {
-    const h = Math.floor(Math.random() * 360);
-    const s = Math.floor(Math.random() * 20) + 80;
-    const l = Math.floor(Math.random() * 20) + 50;
-    return hslToHex(h, s, l);
-  };
-  
-  const hslToHex = (h, s, l) => {
-    s /= 100;
-    l /= 100;
-    
-    const a = s * Math.min(l, 1 - l);
-    const f = n => {
-      const k = (n + h / 30) % 12;
-      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(color * 255).toString(16).padStart(2, '0');
-    };
-  
-    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
-  };
+  const [frequencyValues, setFrequencyValues] = useState([]);
 
-  const gradientColors = [
-    'rgba(255, 0, 0, 0.5)',
-    'rgba(255, 51, 0, 0.5)',
-    'rgba(255, 102, 0, 0.5)',
-    'rgba(255, 153, 0, 0.5)',
-    'rgba(255, 204, 0, 0.5)',
-    'rgba(255, 255, 0, 0.5)',
-    'rgba(204, 255, 0, 0.5)',
-    'rgba(153, 255, 0, 0.5)',
-    'rgba(102, 255, 0, 0.5)',
-    'rgba(51, 255, 0, 0.5)',
-    'rgba(0, 255, 0, 0.5)',
-    'rgba(0, 255, 51, 0.5)',
-    'rgba(0, 255, 102, 0.5)',
-    'rgba(0, 255, 153, 0.5)',
-    'rgba(0, 255, 204, 0.5)',
-    'rgba(0, 255, 255, 0.5)',
-    'rgba(0, 204, 255, 0.5)',
-    'rgba(0, 153, 255, 0.5)',
-    'rgba(0, 102, 255, 0.5)',
-    'rgba(0, 51, 255, 0.5)',
-    'rgba(0, 0, 255, 0.5)'
-]
-
-  const filterRFDs = (rfdArray, attributesHeader) => {
+  const filterRFDs = (rfdArray, attributesHeader, frequency) => {
     const filteredArray = rfdArray.filter(rfd => {
       return !attributesHeader.some(attribute => rfd.includes(attribute));
     });  
     return filteredArray;
   };
+
 
   const countLHSAttributes = (rfdArray) => {
     const lhsCount = {};
@@ -497,7 +479,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return lhsCount;
   };
   
-  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues));
+  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
   const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
   const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
   
@@ -506,7 +488,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'LHS quantity',
       data: lhsAttributeData,
-      backgroundColor: 'rgba(0, 92, 230, 0.5)',
+      backgroundColor: gradientColors[13],
       borderColor: 'rgba(0, 0, 0, 1)',
       borderWidth: 0.5,
     }],
@@ -527,6 +509,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
   
   
+
+
+
   const countVariableFrequency = (rfdArray) => {
     const variableFrequency = {};
     
@@ -595,13 +580,32 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
     return { labels, datasets };
   };
-  
+
+
   const variableChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false
+        display: true,
+        onClick: (event, legendItem) => {
+          const datasetIndex = legendItem.datasetIndex;
+          const chart = event.chart;
+          const meta = chart.getDatasetMeta(datasetIndex);
+          meta.hidden = meta.hidden === null ? !chart.data.datasets[datasetIndex].hidden : null;
+          chart.update();
+  
+          const legendText = legendItem.text;
+          const frequencyIndex = frequencyValues.indexOf(legendText);
+          
+          if (frequencyIndex !== -1) {
+            frequencyValues.splice(frequencyIndex, 1);
+          } else {
+            frequencyValues.push(legendText);
+          }
+
+          filterRFDs(allRFDs, selectedHeaderValues, frequencyValues);
+        },
       },
       tooltip: {
         callbacks: {
@@ -623,8 +627,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       },
     },
   };
+  
 
-  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues));
+  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
   const variableChartData = prepareChartData(variableFrequency, header[0]);
 
 
@@ -653,7 +658,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   let implicatingAttributes = 0;
   if(header[0]) {
-    implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues), header[0]);
+    implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues), header[0]);
   }
 
   const implicatingChartData = {
@@ -661,7 +666,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     datasets: [{
       label: 'Implicating Attributes',
       data: Object.values(implicatingAttributes).map(set => set.size),
-      backgroundColor: 'rgba(51, 204, 255, 0.5)',
+      backgroundColor: 'rgba(51, 204, 255, 1)',
       borderColor: 'rgba(0, 0, 0, 1)',
       borderWidth: 0.5,
     }],
@@ -699,21 +704,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Mean',
         data: statisticMeans,
-        backgroundColor: 'rgba(255, 153, 51, 0.5)',
+        backgroundColor: gradientColors[2],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
       {
         label: 'Median',
         data: statisticMedians,
-        backgroundColor: 'rgba(255, 102, 0, 0.5)',
+        backgroundColor: gradientColors[1],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
       {
         label: 'Mode',
         data: statisticModes,
-        backgroundColor: 'rgba(255, 51, 51, 0.5)',
+        backgroundColor: gradientColors[0],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       }
@@ -743,14 +748,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Min',
         data: statisticMin,
-        backgroundColor: 'rgba(51, 153, 255, 0.5)',
+        backgroundColor: gradientColors[14],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
       {
         label: 'Max',
         data: statisticMax,
-        backgroundColor: 'rgba(0, 102, 204, 0.5)',
+        backgroundColor: gradientColors[15],
         borderColor: 'rgba(0, 0, 0, 1)',
         borderWidth: 0.5,
       },
@@ -915,11 +920,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <h2 className="title">File Details: <span style={{ color: '#005AC1' }}>{info.name[0]}</span></h2>
   </div>
 
-
-  <h2 className="section">DATASET</h2>
-
-
   <div className="container">
+  
+    <h2 className="section">DATASET</h2>
+
     <div className="card mb-3">
       <div className="card-header">
         <span className="details-text">Header </span>
@@ -1417,25 +1421,25 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   </div>
 </div>
 
-    <div className="card mb-12">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">FREQUENCY <ChartIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('frequency')} checked={cardVisibility.frequency} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
-          </div>
-      {cardVisibility.frequency && (
-        <div className="card-body">
-          <div style={{ height: '300px' }}>
-            <Bar data={variableChartData} options={variableChartOptions} />
-          </div>
-        </div>
-      )}
+<div className="card mb-12">
+  <div className="d-flex justify-content-between align-items-center card-header">
+    <span className="details-text">FREQUENCY <ChartIcon /></span>
+    <div className="toggle-button-cover">
+      <div id="button-3" className="button r">
+        <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('frequency')} checked={cardVisibility.frequency} />
+        <div className="knobs"></div>
+        <div className="layer"></div>
+      </div>
     </div>
+  </div>
+  {cardVisibility.frequency && (
+    <div className="card-body">
+      <div style={{ height: '300px' }}>
+        <Bar data={variableChartData} options={variableChartOptions} />
+      </div>
+    </div>
+  )}
+</div>
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
@@ -1461,7 +1465,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3">
   <div className="d-flex justify-content-between align-items-center card-header">
-  <span className="details-text">RFDs (total: {allRFDs.length} - filtered: {filterRFDs(allRFDs, selectedHeaderValues).length})</span>
+  <span className="details-text">RFDs (total: {allRFDs.length} - filtered: {filterRFDs(allRFDs, selectedHeaderValues, frequencyValues).length})</span>
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
@@ -1476,11 +1480,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <input
           type="checkbox"
           className="select-btn larger-checkbox"
-          checked={selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues).length}
+          checked={selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues, frequencyValues).length}
           onChange={toggleSelectAll}
         />
         <label style={{ marginLeft: '10px' }}>
-          {selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues).length ? "Deselect all" : "Select all"}
+          {selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues, frequencyValues).length ? "Deselect all" : "Select all"}
         </label>
       </div>
       <div style={{ height: '15px' }}></div>

@@ -1,4 +1,4 @@
-timeChartData:root {
+:root {
   --primary-color: #007bff;
   --accent-color: #17a2b8;
   --light-color: #f8f8f8;
@@ -91,7 +91,6 @@ body {
 .container {
   max-width: 1600px !important;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .card {
@@ -480,4 +479,5 @@ body {
 
 .pagination-dots {
   padding: 5px 10px;
+  color: var(--light-color);
 }
