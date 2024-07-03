@@ -93,6 +93,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     frequency: true,
     implicating: true,
     boxplot: true,
+    minmax: true,
+    nullValues: true,
     column: true,
     rfd: true,
     prompt: true,
@@ -663,7 +665,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const prepareChartData = (variableFrequency, header) => {
     const labels = Object.keys(variableFrequency);
     const datasets = [];
-  
+    const labelsAndColors = [];
+    
     const getColor = (index) => gradientColors[index % 2 === 0 ? index / 2 : (gradientColors.length - 1) - (index - 1) / 2];
   
     labels.sort((a, b) => {
@@ -677,11 +680,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     const uniqueValues = Array.from(allValues).sort();
   
     uniqueValues.forEach((value, index) => {
+      const colorLHS = getColor(index * 2);
+      const colorRHS = getColor(index * 2 + 1);
+  
+      labelsAndColors.push([`${value} LHS`, colorLHS]);
+      labelsAndColors.push([`${value} RHS`, colorRHS]);
+
       datasets.push(
         {
           label: `${value} LHS`,
           data: labels.map(col => variableFrequency[col][value]?.lhs || 0),
-          backgroundColor: getColor(index * 2),
+          backgroundColor: colorLHS,
           borderColor: 'rgba(0, 0, 0, 1)',
           borderWidth: 0.5,
           stack: 'lhs'
@@ -689,7 +698,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         {
           label: `${value} RHS`,
           data: labels.map(col => variableFrequency[col][value]?.rhs || 0),
-          backgroundColor: getColor(index * 2 + 1),
+          backgroundColor: colorRHS,
           borderColor: 'rgba(0, 0, 0, 1)',
           borderWidth: 0.5,
           stack: 'rhs'
@@ -697,8 +706,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       );
     });
   
-    return { labels, datasets };
+    return { labels, datasets, labelsAndColors };
   };
+  
 
 
   const variableChartOptions = {
@@ -706,25 +716,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: true,
-        onClick: (event, legendItem) => {
-          const datasetIndex = legendItem.datasetIndex;
-          const chart = event.chart;
-          const meta = chart.getDatasetMeta(datasetIndex);
-          meta.hidden = meta.hidden === null ? !chart.data.datasets[datasetIndex].hidden : null;
-          chart.update();
-  
-          const legendText = legendItem.text;
-          const frequencyIndex = frequencyValues.indexOf(legendText);
-          
-          if (frequencyIndex !== -1) {
-            frequencyValues.splice(frequencyIndex, 1);
-          } else {
-            frequencyValues.push(legendText);
-          }
-
-          setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
-        },
+        display: false,
       },
       tooltip: {
         callbacks: {
@@ -746,10 +738,30 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       },
     },
   };
-  
 
   const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
+  
   const variableChartData = prepareChartData(variableFrequency, header[0]);
+
+  const handleLegendClick = (legendText) => {
+    const frequencyIndex = frequencyValues.indexOf(legendText);
+    
+    if (frequencyIndex !== -1) {
+      const newFrequencyValues = [...frequencyValues];
+      newFrequencyValues.splice(frequencyIndex, 1);
+      setFrequencyValues(newFrequencyValues);
+    } else {
+      setFrequencyValues([...frequencyValues, legendText]);
+    }
+
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
+  };
+
+
+
+
+
+
 
 
 
@@ -805,8 +817,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      y: {
-        beginAtZero: true,
+      x: {
+        stacked: true,
       },
     },
     plugins: {
@@ -832,20 +844,26 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const statisticMins = statisticLabels.map(label => statistics.min[label]);
   const statisticMaxs = statisticLabels.map(label => statistics.max[label]);
 
-  const seriesData = statisticLabels.map((label, index) => {
+  prompts[`Statistical Measures Analysis`] += header[0]+'\n'+statisticMeans+'\n'+statisticMedians+'\n'+statisticModes;
+
+
+  const series = statisticLabels.map((label, index) => {
     return {
-      x: label,
-      y: [statisticMins[index], statisticMeans[index], statisticMedians[index], statisticModes[index], statisticMaxs[index]]
+      type: 'boxPlot',
+      data: [{
+        x: label,
+        y: [statisticMins[index], statisticMeans[index], statisticMedians[index], statisticModes[index], statisticMaxs[index]]
+      }]
     };
   });
-
+  
   const options = {
     chart: {
       type: 'boxPlot',
       height: 350
     },
     title: {
-      text: 'Box Plot - Media, Mediana, Moda',
+      text: 'Box Plot',
       align: 'left'
     },
     plotOptions: {
@@ -880,26 +898,162 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     tooltip: {
       shared: false,
       intersect: true,
-      custom: function({seriesIndex, dataPointIndex, w}) {
+      custom: function({ seriesIndex, dataPointIndex, w }) {
         const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
-        return `
-          <div class="apexcharts-tooltip-box-plot">
+        return (
+          `<div class="apexcharts-tooltip-box-plot">
             <div><b>${data.x}</b></div>
             <div>Min: ${data.y[0].toFixed(2)}</div>
             <div>Mean: ${data.y[1].toFixed(2)}</div>
             <div>Median: ${data.y[2].toFixed(2)}</div>
             <div>Mode: ${data.y[3].toFixed(2)}</div>
             <div>Max: ${data.y[4].toFixed(2)}</div>
-          </div>
-        `;
+          </div>`
+        );
       }
     }
+    
   };
 
-  const series = [{
-    type: 'boxPlot',
-    data: seriesData
-  }];
+
+
+  const [currentPageBoxPlot, setcurrentPageBoxPlot] = useState(1);
+  const chartsPerPageBoxPlot = 2;
+  const totalChartsBoxPlot = Object.keys(statistics.type).length;
+  const totalPagesBoxPlot = Math.ceil(totalChartsBoxPlot / chartsPerPageBoxPlot);
+  
+  const getPaginatedChartsBoxPlot = () => {
+    const start = (currentPageBoxPlot - 1) * chartsPerPageBoxPlot;
+    const end = start + chartsPerPageBoxPlot;
+    const statisticLabels = Object.keys(statistics.type).slice(start, end);
+    const seriesData = statisticLabels.map((label, index) => ({
+      x: label,
+      y: [statistics.min[label], statistics.mean[label], statistics.median[label], statistics.mode[label], statistics.max[label]]
+    }));
+    return seriesData;
+  };
+  
+  const handlePageChangeBoxPlot = (page) => {
+    if (page >= 1 && page <= totalPagesBoxPlot) {
+      setcurrentPageBoxPlot(page);
+    }
+  };
+  
+  const renderPaginationButtonsBoxPlot = () => {
+    const pages = [];
+  
+    if (currentPageBoxPlot > 1) pages.push(<button key="first" onClick={() => handlePageChangeBoxPlot(1)} className="pagination-button">1</button>);
+    if (currentPageBoxPlot > 3) pages.push(<span key="dots1" className="pagination-dots">...</span>);
+    if (currentPageBoxPlot > 2) pages.push(<button key="prev" onClick={() => handlePageChangeBoxPlot(currentPageBoxPlot - 1)} className="pagination-button">{currentPageBoxPlot - 1}</button>);
+  
+    pages.push(<span key="current" className="pagination-button current-page">{currentPageBoxPlot}</span>);
+  
+    if (currentPageBoxPlot < totalPagesBoxPlot - 1) pages.push(<button key="next" onClick={() => handlePageChangeBoxPlot(currentPageBoxPlot + 1)} className="pagination-button">{currentPageBoxPlot + 1}</button>);
+    if (currentPageBoxPlot < totalPagesBoxPlot - 2) pages.push(<span key="dots2" className="pagination-dots">...</span>);
+    if (currentPageBoxPlot < totalPagesBoxPlot) pages.push(<button key="last" onClick={() => handlePageChangeBoxPlot(totalPagesBoxPlot)} className="pagination-button">{totalPagesBoxPlot}</button>);
+
+    return pages;
+  };
+
+
+
+
+
+
+
+
+
+
+  const statisticMin = statisticLabels.map(label => statistics.min[label]);
+  const statisticMax = statisticLabels.map(label => statistics.max[label]);  
+
+  const minMaxChartData = {
+    labels: statisticLabels,
+    datasets: [
+      {
+        label: 'Min',
+        data: statisticMin,
+        backgroundColor: gradientColors[13],
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
+      },
+      {
+        label: 'Max',
+        data: statisticMax,
+        backgroundColor: gradientColors[14],
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
+      },
+    ],
+  };
+
+  const minMaxChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        type: 'logarithmic',
+        beginAtZero: true,
+        min: 0,
+      },
+    },
+  };
+
+
+  const calculateNullPercentages = (distribution) => {
+    const nullPercentages = {};
+    
+    for (const col in distribution) {
+      const colData = distribution[col];
+      let totalCount = 0;
+      let nullCount = 0;
+  
+      for (const key in colData) {
+        totalCount += colData[key].count;
+        if (key === "") {
+          nullCount += colData[key].count;
+        }
+      }
+  
+      const nullPercentage = totalCount ? ((nullCount / totalCount) * 100).toFixed(2) : 0;
+      nullPercentages[col] = {
+        nullCount,
+        nullPercentage
+      };
+    }
+  
+    return nullPercentages;
+  };
+  
+  
+  const nullPercentages = calculateNullPercentages(statistics.distribution);
+
+  const NullPercentageLabels = Object.keys(nullPercentages);
+  const nullPercentageValues = NullPercentageLabels.map(label => parseFloat(nullPercentages[label].nullPercentage || 0));
+
+  const nullValuesChartData = {
+    labels: statisticLabels,
+    datasets: [
+      {
+        label: 'Null Percentage',
+        data: nullPercentageValues,
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const nullValuesChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+      },
+    },
+  };
 
 
 
@@ -997,14 +1151,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       }
     }
   }), []);
-
-
-
-
-
-
-
-
   
   const [currentPage, setCurrentPage] = useState(1);
   const chartsPerPage = 2;
@@ -1061,8 +1207,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <h2 className="section">DATASET</h2>
 
     <div className="card mb-3">
-      <div className="card-header">
-        <span className="details-text">Header </span>
+      <div className="card-header"> 
+        <span className="details-text">Header <DatabaseIcon /></span>
       </div>
       {header && header[0] && (
         <div className="card-body">
@@ -1170,18 +1316,19 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
     </div>
 
+    
 
 
-  <div className="card mb-3">
+    <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">MEAN, MEDIAN, MODE, MIN, MAX <ChartIcon /></span>
+        <span className="details-text">MEAN, MEDIAN, MODE <ChartIcon /></span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
-            <input 
-              className="checkbox" 
-              type="checkbox" 
-              onChange={() => toggleCardVisibility('boxplot')} 
-              checked={cardVisibility.boxplot} 
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('boxplot')}
+              checked={cardVisibility.boxplot}
             />
             <div className="knobs"></div>
             <div className="layer"></div>
@@ -1190,9 +1337,72 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
       {cardVisibility.boxplot && (
         <div className="card-body">
-          <ReactApexChart options={options} series={series} type="boxPlot" height={350} />
+          <div className="row">
+            {getPaginatedChartsBoxPlot().map((seriesItem, index) => (
+              <div key={index} className="col-md-6 mb-3">
+                <ReactApexChart options={options} series={[{ type: 'boxPlot', data: [seriesItem] }]} type="boxPlot" height={350} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
+      <div className="pagination-container d-flex justify-content-center mt-3">
+        <div className="pagination-bar">
+          <button onClick={() => handlePageChangeBoxPlot(currentPageBoxPlot - 1)} disabled={currentPageBoxPlot === 1} className="pagination-button">{'<'}</button>
+          {renderPaginationButtonsBoxPlot()}
+          <button onClick={() => handlePageChangeBoxPlot(currentPageBoxPlot + 1)} disabled={currentPageBoxPlot === totalPagesBoxPlot} className="pagination-button">{'>'}</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div className="row">
+    <div className="col-md-12">
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span className="details-text">MIN, MAX <ChartIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('minmax')} checked={cardVisibility.minmax} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+            </div>
+        {cardVisibility.minmax && (
+          <div className="card-body">
+            <div style={{ height: '300px' }}>
+              <Bar data={minMaxChartData} options={minMaxChartOptions} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+    </div>
+
+
+    <div className="row">
+    <div className="col-md-12">
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span className="details-text">NULL VALUES <ChartIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('nullValues')} checked={cardVisibility.nullValues} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+            </div>
+        {cardVisibility.nullValues && (
+            <div className="card-body d-flex flex-column align-items-center">
+            <div style={{ width: '100%', height: '200px' }}>
+              <Bar data={nullValuesChartData} options={nullValuesChartOptions} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
     </div>
 
 
@@ -1552,7 +1762,18 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
   </div>
   {cardVisibility.frequency && (
-    <div className="card-body">
+    
+        <div className="card-body">
+            <div className="label-boxes-container mt-2 mx-auto">
+              <div className="label-boxes">
+                {variableChartData.labelsAndColors.map(([label, color], index) => (
+                  <div key={index} className="label-box" onClick={() => handleLegendClick(label)}>
+                    <div className="color-box" style={{ backgroundColor: color }}></div>
+                    {' ' + label}
+                  </div>
+                ))}
+              </div>
+        </div>
       <div style={{ height: '300px' }}>
         <Bar data={variableChartData} options={variableChartOptions} />
       </div>
@@ -1644,9 +1865,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             </div>
       {cardVisibility.prompt && (
         <div className="card-body">
-          <select
+        <textarea
+          type="text"
+          value={customPromptAI}
+          onChange={handleTextareaChange}
+          style={{ width: "100%", minHeight: "200px" }}
+        />
+        
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+        <select
             className="form-select mt-2"
-            style={{ display: 'block', marginLeft: '0', width: '200px' }}
+            style={{ display: 'block', marginLeft: '0', width: '300px' }}
             value={selectedPrompt}
             onChange={handlePromptChange}
             >
@@ -1656,14 +1885,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             </option>
             ))}
          </select>
-
-        <textarea
-          type="text"
-          value={customPromptAI}
-          onChange={handleTextareaChange}
-          style={{ width: "100%", minHeight: "200px" }}
-        />
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
           <button className="select-btn" onClick={scrollToBottom}>
             {isLoading ? "LOADING..." : "EXPLANATION"}
           </button>
@@ -1673,28 +1894,32 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
 
     <div className="card mb-3">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">EXPLANATION <RobotIcon /></span>
-        <div className="toggle-button-cover">
-          <div id="button-3" className="button r">
-            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('explanation')} checked={cardVisibility.explanation} />
-            <div className="knobs"></div>
-            <div className="layer"></div>
-          </div>
-        </div>
+  <div className="d-flex justify-content-between align-items-center card-header">
+    <span className="details-text">EXPLANATION <RobotIcon /></span>
+    <div className="toggle-button-cover">
+      <div id="button-3" className="button r">
+        <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('explanation')} checked={cardVisibility.explanation} />
+        <div className="knobs"></div>
+        <div className="layer"></div>
       </div>
-      {cardVisibility.explanation && (
-        <div className="card-body">
-          {isTextGenerated && (
-            <>
-              <p>{responseAI}</p>
-              <button className="select-btn" onClick={summarizeText}>
-                {isLoading2 ? "LOADING..." : "SUMMARY"}
-              </button>        </>
-          )}
-        </div>
+    </div>
+  </div>
+  {cardVisibility.explanation && (
+    <div className="card-body">
+      {isTextGenerated && (
+        <>
+          <p>{responseAI}</p>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+            <button className="select-btn" onClick={summarizeText}>
+              {isLoading2 ? "LOADING..." : "SUMMARY"}
+            </button>        
+          </div>
+        </>
       )}
     </div>
+  )}
+</div>
+
 
 
     <div className="card mb-3">
