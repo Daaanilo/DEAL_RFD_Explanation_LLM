@@ -34,6 +34,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [isTextGenerated2, setIsTextGenerated2] = useState(false);
   const [responseAI2, setResponseAI2] = useState();
   
+  const getColors = (darkMode)=> {
+    return {
+      text: darkMode ? '#ffffff' : '#000000',
+      grid: darkMode ? '#444444' : '#e0e0e0',
+      background: darkMode ? '#343a40' : '#ffffff',
+    };
+  };
 
 
   const prompts = {
@@ -491,23 +498,32 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     scales: {
       y: {
         stacked: true,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
       x: {
         stacked: true,
         beginAtZero: true,
         max: 100,
         ticks: {
+          color: getColors(darkMode).text,
           callback: function (value) {
             return value + '%';
           }
-        }
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       }
     },
     layout: {
       padding: {
         left: 20,
         right: 20,
-        
       }
     },
     plugins: {
@@ -528,7 +544,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             }
             return label;
           }
-        }
+        },
+        backgroundColor: getColors(darkMode).background,
+        titleColor: getColors(darkMode).text,
+        bodyColor: getColors(darkMode).text,
       }
     }
   };
@@ -612,22 +631,39 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     scales: {
       x: {
         stacked: true,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
       y: {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'LHS cardinality'
-        }
+          text: 'LHS cardinality',
+          color: getColors(darkMode).text,
+        },
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       }
     },
     plugins: {
       legend: {
         display: true,
-        position: 'top'
+        position: 'top',
+        labels: {
+          color: getColors(darkMode).text,
+        },
       }
     }
   };
+  
   
   
 
@@ -725,16 +761,31 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             const value = context.parsed.y;
             return `${context.dataset.label}: ${value}`;
           }
-        }
+        },
+        backgroundColor: getColors(darkMode).background,
+        titleColor: getColors(darkMode).text,
+        bodyColor: getColors(darkMode).text,
       }
     },
     scales: {
       x: {
         stacked: true,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
       y: {
         stacked: true,
         beginAtZero: true,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
     },
   };
@@ -819,6 +870,20 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     scales: {
       x: {
         stacked: true,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
+      },
+      y: {
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
     },
     plugins: {
@@ -829,7 +894,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
             return `${attribute}: ${implicatingAttrs}`;
           }
-        }
+        },
+        backgroundColor: getColors(darkMode).background,
+        titleColor: getColors(darkMode).text,
+        bodyColor: getColors(darkMode).text,
       }
     }
   };
@@ -860,17 +928,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const options = {
     chart: {
       type: 'boxPlot',
-      height: 350
+      height: 350,
+      background: getColors(darkMode).background,
     },
     title: {
       text: 'Box Plot',
-      align: 'left'
+      align: 'left',
+      style: {
+        color: getColors(darkMode).text,
+      },
     },
     plotOptions: {
       boxPlot: {
         colors: {
-          upper: '#5C4742',
-          lower: '#A5978B'
+          upper: darkMode ? '#A5978B' : '#5C4742',
+          lower: darkMode ? '#5C4742' : '#A5978B'
         }
       }
     },
@@ -879,25 +951,38 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       labels: {
         formatter: function(val) {
           return val;
-        }
+        },
+        style: {
+          colors: getColors(darkMode).text,
+        },
       },
       title: {
-        text: 'Statistics'
+        text: 'Statistics',
+        style: {
+          color: getColors(darkMode).text,
+        },
       }
     },
     yaxis: {
       title: {
-        text: 'Values'
+        text: 'Values',
+        style: {
+          color: getColors(darkMode).text,
+        },
       },
       labels: {
         formatter: function(val) {
           return val.toFixed(2);
-        }
+        },
+        style: {
+          colors: getColors(darkMode).text,
+        },
       }
     },
     tooltip: {
       shared: false,
       intersect: true,
+      theme: darkMode ? 'dark' : 'light',
       custom: function({ seriesIndex, dataPointIndex, w }) {
         const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
         return (
@@ -912,7 +997,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         );
       }
     }
-    
   };
 
 
@@ -995,6 +1079,20 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         type: 'logarithmic',
         beginAtZero: true,
         min: 0,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
+      },
+      x: {
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
     },
   };
@@ -1051,6 +1149,20 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       y: {
         beginAtZero: true,
         max: 100,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
+      },
+      x: {
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
     },
   };
@@ -1118,7 +1230,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   }, [relativeFrequency, chartDataLimit]);
   
   
-  const distributionChartOptions = useMemo(() => ({
+  const distributionChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -1130,27 +1242,29 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             return `${label}: ${value}%`;
           }
         },
-        backgroundColor: '#000000',
+        backgroundColor: getColors(darkMode).background,
         titleFont: { size: 0 },
-        bodyFont: { size: 14 },
+        bodyFont: { size: 14, color: getColors(darkMode).text },
         padding: 10,
         caretPadding: 5,
         caretSize: 5,
         cornerRadius: 4,
         borderWidth: 0.5,
-        borderColor: '#cccccc',
+        borderColor: getColors(darkMode).grid,
         displayColors: false,
         titleMarginBottom: 0
       },
-      legend: { display: false }
+      legend: { 
+        display: false 
+      }
     },
     elements: {
       arc: {
-        borderColor: '#000000',
+        borderColor: getColors(darkMode).text,
         borderWidth: 0.2
       }
     }
-  }), []);
+  };
   
   const [currentPage, setCurrentPage] = useState(1);
   const chartsPerPage = 2;
