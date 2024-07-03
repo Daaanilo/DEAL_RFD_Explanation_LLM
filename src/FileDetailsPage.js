@@ -865,41 +865,46 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   
   const implicatingChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        stacked: true,
-        ticks: {
-          color: getColors(darkMode).text,
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            color: getColors(darkMode).text,
+          },
+          grid: {
+            color: getColors(darkMode).grid,
+          },
         },
-        grid: {
-          color: getColors(darkMode).grid,
+        y: {
+          ticks: {
+            color: getColors(darkMode).text,
+          },
+          grid: {
+            color: getColors(darkMode).grid,
+          },
         },
       },
-      y: {
-        ticks: {
-          color: getColors(darkMode).text,
-        },
-        grid: {
-          color: getColors(darkMode).grid,
-        },
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            const attribute = context.label;
-            const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
-            return `${attribute}: ${implicatingAttrs}`;
+      plugins: {
+        legend: {
+          labels: {
+            color: getColors(darkMode).text
           }
         },
-        backgroundColor: getColors(darkMode).background,
-        titleColor: getColors(darkMode).text,
-        bodyColor: getColors(darkMode).text,
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const attribute = context.label;
+              const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
+              return `${attribute}: ${implicatingAttrs}`;
+            }
+          },
+          backgroundColor: getColors(darkMode).background,
+          titleColor: getColors(darkMode).text,
+          bodyColor: getColors(darkMode).text,
+        }
       }
-    }
   };
 
 
@@ -1072,30 +1077,42 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const minMaxChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        type: 'logarithmic',
-        beginAtZero: true,
-        min: 0,
-        ticks: {
-          color: getColors(darkMode).text,
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          type: 'logarithmic',
+          beginAtZero: true,
+          min: 0,
+          ticks: {
+            color: getColors(darkMode).text,
+          },
+          grid: {
+            color: getColors(darkMode).grid,
+          },
         },
-        grid: {
-          color: getColors(darkMode).grid,
+        x: {
+          ticks: {
+            color: getColors(darkMode).text,
+          },
+          grid: {
+            color: getColors(darkMode).grid,
+          },
         },
       },
-      x: {
-        ticks: {
-          color: getColors(darkMode).text,
+      plugins: {
+        legend: {
+          labels: {
+            color: getColors(darkMode).text
+          }
         },
-        grid: {
-          color: getColors(darkMode).grid,
-        },
+        tooltip: {
+          backgroundColor: getColors(darkMode).background,
+          titleColor: getColors(darkMode).text,
+          bodyColor: getColors(darkMode).text,
+        }
       },
-    },
-  };
+    };
 
 
   const calculateNullPercentages = (distribution) => {
@@ -1144,27 +1161,39 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const nullValuesChartOptions = {
     responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          color: getColors(darkMode).text,
-        },
-        grid: {
-          color: getColors(darkMode).grid,
-        },
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: {
+        color: getColors(darkMode).text,
       },
-      x: {
-        ticks: {
-          color: getColors(darkMode).text,
-        },
-        grid: {
-          color: getColors(darkMode).grid,
-        },
+      grid: {
+        color: getColors(darkMode).grid,
       },
     },
+    x: {
+      ticks: {
+        color: getColors(darkMode).text,
+      },
+      grid: {
+        color: getColors(darkMode).grid,
+      },
+    },
+  },
+  plugins: {
+    legend: {
+      labels: {
+        color: getColors(darkMode).text
+      }
+    },
+    tooltip: {
+      backgroundColor: getColors(darkMode).background,
+      titleColor: getColors(darkMode).text,
+      bodyColor: getColors(darkMode).text,
+    }
+   }
   };
 
 
@@ -1231,40 +1260,40 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   
   const distributionChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            const label = context.label.split(':')[1].trim();
-            const value = context.raw.toFixed(2);
-            return `${label}: ${value}%`;
-          }
-        },
-        backgroundColor: getColors(darkMode).background,
-        titleFont: { size: 0 },
-        bodyFont: { size: 14, color: getColors(darkMode).text },
-        padding: 10,
-        caretPadding: 5,
-        caretSize: 5,
-        cornerRadius: 4,
-        borderWidth: 0.5,
-        borderColor: getColors(darkMode).grid,
-        displayColors: false,
-        titleMarginBottom: 0
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          const label = context.label.split(':')[1].trim();
+          const value = context.raw.toFixed(2);
+          return `${label}: ${value}%`;
+        }
       },
-      legend: { 
-        display: false 
-      }
+      backgroundColor: getColors(darkMode).background,
+      titleFont: { size: 0 },
+      bodyFont: { size: 14, color: getColors(darkMode).text },
+      padding: 10,
+      caretPadding: 5,
+      caretSize: 5,
+      cornerRadius: 4,
+      borderWidth: 0.5,
+      borderColor: getColors(darkMode).grid,
+      displayColors: false,
+      titleMarginBottom: 0
     },
-    elements: {
-      arc: {
-        borderColor: getColors(darkMode).text,
-        borderWidth: 0.2
-      }
+    legend: { 
+      display: false 
     }
-  };
+  },
+  elements: {
+    arc: {
+      borderColor: getColors(darkMode).text,
+      borderWidth: 0.2
+    }
+  }
+};
   
   const [currentPage, setCurrentPage] = useState(1);
   const chartsPerPage = 2;
