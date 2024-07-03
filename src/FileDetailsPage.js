@@ -557,23 +557,25 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   
   const [frequencyValues, setFrequencyValues] = useState([]);
+  const [cardinalityValues, setCardinalityValues] = useState([]);
+
   const [filteredRFDs, setFilteredRFDs] = useState([]);
 
 
-  const filterRFDs = (rfdArray, attributesHeader, frequency) => {
+  const filterRFDs = (rfdArray, attributesHeader, cardinality, frequency) => {
     if (!Array.isArray(rfdArray)) return [];
-  
+    
     let filteredArray = rfdArray.filter(rfd => {
       return !attributesHeader.some(attribute => rfd.includes(attribute));
     });
-  
+    
     if (frequency.length > 0) {
       frequency.forEach(freq => {
         const match = freq.match(/\[(.*?)\] (LHS|RHS)/);
         if (match) {
           const value = match[1];
           const type = match[2];
-  
+    
           filteredArray = filteredArray.filter(rfd => {
             const [lhs, rhs] = rfd.split(' -> ');
             if (type === 'LHS') {
@@ -585,13 +587,27 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         }
       });
     }
-  
+    
+    if (cardinality.length > 0) {
+      const cardinalityValues = cardinality.map(card => parseInt(card.match(/^(\d+)/)[1]));
+    
+      filteredArray = filteredArray.filter(rfd => {
+        const lhs = rfd.split(' -> ')[0];
+        const lhsAttributesCount = lhs.split(',').length;
+    
+        return !cardinalityValues.includes(lhsAttributesCount);
+      });
+    }
+    
     return filteredArray;
   };
   
   useEffect(() => {
-    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
-  }, [allRFDs, selectedHeaderValues, frequencyValues]);
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+  }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues]);
+
+
+
 
 
 
@@ -610,7 +626,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return lhsCount;
   };
   
-  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
+  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
   const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
   const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
   
@@ -655,7 +671,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
     plugins: {
       legend: {
-        display: true,
+        display: false,
         position: 'top',
         labels: {
           color: getColors(darkMode).text,
@@ -664,8 +680,36 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   };
   
-  
-  
+  const [labelsAndColorsCardinality, setLabelsAndColorsCardinality] = useState([]);
+
+  const createLabelsAndColors = () => {
+    return lhsAttributeLabels.map(label => [`${label} attribute(s)`, gradientColors[13]]);
+  };
+
+  useEffect(() => {
+    if (labelsAndColorsCardinality.length === 0) {
+      setLabelsAndColorsCardinality(createLabelsAndColors());
+    }
+  }, [labelsAndColorsCardinality]);
+
+
+  const handleLegendClickCardinality = (legendText) => {
+    const cardinalityIndex = cardinalityValues.indexOf(legendText);
+    
+    if (cardinalityIndex !== -1) {
+      const newCardinalityValues = [...cardinalityValues];
+      newCardinalityValues.splice(cardinalityIndex, 1);
+      setCardinalityValues(newCardinalityValues);
+    } else {
+      setCardinalityValues([...cardinalityValues, legendText]);
+    }
+
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+  };
+
+
+
+
 
 
 
@@ -701,8 +745,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const prepareChartData = (variableFrequency, header) => {
     const labels = Object.keys(variableFrequency);
     const datasets = [];
-    const labelsAndColors = [];
-    
+  
     const getColor = (index) => gradientColors[index % 2 === 0 ? index / 2 : (gradientColors.length - 1) - (index - 1) / 2];
   
     labels.sort((a, b) => {
@@ -713,36 +756,67 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     labels.forEach(col => {
       Object.keys(variableFrequency[col]).forEach(value => allValues.add(value));
     });
+
+
     const uniqueValues = Array.from(allValues).sort();
   
-    uniqueValues.forEach((value, index) => {
-      const colorLHS = getColor(index * 2);
-      const colorRHS = getColor(index * 2 + 1);
-  
-      labelsAndColors.push([`${value} LHS`, colorLHS]);
-      labelsAndColors.push([`${value} RHS`, colorRHS]);
+    if(labelsAndColorsFrequency.length === 0) {
+      uniqueValues.forEach((value, index) => {
 
-      datasets.push(
-        {
-          label: `${value} LHS`,
-          data: labels.map(col => variableFrequency[col][value]?.lhs || 0),
-          backgroundColor: colorLHS,
-          borderColor: 'rgba(0, 0, 0, 1)',
-          borderWidth: 0.5,
-          stack: 'lhs'
-        },
-        {
-          label: `${value} RHS`,
-          data: labels.map(col => variableFrequency[col][value]?.rhs || 0),
-          backgroundColor: colorRHS,
-          borderColor: 'rgba(0, 0, 0, 1)',
-          borderWidth: 0.5,
-          stack: 'rhs'
-        }
-      );
-    });
+        const colorLHS = getColor(index * 2);
+        const colorRHS = getColor(index * 2 + 1);
   
-    return { labels, datasets, labelsAndColors };
+        labelsAndColorsFrequency.push([`${value} LHS`, colorLHS]);
+        labelsAndColorsFrequency.push([`${value} RHS`, colorRHS]);
+
+        datasets.push(
+          {
+            label: `${value} LHS`,
+            data: labels.map(col => variableFrequency[col][value]?.lhs || 0),
+            backgroundColor: colorLHS,
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 0.5,
+            stack: 'lhs'
+          },
+          {
+            label: `${value} RHS`,
+            data: labels.map(col => variableFrequency[col][value]?.rhs || 0),
+            backgroundColor: colorRHS,
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 0.5,
+            stack: 'rhs'
+          }
+        );
+      });
+    } else {
+      uniqueValues.forEach((value, index) => {
+        
+        const colorLHS = getColor(index * 2);
+        const colorRHS = getColor(index * 2 + 1);
+
+
+        datasets.push(
+          {
+            label: `${value} LHS`,
+            data: labels.map(col => variableFrequency[col][value]?.lhs || 0),
+            backgroundColor: colorLHS,
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 0.5,
+            stack: 'lhs'
+          },
+          {
+            label: `${value} RHS`,
+            data: labels.map(col => variableFrequency[col][value]?.rhs || 0),
+            backgroundColor: colorRHS,
+            borderColor: 'rgba(0, 0, 0, 1)',
+            borderWidth: 0.5,
+            stack: 'rhs'
+          }
+        );
+      });
+    }
+    
+    return { labels, datasets };
   };
   
 
@@ -790,11 +864,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
   };
 
-  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
-  
-  const variableChartData = prepareChartData(variableFrequency, header[0]);
 
-  const handleLegendClick = (legendText) => {
+  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+  
+  const [labelsAndColorsFrequency, setLabelsAndColorsFrequency] = useState([]);
+  const variableChartData = prepareChartData(variableFrequency, header[0], labelsAndColorsFrequency);
+  
+  const handleLegendClickFrequency = (legendText) => {
     const frequencyIndex = frequencyValues.indexOf(legendText);
     
     if (frequencyIndex !== -1) {
@@ -805,8 +881,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setFrequencyValues([...frequencyValues, legendText]);
     }
 
-    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
   };
+
+  
+
 
 
 
@@ -840,7 +919,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   let implicatingAttributes = 0;
   if(header[0]) {
-    implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues), header[0]);
+    implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues), header[0]);
   }
 
 
@@ -1883,7 +1962,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
       </div>
       {cardVisibility.cardinality && (
-        <div className="card-body d-flex flex-column align-items-center">
+        <div className="card-body">
+                      <div className="label-boxes-container mt-2 mx-auto">
+              <div className="label-boxes">
+                {labelsAndColorsCardinality.map(([label, color], index) => (
+                  <div key={index} className="label-box" onClick={() => handleLegendClickCardinality(label)}>
+                    <div className="color-box" style={{ backgroundColor: color }}></div>
+                    {' ' + label}
+                  </div>
+                ))}
+              </div>
+        </div>
           <div style={{ width: '100%', height:'300px'}}>
             <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
           </div>
@@ -1905,12 +1994,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
   </div>
   {cardVisibility.frequency && (
-    
         <div className="card-body">
             <div className="label-boxes-container mt-2 mx-auto">
               <div className="label-boxes">
-                {variableChartData.labelsAndColors.map(([label, color], index) => (
-                  <div key={index} className="label-box" onClick={() => handleLegendClick(label)}>
+                {labelsAndColorsFrequency.map(([label, color], index) => (
+                  <div key={index} className="label-box" onClick={() => handleLegendClickFrequency(label)}>
                     <div className="color-box" style={{ backgroundColor: color }}></div>
                     {' ' + label}
                   </div>
