@@ -13,6 +13,7 @@ import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high
 import { DarkModeContext } from './DarkModeProvider';
 import axios from 'axios';
 import { Bar, Pie } from 'react-chartjs-2';
+import ReactApexChart from 'react-apexcharts';
 import 'chart.js/auto';
 import './FileDetailsPage.css';
 import './DarkModeProvider.css';
@@ -36,21 +37,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
 
   const prompts = {
-
-    'Prompt 1': "I would like a thorough understanding of the RFD dependencies listed below, "+
+    'RFDs Overview': "I would like a thorough understanding of the RFD dependencies listed below, "+
         "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
         "I want an overall summary that explains the general concept of these dependencies, "+
         "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n",
-    'Prompt 2': 'Questo è il testo base per il Prompt 2',
-    'Prompt 3': 'Questo è il testo base per il Prompt 3'
+    'Statistical Measures Analysis': "I would like a thorough understanding of the following statistics, including a detailed analysis of the variables "+
+        "involved and their measures of central tendency and dispersion. I'm looking for an overall summary that explains the concept of each statistic, "+
+        "how these measures interact with each other, and their impact on data. The statistics are as follows: mean, median, and mode:\n",
+    'Dataset Value Distribution Analysis': "I would like to gain a comprehensive understanding of the dataset headers and the distribution of most frequent "+
+        "values associated with each. This includes a detailed analysis of header names and the prevalent values within them. I'm seeking an overarching summary "+
+        "that explains how these values are distributed across different headers and the significance of this distribution for an overall understanding of the dataset. "+
+        "The values are as follows:\n"
   };
 
-  const [selectedPrompt, setSelectedPrompt] = useState('Prompt 1');
-
-  const [promptAI, setPromptAI] = useState(prompts[selectedPrompt]);
-
+  const [selectedPrompt, setSelectedPrompt] = useState('RFDs Overview');
   const [customPromptAI, setCustomPromptAI] = useState('');
-
   const [basePrompt, setBasePrompt] = useState('');
 
   useEffect(() => {
@@ -60,12 +61,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
       const selectedRFDs = selectedRows.map(index => allRFDs[index]);
 
-      const newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
-
+      let newPrompt = newBasePrompt;
+      if(selectedPrompt === "RFDs Overview") {
+        newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
+      }
+      else {
+        newPrompt = [newBasePrompt];
+      }
       setCustomPromptAI(newPrompt);
-
-      setPromptAI(newPrompt);
-
     }
 
   }, [selectedPrompt, selectedRows]);
@@ -89,8 +92,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     cardinality: true,
     frequency: true,
     implicating: true,
-    triplem: true,
-    minmax: true,
+    boxplot: true,
     column: true,
     rfd: true,
     prompt: true,
@@ -242,27 +244,27 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
   
   const toggleSelectAll = () => {
-    const visibleRFDsIndexes = allRFDs
-      .map((_, index) => index)
-      .filter(index => !selectedHeaderValues.some(value => allRFDs[index].includes(value)));
+    const visibleRFDsIndexes = filteredRFDs.map((_, index) => index);
 
     setSelectedRows(prevSelectedRows => {
       const newSelectedRows = prevSelectedRows.length === visibleRFDsIndexes.length ? [] : visibleRFDsIndexes;
 
 
-      setCustomPromptAI(prevPrompt => {
-        const promptLines = prevPrompt.split('\n');
-        const baseLines = promptLines.filter(line => !allRFDs.includes(line));
+      if(selectedPrompt === "RFDs Overview"){
+        setCustomPromptAI(prevPrompt => {
+          const promptLines = prevPrompt.split('\n');
+          const baseLines = promptLines.filter(line => !allRFDs.includes(line));
 
-        if (newSelectedRows.length === 0) {
+          if (newSelectedRows.length === 0) {
 
-          return baseLines.join('\n');
-        } else {
+            return baseLines.join('\n');
+          } else {
 
-          const selectedRFDs = newSelectedRows.map(index => allRFDs[index]);
-          return [...baseLines, ...selectedRFDs].join('\n');
-        }
-      });
+            const selectedRFDs = newSelectedRows.map(index => allRFDs[index]);
+            return [...baseLines, ...selectedRFDs].join('\n');
+          }
+        });
+      }
 
       return newSelectedRows;
     });
@@ -295,38 +297,35 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const handleTextareaChange = (e) => {
     setCustomPromptAI(e.target.value);
   };
-  
-  const generateText = () => {
-    const selectedRFDs = selectedRows.map(index => allRFDs[index]);
-  
-    setPromptAI(customPromptAI + '\n' + selectedRFDs.join('\n'));
-  
-  };
-  
+
   const updateCustomPrompt = (index, isAdding) => {
     const rfdToToggle = allRFDs[index];
   
-    setCustomPromptAI(prevPrompt => {
-      const promptLines = prevPrompt.split('\n');
-      if (isAdding) {
-        if (!promptLines.includes(rfdToToggle)) {
-        return prevPrompt + '\n' + rfdToToggle;
+    if (selectedPrompt === "RFDs Overview") {
+      setCustomPromptAI(prevPrompt => {
+        const promptLines = prevPrompt.split('\n');
+  
+        if (isAdding) {
+          if (!promptLines.includes(rfdToToggle)) {
+            return prevPrompt + '\n' + rfdToToggle;
+          }
+        } else {
+          return promptLines.filter(line => line !== rfdToToggle).join('\n');
         }
-      } else {
-        return promptLines.filter(line => line !== rfdToToggle).join('\n');
-      }
+  
         return prevPrompt;
-    });
-  }
-
+      });
+    }
+  };
+  
   const scrollToBottom = async () => {
 
-    if (selectedRows.length === 0) {
+    if (selectedPrompt === "RFDs Overview" && selectedRows.length === 0) {
       alert('Select one or more RFDs');
       return;
     }
   
-    const selectedRFDs = selectedRows.map(index => allRFDs[index]);
+    // const selectedRFDs = selectedRows.map(index => allRFDs[index]);
   
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
@@ -345,7 +344,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     if (window.confirm('Are you sure you want to generate the text?')) {
       setIsLoading(true);
 
-      const response = await handleUserInput(promptAI.includes(selectedRFDs.join('\n')) ? promptAI : promptAI + selectedRFDs.join('\n'));
+      const response = await handleUserInput(customPromptAI);
 
       setResponseAI(response);
       setIsTextGenerated(true);
@@ -537,13 +536,42 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   
   const [frequencyValues, setFrequencyValues] = useState([]);
+  const [filteredRFDs, setFilteredRFDs] = useState([]);
+
 
   const filterRFDs = (rfdArray, attributesHeader, frequency) => {
-    const filteredArray = rfdArray.filter(rfd => {
+    if (!Array.isArray(rfdArray)) return [];
+  
+    let filteredArray = rfdArray.filter(rfd => {
       return !attributesHeader.some(attribute => rfd.includes(attribute));
-    });  
+    });
+  
+    if (frequency.length > 0) {
+      frequency.forEach(freq => {
+        const match = freq.match(/\[(.*?)\] (LHS|RHS)/);
+        if (match) {
+          const value = match[1];
+          const type = match[2];
+  
+          filteredArray = filteredArray.filter(rfd => {
+            const [lhs, rhs] = rfd.split(' -> ');
+            if (type === 'LHS') {
+              return !lhs.includes(`[${value}]`);
+            } else if (type === 'RHS') {
+              return !rhs.includes(`[${value}]`);
+            }
+          });
+        }
+      });
+    }
+  
     return filteredArray;
   };
+  
+  useEffect(() => {
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
+  }, [allRFDs, selectedHeaderValues, frequencyValues]);
+
 
 
   const countLHSAttributes = (rfdArray) => {
@@ -567,25 +595,34 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const lhsAttributeChartData = {
     labels: lhsAttributeLabels.map(label => `${label} attribute(s)`),
-    datasets: [{
-      label: 'LHS quantity',
-      data: lhsAttributeData,
+    datasets: lhsAttributeLabels.map((label, index) => ({
+      label: `${label} attribute(s)`,
+      data: lhsAttributeLabels.map((_, i) => i === index ? lhsAttributeData[index] : null),
       backgroundColor: gradientColors[13],
       borderColor: 'rgba(0, 0, 0, 1)',
       borderWidth: 0.5,
-    }],
+    })),
   };
   
   const lhsAttributeChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
+      x: {
+        stacked: true,
+      },
       y: {
         beginAtZero: true,
         title: {
           display: true,
           text: 'LHS cardinality'
         }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
       }
     }
   };
@@ -686,7 +723,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             frequencyValues.push(legendText);
           }
 
-          filterRFDs(allRFDs, selectedHeaderValues, frequencyValues);
+          setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues));
         },
       },
       tooltip: {
@@ -743,17 +780,27 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues, frequencyValues), header[0]);
   }
 
+
+
+
   const implicatingChartData = {
-    labels: Object.keys(implicatingAttributes),
-    datasets: [{
-      label: 'Implicating Attributes',
-      data: Object.values(implicatingAttributes).map(set => set.size),
-      backgroundColor: 'rgba(51, 204, 255, 1)',
-      borderColor: 'rgba(0, 0, 0, 1)',
-      borderWidth: 0.5,
-    }],
+    labels: Object.keys(implicatingAttributes).map(label => `${label}`),
+    datasets: Object.keys(implicatingAttributes).map(label => {
+      const data = Object.keys(implicatingAttributes).map(key => {
+        return key === label ? implicatingAttributes[key].size : 0;
+      });
+
+      return {
+        label: `${label}`,
+        data: data,
+        backgroundColor: 'rgba(51, 204, 255, 1)',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
+      };
+    }),
   };
 
+  
   const implicatingChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -775,87 +822,84 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   };
 
+
+
+
   const statisticLabels = Object.keys(statistics.type);
   const statisticMeans = statisticLabels.map(label => statistics.mean[label]);
   const statisticMedians = statisticLabels.map(label => statistics.median[label]);
   const statisticModes = statisticLabels.map(label => statistics.mode[label]);
+  const statisticMins = statisticLabels.map(label => statistics.min[label]);
+  const statisticMaxs = statisticLabels.map(label => statistics.max[label]);
 
-  const tripleMChartData = {
-    labels: statisticLabels,
-    datasets: [
-      {
-        label: 'Mean',
-        data: statisticMeans,
-        backgroundColor: gradientColors[2],
-        borderColor: 'rgba(0, 0, 0, 1)',
-        borderWidth: 0.5,
-      },
-      {
-        label: 'Median',
-        data: statisticMedians,
-        backgroundColor: gradientColors[1],
-        borderColor: 'rgba(0, 0, 0, 1)',
-        borderWidth: 0.5,
-      },
-      {
-        label: 'Mode',
-        data: statisticModes,
-        backgroundColor: gradientColors[0],
-        borderColor: 'rgba(0, 0, 0, 1)',
-        borderWidth: 0.5,
+  const seriesData = statisticLabels.map((label, index) => {
+    return {
+      x: label,
+      y: [statisticMins[index], statisticMeans[index], statisticMedians[index], statisticModes[index], statisticMaxs[index]]
+    };
+  });
+
+  const options = {
+    chart: {
+      type: 'boxPlot',
+      height: 350
+    },
+    title: {
+      text: 'Box Plot - Media, Mediana, Moda',
+      align: 'left'
+    },
+    plotOptions: {
+      boxPlot: {
+        colors: {
+          upper: '#5C4742',
+          lower: '#A5978B'
+        }
       }
-    ],
-  };
-
-
-  const tripleMChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        type: 'logarithmic',
-        beginAtZero: true,
-        min: 0,
-      },
     },
-  };
-
-
-  const statisticMin = statisticLabels.map(label => statistics.min[label]);
-  const statisticMax = statisticLabels.map(label => statistics.max[label]);  
-
-  const minMaxChartData = {
-    labels: statisticLabels,
-    datasets: [
-      {
-        label: 'Min',
-        data: statisticMin,
-        backgroundColor: gradientColors[14],
-        borderColor: 'rgba(0, 0, 0, 1)',
-        borderWidth: 0.5,
+    xaxis: {
+      type: 'category',
+      labels: {
+        formatter: function(val) {
+          return val;
+        }
       },
-      {
-        label: 'Max',
-        data: statisticMax,
-        backgroundColor: gradientColors[15],
-        borderColor: 'rgba(0, 0, 0, 1)',
-        borderWidth: 0.5,
-      },
-    ],
-  };
-
-  const minMaxChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        type: 'logarithmic',
-        beginAtZero: true,
-        min: 0,
-      },
+      title: {
+        text: 'Statistics'
+      }
     },
+    yaxis: {
+      title: {
+        text: 'Values'
+      },
+      labels: {
+        formatter: function(val) {
+          return val.toFixed(2);
+        }
+      }
+    },
+    tooltip: {
+      shared: false,
+      intersect: true,
+      custom: function({seriesIndex, dataPointIndex, w}) {
+        const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+        return `
+          <div class="apexcharts-tooltip-box-plot">
+            <div><b>${data.x}</b></div>
+            <div>Min: ${data.y[0].toFixed(2)}</div>
+            <div>Mean: ${data.y[1].toFixed(2)}</div>
+            <div>Median: ${data.y[2].toFixed(2)}</div>
+            <div>Mode: ${data.y[3].toFixed(2)}</div>
+            <div>Max: ${data.y[4].toFixed(2)}</div>
+          </div>
+        `;
+      }
+    }
   };
 
+  const series = [{
+    type: 'boxPlot',
+    data: seriesData
+  }];
 
 
 
@@ -881,13 +925,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const relativeFrequency = calculateRelativeFrequency(statistics.distribution);
   const [chartDataLimit, setChartDataLimit] = useState({});
 
-
   const handleSliderChange = (attribute, value) => {
     setChartDataLimit(prevState => ({
       ...prevState,
       [attribute]: value
     }));
   };
+
+  Object.keys(relativeFrequency).forEach(attribute => {
+    const dataLimit = chartDataLimit[attribute] || Math.min(Object.keys(relativeFrequency[attribute]).length, 10);
+    const allValues = Object.keys(relativeFrequency[attribute]);
+    const sortedValues = allValues.sort((a, b) => relativeFrequency[attribute][b] - relativeFrequency[attribute][a]);
+    const displayedValues = sortedValues.slice(0, dataLimit);
+    
+    const total = displayedValues.reduce((acc, value) => acc + relativeFrequency[attribute][value], 0);
+        
+    prompts[`Dataset Value Distribution Analysis`] += `\n${attribute}\n${displayedValues.join('\n')}`;
+  });
 
   const getChartDataForAttribute = useMemo(() => (attribute) => {
     const dataLimit = chartDataLimit[attribute] || Math.min(Object.keys(relativeFrequency[attribute]).length, 10);
@@ -898,7 +952,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     const total = displayedValues.reduce((acc, value) => acc + relativeFrequency[attribute][value], 0);
   
     const data = displayedValues.map(value => (relativeFrequency[attribute][value] / total) * 100);
-  
+
     return {
       labels: displayedValues.map(value => `${attribute}:${value}`),
       datasets: [{
@@ -1077,83 +1131,66 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   </div>
 
       <div className="col-md-6">
-  <div className="card mb-3">
-    <div className="d-flex justify-content-between align-items-center card-header">
-      <span className="details-text">Content Specifications <ColumnsIcon /></span>
-      <div className="toggle-button-cover">
-        <div id="button-3" className="button r">
-          <input
-            className="checkbox"
-            type="checkbox"
-            onChange={() => toggleCardVisibility('columnAndRowNumber')}
-            checked={cardVisibility.columnAndRowNumber}
-          />
-          <div className="knobs"></div>
-          <div className="layer"></div>
-        </div>
-      </div>
-    </div>
-    {cardVisibility.columnAndRowNumber && (
-      <div className="card-body">
-        {info.col_number.length > 0 ? (
-          info.col_number.map((item, index) => (
-            <div key={index}>
-              <strong>Column:</strong> {item} <br />
-              <strong>Row:</strong> {info.row_number[index]} <br />
-              <strong>Blank char:</strong> {info.blank_char[index]}
-            </div>
-          ))
-        ) : (
-          <div>
-            <strong>Column:</strong> N/A <br />
-            <strong>Row:</strong> N/A <br />
-            <strong>Blank char:</strong> N/A
-          </div>
-        )}
-      </div>
-    )}
-  </div>
-  </div>
-  </div>
-
-
-
-  <div className="card mb-3">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">MEAN, MEDIAN, MODE <ChartIcon /></span>
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span className="details-text">Content Specifications <ColumnsIcon /></span>
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('triplem')} checked={cardVisibility.triplem} />
+                <input
+                  className="checkbox"
+                  type="checkbox"
+                  onChange={() => toggleCardVisibility('columnAndRowNumber')}
+                  checked={cardVisibility.columnAndRowNumber}
+                />
                 <div className="knobs"></div>
                 <div className="layer"></div>
               </div>
             </div>
           </div>
-      {cardVisibility.triplem && (
-        <div className="card-body">
-          <div style={{ height: '300px' }}>
-            <Bar data={tripleMChartData} options={tripleMChartOptions} />
-          </div>
+          {cardVisibility.columnAndRowNumber && (
+            <div className="card-body">
+              {info.col_number.length > 0 ? (
+                info.col_number.map((item, index) => (
+                  <div key={index}>
+                    <strong>Column:</strong> {item} <br />
+                    <strong>Row:</strong> {info.row_number[index]} <br />
+                    <strong>Blank char:</strong> {info.blank_char[index]}
+                  </div>
+                ))
+              ) : (
+                <div>
+                  <strong>Column:</strong> N/A <br />
+                  <strong>Row:</strong> N/A <br />
+                  <strong>Blank char:</strong> N/A
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+        </div>
     </div>
 
-    <div className="card mb-3">
+
+
+  <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">MIN, MAX <ChartIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('minmax')} checked={cardVisibility.minmax} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
+        <span className="details-text">MEAN, MEDIAN, MODE, MIN, MAX <ChartIcon /></span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input 
+              className="checkbox" 
+              type="checkbox" 
+              onChange={() => toggleCardVisibility('boxplot')} 
+              checked={cardVisibility.boxplot} 
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
-      {cardVisibility.minmax && (
+        </div>
+      </div>
+      {cardVisibility.boxplot && (
         <div className="card-body">
-          <div style={{ height: '300px' }}>
-            <Bar data={minMaxChartData} options={minMaxChartOptions} />
-          </div>
+          <ReactApexChart options={options} series={series} type="boxPlot" height={350} />
         </div>
       )}
     </div>
@@ -1546,37 +1583,34 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
 
     <div className="card mb-3">
-  <div className="d-flex justify-content-between align-items-center card-header">
-  <span className="details-text">RFDs (total: {allRFDs.length} - filtered: {filterRFDs(allRFDs, selectedHeaderValues, frequencyValues).length})</span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
-            </div>
-  {cardVisibility.rfd && (
-    <div className="card-body">
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <input
-          type="checkbox"
-          className="select-btn larger-checkbox"
-          checked={selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues, frequencyValues).length}
-          onChange={toggleSelectAll}
+      <div className="d-flex justify-content-between align-items-center card-header">
+      <span className="details-text">RFDs (total: {allRFDs.length} - filtered: {filteredRFDs.length})</span>
+                <div className="toggle-button-cover">
+                  <div id="button-3" className="button r">
+                    <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
+                    <div className="knobs"></div>
+                    <div className="layer"></div>
+                  </div>
+                </div>
+                </div>
+      {cardVisibility.rfd && (
+        <div className="card-body">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              className="select-btn larger-checkbox"
+              checked={selectedRows.length === filteredRFDs.length}
+              onChange={toggleSelectAll}
         />
         <label style={{ marginLeft: '10px' }}>
-          {selectedRows.length === filterRFDs(allRFDs, selectedHeaderValues, frequencyValues).length ? "Deselect all" : "Select all"}
+          {selectedRows.length === filteredRFDs.length ? "Deselect all" : "Select all"}
         </label>
       </div>
       <div style={{ height: '15px' }}></div>
 
       <div style={{ whiteSpace: 'pre-wrap' }}>
-        {allRFDs.map((rfd, index) => {
-          const containsSelectedHeader = selectedHeaderValues.some(value => rfd.includes(value));
-          if (containsSelectedHeader) {
-            return null;
-          }
+        {filteredRFDs.map((rfd, index) => {
+
           return (
             <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
               <input
@@ -1611,17 +1645,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {cardVisibility.prompt && (
         <div className="card-body">
           <select
-className="form-select mt-2"
-style={{ display: 'block', marginLeft: '0', width: '200px' }}
-value={selectedPrompt}
-onChange={handlePromptChange}
->
-{Object.keys(prompts).map((prompt, index) => (
-<option key={index} value={prompt}>
-{prompt}
-</option>
-))}
-</select>
+            className="form-select mt-2"
+            style={{ display: 'block', marginLeft: '0', width: '200px' }}
+            value={selectedPrompt}
+            onChange={handlePromptChange}
+            >
+            {Object.keys(prompts).map((prompt, index) => (
+            <option key={index} value={prompt}>
+            {prompt}
+            </option>
+            ))}
+         </select>
 
         <textarea
           type="text"
@@ -1630,7 +1664,6 @@ onChange={handlePromptChange}
           style={{ width: "100%", minHeight: "200px" }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-          <button className="select-btn" onClick={generateText}>GENERATE TEXT</button>
           <button className="select-btn" onClick={scrollToBottom}>
             {isLoading ? "LOADING..." : "EXPLANATION"}
           </button>

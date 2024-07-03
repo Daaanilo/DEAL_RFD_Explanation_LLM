@@ -272,6 +272,10 @@ body {
   line-height: 1.5;
 }
 
+.label-box-deleted {
+  text-decoration: line-through;
+}
+
 .dark-mode .label-box {
   color: #ccc;
 }
