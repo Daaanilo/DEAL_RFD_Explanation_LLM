@@ -21,6 +21,19 @@
   color: #f8f8f8;
 }
 
+.dark-mode .label-boxes-container {
+  background-color: #343a40;
+}
+
+.dark-mode .label-box {
+  color: #ffffff;
+}
+
+.dark-mode .label-box-deleted {
+  color: #999999;
+  text-decoration: line-through;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -277,6 +290,7 @@ body {
 .label-box-deleted {
   text-decoration: line-through;
 }
+
 
 .dark-mode .label-box {
   color: #ccc;

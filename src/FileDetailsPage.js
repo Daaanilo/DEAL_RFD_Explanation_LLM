@@ -349,11 +349,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       checkIfScrolled();
     });
 
-    
     if (window.confirm('Are you sure you want to generate the text?')) {
       setIsLoading(true);
 
-      const response = await handleUserInput(customPromptAI);
+      const response = await handleUserInput(JSON.stringify(customPromptAI));
 
       setResponseAI(response);
       setIsTextGenerated(true);
@@ -558,11 +557,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const [frequencyValues, setFrequencyValues] = useState([]);
   const [cardinalityValues, setCardinalityValues] = useState([]);
+  const [implicatingValues, setImplicatingValues] = useState([]);
 
   const [filteredRFDs, setFilteredRFDs] = useState([]);
 
 
-  const filterRFDs = (rfdArray, attributesHeader, cardinality, frequency) => {
+  const filterRFDs = (rfdArray, attributesHeader, cardinality, frequency, implicating) => {
     if (!Array.isArray(rfdArray)) return [];
     
     let filteredArray = rfdArray.filter(rfd => {
@@ -575,7 +575,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         if (match) {
           const value = match[1];
           const type = match[2];
-    
+  
           filteredArray = filteredArray.filter(rfd => {
             const [lhs, rhs] = rfd.split(' -> ');
             if (type === 'LHS') {
@@ -590,12 +590,20 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     
     if (cardinality.length > 0) {
       const cardinalityValues = cardinality.map(card => parseInt(card.match(/^(\d+)/)[1]));
-    
+  
       filteredArray = filteredArray.filter(rfd => {
         const lhs = rfd.split(' -> ')[0];
         const lhsAttributesCount = lhs.split(',').length;
-    
+  
         return !cardinalityValues.includes(lhsAttributesCount);
+      });
+    }
+  
+    if (implicating.length > 0) {
+      filteredArray = filteredArray.filter(rfd => {
+        const rhs = rfd.split(' -> ')[1];
+        const rhsAttributes = rhs.split(',').map(attr => attr.split('@')[0].trim());
+        return !implicating.some(value => rhsAttributes.includes(value));
       });
     }
     
@@ -603,8 +611,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
   
   useEffect(() => {
-    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
-  }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues]);
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
+  }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues]);
 
 
 
@@ -626,7 +634,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return lhsCount;
   };
   
-  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
   const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
   
@@ -704,7 +712,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setCardinalityValues([...cardinalityValues, legendText]);
     }
 
-    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   };
 
 
@@ -865,7 +873,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
 
-  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+  const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   
   const [labelsAndColorsFrequency, setLabelsAndColorsFrequency] = useState([]);
   const variableChartData = prepareChartData(variableFrequency, header[0], labelsAndColorsFrequency);
@@ -881,11 +889,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setFrequencyValues([...frequencyValues, legendText]);
     }
 
-    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues));
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   };
 
   
-
 
 
 
@@ -899,15 +906,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     const implicatingAttributes = {};
   
     const extractAttributes = (str) => {
-      return str.match(/[a-zA-Z][a-zA-Z0-9\s]*/g).filter(attr => !attr.includes('@'));
+      return str.match(/[a-zA-Z][a-zA-Z0-9]*/g).filter(attr => !attr.includes('@'));
     };
-    
   
     attributesHeader.forEach(attribute => {
       implicatingAttributes[attribute] = new Set();
       rfdArray.forEach(rfd => {
         const [lhs, rhs] = rfd.split(' -> ');
-        if (rhs.includes(attribute)) {
+
+        const rhsAttribute = rhs.substring(0, rhs.indexOf('@')).trim();
+        
+        if (rhsAttribute === attribute) {
           const leftAttributes = extractAttributes(lhs);
           leftAttributes.forEach(attr => implicatingAttributes[attribute].add(attr.trim()));
         }
@@ -919,72 +928,109 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   let implicatingAttributes = 0;
   if(header[0]) {
-    implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues), header[0]);
+    implicatingAttributes = findImplicatingAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues), header[0]);
   }
 
 
 
+const implicatingChartData = {
+  labels: Object.keys(implicatingAttributes).map(label => `${label}`),
+  datasets: Object.keys(implicatingAttributes).map(label => {
+    const data = Object.keys(implicatingAttributes).map(key => {
+      return key === label ? implicatingAttributes[key].size : 0;
+    });
 
-  const implicatingChartData = {
-    labels: Object.keys(implicatingAttributes).map(label => `${label}`),
-    datasets: Object.keys(implicatingAttributes).map(label => {
-      const data = Object.keys(implicatingAttributes).map(key => {
-        return key === label ? implicatingAttributes[key].size : 0;
-      });
+    return {
+      label: `${label}`,
+      data: data,
+      backgroundColor: gradientColors[12],
+      borderColor: 'rgba(0, 0, 0, 1)',
+      borderWidth: 0.5,
+    };
+  }),
+};
 
-      return {
-        label: `${label}`,
-        data: data,
-        backgroundColor: 'rgba(51, 204, 255, 1)',
-        borderColor: 'rgba(0, 0, 0, 1)',
-        borderWidth: 0.5,
-      };
-    }),
-  };
 
-  
-  const implicatingChartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          stacked: true,
-          ticks: {
-            color: getColors(darkMode).text,
-          },
-          grid: {
-            color: getColors(darkMode).grid,
-          },
+const implicatingChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        stacked: true,
+        ticks: {
+          color: getColors(darkMode).text,
         },
-        y: {
-          ticks: {
-            color: getColors(darkMode).text,
-          },
-          grid: {
-            color: getColors(darkMode).grid,
-          },
+        grid: {
+          color: getColors(darkMode).grid,
         },
       },
-      plugins: {
-        legend: {
-          labels: {
-            color: getColors(darkMode).text
+      y: {
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const attribute = context.label;
+            const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
+            return `${attribute}: ${implicatingAttrs}`;
           }
         },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const attribute = context.label;
-              const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
-              return `${attribute}: ${implicatingAttrs}`;
-            }
-          },
-          backgroundColor: getColors(darkMode).background,
-          titleColor: getColors(darkMode).text,
-          bodyColor: getColors(darkMode).text,
-        }
+        backgroundColor: getColors(darkMode).background,
+        titleColor: getColors(darkMode).text,
+        bodyColor: getColors(darkMode).text,
       }
-  };
+    }
+};
+
+
+const [labelsAndColorsImplicating, setLabelsAndColorsImplicating] = useState([]);
+
+const createLabelsAndColorsImplicating = () => {
+  if (labelsAndColorsImplicating.length === 0) {
+    return Object.keys(implicatingAttributes).map((label, index) => {
+      return [`${label}`, gradientColors[12]];
+    });
+  } else {
+    return labelsAndColorsImplicating;
+  }
+};
+
+
+useEffect(() => {
+  if (labelsAndColorsImplicating.length === 0) {
+    setLabelsAndColorsImplicating(createLabelsAndColorsImplicating());
+  }
+}, [labelsAndColorsImplicating]);
+
+const handleLegendClickImplicating = (legendText) => {
+  const implicatingIndex = implicatingValues.indexOf(legendText);
+  
+  if (implicatingIndex !== -1) {
+    const newImplicatingValues = [...implicatingValues];
+    newImplicatingValues.splice(implicatingValues, 1);
+    setImplicatingValues(newImplicatingValues);
+  } else {
+    setImplicatingValues([...implicatingValues, legendText]);
+  }
+
+  setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
+};
+
+
+
+
+
+
 
 
 
@@ -1231,9 +1277,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {
         label: 'Null Percentage',
         data: nullPercentageValues,
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1,
+        backgroundColor: gradientColors[4],
+        borderColor: '#000000',
+        borderWidth: 0.5,
       },
     ],
   };
@@ -1966,10 +2012,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                       <div className="label-boxes-container mt-2 mx-auto">
               <div className="label-boxes">
                 {labelsAndColorsCardinality.map(([label, color], index) => (
-                  <div key={index} className="label-box" onClick={() => handleLegendClickCardinality(label)}>
-                    <div className="color-box" style={{ backgroundColor: color }}></div>
-                    {' ' + label}
-                  </div>
+                  <div 
+                        key={index} 
+                        className={`label-box ${cardinalityValues.includes(label) ? 'label-box-deleted' : ''}`} 
+                        onClick={() => handleLegendClickCardinality(label)}
+                      >
+                        <div className="color-box" style={{ backgroundColor: color }}></div>
+                        {' ' + label}
+                </div>
                 ))}
               </div>
         </div>
@@ -1998,7 +2048,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <div className="label-boxes-container mt-2 mx-auto">
               <div className="label-boxes">
                 {labelsAndColorsFrequency.map(([label, color], index) => (
-                  <div key={index} className="label-box" onClick={() => handleLegendClickFrequency(label)}>
+                  <div 
+                    key={index} 
+                    className={`label-box ${frequencyValues.includes(label) ? 'label-box-deleted' : ''}`} 
+                    onClick={() => handleLegendClickFrequency(label)}
+                  >
                     <div className="color-box" style={{ backgroundColor: color }}></div>
                     {' ' + label}
                   </div>
@@ -2025,6 +2079,20 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           </div>
       {cardVisibility.implicating && (
         <div className="card-body">
+        <div className="label-boxes-container mt-2 mx-auto">
+          <div className="label-boxes">
+            {labelsAndColorsImplicating.map(([label, color], index) => (
+              <div 
+              key={index} 
+              className={`label-box ${implicatingValues.includes(label) ? 'label-box-deleted' : ''}`} 
+              onClick={() => handleLegendClickImplicating(label)}
+              >
+              <div className="color-box" style={{ backgroundColor: color }}></div>
+              {' ' + label}
+              </div>
+            ))}
+          </div>
+      </div>
           <div style={{ height: '300px' }}>
             <Bar data={implicatingChartData} options={implicatingChartOptions} />
           </div>
