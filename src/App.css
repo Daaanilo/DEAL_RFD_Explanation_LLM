@@ -2,20 +2,10 @@
 
 :root {
   --background-color-light: #f8f8f8;
-  --text-color-light: #000;
-  --primary-color-light: #007bff;
-  --danger-color: #dc3545;
-  --background-color-dark: #222;
-  --text-color-dark: #fff;
-  --primary-color-dark: #4a90e2;
+  --text-color-light: #000000;
+  --background-color-dark: #222222;
+  --text-color-dark: #ffffff;
 }
-
-.fas.fa-file {
-  padding: 5px;
-  border-radius: 4px;
-  color: rgb(0, 110, 255);
-}
-
 
 body {
   background-color: var(--background-color-light);
@@ -26,17 +16,21 @@ body {
 .dark-mode {
   --background-color: var(--background-color-dark);
   --text-color: var(--text-color-dark);
-  --primary-color: var(--primary-color-dark);
 }
-
 
 .dark-mode p {
   color: var(--text-color);
 }
 
+.fas.fa-file {
+  padding: 5px;
+  border-radius: 4px;
+  color: rgb(0, 110, 255);
+}
+
 ul li button.delete-button,
 .remove-btn {
-  background-color: var(--danger-color);
+  background-color: #dc3545;
   color: #fff;
   border: none;
   padding: 6px 10px;
@@ -53,20 +47,6 @@ ul li button.delete-button:hover,
   background-color: darken(var(--primary-color), 10%);
 }
 
-.fade-in {
-  animation: fadeIn ease 0.5s;
-  animation-fill-mode: forwards;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 .file-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -77,9 +57,6 @@ ul li button.delete-button:hover,
   margin: 0 auto;
 }
 
-h2 {
-  text-align: center;
-}
 
 .desktop-icon {
   position: relative;
@@ -120,7 +97,7 @@ h2 {
 
 .upload-section input[type="file"],
 .upload-section button {
-  background-color: var(--primary-color-light);
+  background-color: #007bff;
   color: #fff;
   border: none;
   padding: 10px 20px;
@@ -220,6 +197,9 @@ h2 {
   fill: var(--text-color);
 }
 
+
+/* TITLE */
+
 :root {
   --background-color: #f8f8f8;
   --text-color: black;
@@ -236,12 +216,12 @@ h2 {
   background-color: var(--background-color-light);
 }
 
-.dark-mode .wrapper {
-  background-color: var(--text-color-light);
-}
-
 .wrapper > div {
   grid-area: 1/1/-1/-1;
+}
+
+.dark-mode .wrapper {
+  background-color: var(--text-color-light);
 }
 
 .top {

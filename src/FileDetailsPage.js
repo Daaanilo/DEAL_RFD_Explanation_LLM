@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { ReactComponent as DatabaseIcon } from 'bootstrap-icons/icons/database.svg';
 import { ReactComponent as AspectRatioIcon } from 'bootstrap-icons/icons/aspect-ratio.svg';
 import { ReactComponent as ColumnsIcon } from 'bootstrap-icons/icons/columns.svg';
@@ -11,12 +11,15 @@ import { ReactComponent as PcIcon } from 'bootstrap-icons/icons/pc-horizontal.sv
 import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
 import { DarkModeContext } from './DarkModeProvider';
-import axios from 'axios';
-import { Bar, Pie } from 'react-chartjs-2';
+
 import ReactApexChart from 'react-apexcharts';
+import { Bar, Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 import './FileDetailsPage.css';
 import './DarkModeProvider.css';
+
+import axios from 'axios';
+
 const { handleUserInput } = require('./chatgptapi.js');
 
 const FileDetailsPage = ({ fileName, onBack }) => {
@@ -34,20 +37,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const [isTextGenerated2, setIsTextGenerated2] = useState(false);
   const [responseAI2, setResponseAI2] = useState();
   
-  const getColors = (darkMode)=> {
-    return {
-      text: darkMode ? '#ffffff' : '#000000',
-      grid: darkMode ? '#444444' : '#e0e0e0',
-      background: darkMode ? '#343a40' : '#ffffff',
-    };
-  };
-
-
-  const prompts = {
-    'RFDs Overview': "I would like a thorough understanding of the RFD dependencies listed below, "+
-        "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
-        "I want an overall summary that explains the general concept of these dependencies, "+
-        "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n",
+  const initialPrompts = useMemo(() => ({
+    'RFDs Overview': "",
     'Statistical Measures Analysis': "I would like a thorough understanding of the following statistics, including a detailed analysis of the variables "+
         "involved and their measures of central tendency and dispersion. I'm looking for an overall summary that explains the concept of each statistic, "+
         "how these measures interact with each other, and their impact on data. The statistics are as follows: mean, median, and mode:\n",
@@ -55,6 +46,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         "values associated with each. This includes a detailed analysis of header names and the prevalent values within them. I'm seeking an overarching summary "+
         "that explains how these values are distributed across different headers and the significance of this distribution for an overall understanding of the dataset. "+
         "The values are as follows:\n"
+  }), []);
+
+  const prompts = useMemo(() => ({
+    'RFDs Overview': "I would like a thorough understanding of the RFD dependencies listed below, "+
+        "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
+        "I want an overall summary that explains the general concept of these dependencies, "+
+        "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n",
+    'Statistical Measures Analysis': "",
+    'Dataset Value Distribution Analysis': ""
+  }), []);
+
+  const getColors = (darkMode) => {
+    return {
+      text: darkMode ? '#ffffff' : '#000000',
+      grid: darkMode ? '#444444' : '#e0e0e0',
+      background: darkMode ? '#343a40' : '#ffffff',
+    };
   };
 
   const [selectedPrompt, setSelectedPrompt] = useState('RFDs Overview');
@@ -80,12 +88,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   }, [selectedPrompt, selectedRows]);
   
+  
  
   const [cardVisibility, setCardVisibility] = useState({
     infoDataset: true,
     header: true,
-    sizeAndFormat: true,
-    columnAndRowNumber: true,
+    details: true,
+    contentSpecifications: true,
     algorithm: true,
     executionInfo: true,
     system: true,
@@ -293,6 +302,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   fileContent.forEach(row => formatData(row));
 
   const toggleCardVisibility = (cardName) => {
+    if(cardName === 'rfd' && cardVisibility.rfd) {
+      setMenuOpen(false);
+    }
+    
     setCardVisibility({ ...cardVisibility, [cardName]: !cardVisibility[cardName] });
   };
 
@@ -301,7 +314,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const handlePromptChange = (event) => {
     setSelectedPrompt(event.target.value);
-    };
+  };
   
   const handleTextareaChange = (e) => {
     setCustomPromptAI(e.target.value);
@@ -333,9 +346,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       alert('Select one or more RFDs');
       return;
     }
-  
-    // const selectedRFDs = selectedRows.map(index => allRFDs[index]);
-  
+    
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
     await new Promise(resolve => {
@@ -387,9 +398,79 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   };
 
+  // FILTER RFD
+
+  const [cardinalityValues, setCardinalityValues] = useState([]);
+  const [frequencyValues, setFrequencyValues] = useState([]);
+  const [implicatingValues, setImplicatingValues] = useState([]);
+
+  const [filteredRFDs, setFilteredRFDs] = useState([]);
+
+  const filterRFDs = (rfdArray, attributesHeader, cardinality, frequency, implicating) => {
+    if (!Array.isArray(rfdArray)) return [];
+    
+    let filteredArray = rfdArray.filter(rfd => {
+      return !attributesHeader.some(attribute => rfd.includes(attribute));
+    });
+    
+    if (frequency.length > 0) {
+      frequency.forEach(freq => {
+        const match = freq.match(/\[(.*?)\] (LHS|RHS)/);
+        if (match) {
+          const value = match[1];
+          const type = match[2];
+  
+          filteredArray = filteredArray.filter(rfd => {
+            const [lhs, rhs] = rfd.split(' -> ');
+            if (type === 'LHS') {
+              return !lhs.includes(`[${value}]`);
+            } else if (type === 'RHS') {
+              return !rhs.includes(`[${value}]`);
+            }
+
+            return false;
+          });
+        }
+      });
+    }
+    
+    if (cardinality.length > 0) {
+      const cardinalityValues = cardinality.map(card => parseInt(card.match(/^(\d+)/)[1]));
+  
+      filteredArray = filteredArray.filter(rfd => {
+        const lhs = rfd.split(' -> ')[0];
+        const lhsAttributesCount = lhs.split(',').length;
+  
+        return !cardinalityValues.includes(lhsAttributesCount);
+      });
+    }
+  
+    if (implicating.length > 0) {
+      filteredArray = filteredArray.filter(rfd => {
+        const rhs = rfd.split(' -> ')[1];
+        const rhsAttributes = rhs.split(',').map(attr => attr.split('@')[0].trim());
+        return !implicating.some(value => rhsAttributes.includes(value));
+      });
+    }
+    
+    return filteredArray;
+  };
+  
+  useEffect(() => {
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
+  }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues]);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    if (cardVisibility.rfd) {
+      setMenuOpen(!menuOpen);
+    }
+  };
+
   // CHARTS
 
-  const gradientColors = [
+  const gradientColors = useMemo(() => [
     'rgba(255, 128, 128, 1)',
     'rgba(255, 159, 128, 1)',
     'rgba(255, 191, 128, 1)',
@@ -411,8 +492,34 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     'rgba(191, 128, 255, 1)',
     'rgba(223, 128, 255, 1)',
     'rgba(255, 128, 255, 1)'
-  ];
+  ], []);
   
+
+  // CHART: TIME EXECUTION
+
+  const formatTime = (timeString) => {
+    if (timeString) {
+      let time = parseFloat(timeString);
+      if (timeString.endsWith('s')) {
+        return `${(time * 1000).toFixed(2)}ms`;
+      } else {
+        return `${time}ms`;
+      }
+    } else {
+      return 'N/A';
+    }
+  };
+
+  const formatLeftTime = (left) => {
+    if (left === 0) {
+      return 'N/A';
+    } else if (left > 1000) {
+      return `${(left / 1000).toFixed(2).replace('.', ',')}s`;
+    } else {
+      return `${left}ms`;
+    }
+  };
+
 
   const convertToFloatArray = (data) => {
     if (Array.isArray(data) && data.length > 0) {
@@ -455,7 +562,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     left: left.map(value => ((value / totalSum) * 100).toFixed(2)),
   };
   
-
   const timeChartData = {
     labels: [''],
     datasets: [
@@ -554,70 +660,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const isAllZerosOrNull = (arr) => arr.every(item => item === 0 || item === null || item === '');
   const shouldDisplayCard = !isAllZerosOrNull(temp.dataset_loading) || !isAllZerosOrNull(temp.preprocessing) || !isAllZerosOrNull(temp.discovery) || !isAllZerosOrNull(temp.total);
 
-  
-  const [frequencyValues, setFrequencyValues] = useState([]);
-  const [cardinalityValues, setCardinalityValues] = useState([]);
-  const [implicatingValues, setImplicatingValues] = useState([]);
-
-  const [filteredRFDs, setFilteredRFDs] = useState([]);
-
-
-  const filterRFDs = (rfdArray, attributesHeader, cardinality, frequency, implicating) => {
-    if (!Array.isArray(rfdArray)) return [];
-    
-    let filteredArray = rfdArray.filter(rfd => {
-      return !attributesHeader.some(attribute => rfd.includes(attribute));
-    });
-    
-    if (frequency.length > 0) {
-      frequency.forEach(freq => {
-        const match = freq.match(/\[(.*?)\] (LHS|RHS)/);
-        if (match) {
-          const value = match[1];
-          const type = match[2];
-  
-          filteredArray = filteredArray.filter(rfd => {
-            const [lhs, rhs] = rfd.split(' -> ');
-            if (type === 'LHS') {
-              return !lhs.includes(`[${value}]`);
-            } else if (type === 'RHS') {
-              return !rhs.includes(`[${value}]`);
-            }
-          });
-        }
-      });
-    }
-    
-    if (cardinality.length > 0) {
-      const cardinalityValues = cardinality.map(card => parseInt(card.match(/^(\d+)/)[1]));
-  
-      filteredArray = filteredArray.filter(rfd => {
-        const lhs = rfd.split(' -> ')[0];
-        const lhsAttributesCount = lhs.split(',').length;
-  
-        return !cardinalityValues.includes(lhsAttributesCount);
-      });
-    }
-  
-    if (implicating.length > 0) {
-      filteredArray = filteredArray.filter(rfd => {
-        const rhs = rfd.split(' -> ')[1];
-        const rhsAttributes = rhs.split(',').map(attr => attr.split('@')[0].trim());
-        return !implicating.some(value => rhsAttributes.includes(value));
-      });
-    }
-    
-    return filteredArray;
-  };
-  
-  useEffect(() => {
-    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
-  }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues]);
-
-
-
-
-
+  // CHART: LHS CARDINALITY
 
   const countLHSAttributes = (rfdArray) => {
     const lhsCount = {};
@@ -690,17 +733,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const [labelsAndColorsCardinality, setLabelsAndColorsCardinality] = useState([]);
 
-  const createLabelsAndColors = () => {
+  const createLabelsAndColorsCardinality = useCallback(() => {
     return lhsAttributeLabels.map(label => [`${label} attribute(s)`, gradientColors[13]]);
-  };
-
+  }, [lhsAttributeLabels, gradientColors]);
+  
   useEffect(() => {
     if (labelsAndColorsCardinality.length === 0) {
-      setLabelsAndColorsCardinality(createLabelsAndColors());
+      setLabelsAndColorsCardinality(createLabelsAndColorsCardinality());
     }
-  }, [labelsAndColorsCardinality]);
-
-
+  }, [labelsAndColorsCardinality, createLabelsAndColorsCardinality]);
+  
+  
   const handleLegendClickCardinality = (legendText) => {
     const cardinalityIndex = cardinalityValues.indexOf(legendText);
     
@@ -716,10 +759,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
 
-
-
-
-
+  // CHART: FREQUENCY
 
   const countVariableFrequency = (rfdArray) => {
     const variableFrequency = {};
@@ -828,7 +868,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
   
 
-
   const variableChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -872,10 +911,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     },
   };
 
-
   const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   
-  const [labelsAndColorsFrequency, setLabelsAndColorsFrequency] = useState([]);
+  const [labelsAndColorsFrequency] = useState([]);
   const variableChartData = prepareChartData(variableFrequency, header[0], labelsAndColorsFrequency);
   
   const handleLegendClickFrequency = (legendText) => {
@@ -892,15 +930,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   };
 
-  
 
-
-
-
-
-
-
-
+  // CHART: IMPLICATING ATTRIBUTES
 
   const findImplicatingAttributes = (rfdArray, attributesHeader) => {
     const implicatingAttributes = {};
@@ -932,128 +963,115 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   }
 
 
+  const implicatingChartData = {
+    labels: Object.keys(implicatingAttributes).map(label => `${label}`),
+    datasets: Object.keys(implicatingAttributes).map(label => {
+      const data = Object.keys(implicatingAttributes).map(key => {
+        return key === label ? implicatingAttributes[key].size : 0;
+      });
 
-const implicatingChartData = {
-  labels: Object.keys(implicatingAttributes).map(label => `${label}`),
-  datasets: Object.keys(implicatingAttributes).map(label => {
-    const data = Object.keys(implicatingAttributes).map(key => {
-      return key === label ? implicatingAttributes[key].size : 0;
-    });
-
-    return {
-      label: `${label}`,
-      data: data,
-      backgroundColor: gradientColors[12],
-      borderColor: 'rgba(0, 0, 0, 1)',
-      borderWidth: 0.5,
-    };
-  }),
-};
+      return {
+        label: `${label}`,
+        data: data,
+        backgroundColor: gradientColors[12],
+        borderColor: 'rgba(0, 0, 0, 1)',
+        borderWidth: 0.5,
+      };
+    }),
+  };
 
 
-const implicatingChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        stacked: true,
-        ticks: {
-          color: getColors(darkMode).text,
+  const implicatingChartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            color: getColors(darkMode).text,
+          },
+          grid: {
+            color: getColors(darkMode).grid,
+          },
         },
-        grid: {
-          color: getColors(darkMode).grid,
+        y: {
+          ticks: {
+            color: getColors(darkMode).text,
+          },
+          grid: {
+            color: getColors(darkMode).grid,
+          },
         },
       },
-      y: {
-        ticks: {
-          color: getColors(darkMode).text,
+      plugins: {
+        legend: {
+          display: false,
         },
-        grid: {
-          color: getColors(darkMode).grid,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            const attribute = context.label;
-            const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
-            return `${attribute}: ${implicatingAttrs}`;
-          }
-        },
-        backgroundColor: getColors(darkMode).background,
-        titleColor: getColors(darkMode).text,
-        bodyColor: getColors(darkMode).text,
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const attribute = context.label;
+              const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
+              return `${attribute}: ${implicatingAttrs}`;
+            }
+          },
+          backgroundColor: getColors(darkMode).background,
+          titleColor: getColors(darkMode).text,
+          bodyColor: getColors(darkMode).text,
+        }
       }
+  };
+
+
+  const [labelsAndColorsImplicating, setLabelsAndColorsImplicating] = useState([]);
+
+  const createLabelsAndColorsImplicating = useCallback(() => {
+    if (labelsAndColorsImplicating.length === 0) {
+      return Object.keys(implicatingAttributes).map((label, index) => {
+        return [`${label}`, gradientColors[12]];
+      });
+    } else {
+      return labelsAndColorsImplicating;
     }
-};
+  }, [labelsAndColorsImplicating, implicatingAttributes, gradientColors]);
+
+  useEffect(() => {
+    if (labelsAndColorsImplicating.length === 0) {
+      setLabelsAndColorsImplicating(createLabelsAndColorsImplicating());
+    }
+  }, [labelsAndColorsImplicating, createLabelsAndColorsImplicating]);
 
 
-const [labelsAndColorsImplicating, setLabelsAndColorsImplicating] = useState([]);
+  const handleLegendClickImplicating = (legendText) => {
+    const implicatingIndex = implicatingValues.indexOf(legendText);
+    
+    if (implicatingIndex !== -1) {
+      const newImplicatingValues = [...implicatingValues];
+      newImplicatingValues.splice(implicatingIndex, 1);
+      setImplicatingValues(newImplicatingValues);
+    } else {
+      setImplicatingValues([...implicatingValues, legendText]);
+    }
 
-const createLabelsAndColorsImplicating = () => {
-  if (labelsAndColorsImplicating.length === 0) {
-    return Object.keys(implicatingAttributes).map((label, index) => {
-      return [`${label}`, gradientColors[12]];
-    });
-  } else {
-    return labelsAndColorsImplicating;
-  }
-};
-
-
-useEffect(() => {
-  if (labelsAndColorsImplicating.length === 0) {
-    setLabelsAndColorsImplicating(createLabelsAndColorsImplicating());
-  }
-}, [labelsAndColorsImplicating]);
-
-const handleLegendClickImplicating = (legendText) => {
-  const implicatingIndex = implicatingValues.indexOf(legendText);
-  
-  if (implicatingIndex !== -1) {
-    const newImplicatingValues = [...implicatingValues];
-    newImplicatingValues.splice(implicatingValues, 1);
-    setImplicatingValues(newImplicatingValues);
-  } else {
-    setImplicatingValues([...implicatingValues, legendText]);
-  }
-
-  setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
-};
+    setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
+  };
 
 
-
-
-
-
-
-
-
+  // CHART: BOX PLOT
 
   const statisticLabels = Object.keys(statistics.type);
   const statisticMeans = statisticLabels.map(label => statistics.mean[label]);
   const statisticMedians = statisticLabels.map(label => statistics.median[label]);
   const statisticModes = statisticLabels.map(label => statistics.mode[label]);
-  const statisticMins = statisticLabels.map(label => statistics.min[label]);
-  const statisticMaxs = statisticLabels.map(label => statistics.max[label]);
+  //const statisticMins = statisticLabels.map(label => statistics.min[label]);
+  //const statisticMaxs = statisticLabels.map(label => statistics.max[label]);
 
-  prompts[`Statistical Measures Analysis`] += header[0]+'\n'+statisticMeans+'\n'+statisticMedians+'\n'+statisticModes;
+  const meansString = statisticMeans.join(' ');
+  const mediansString = statisticMedians.join(' ');
+  const modesString = statisticModes.join(' ');
+  
+  prompts[`Statistical Measures Analysis`] = initialPrompts[`Statistical Measures Analysis`] + `\n${header[0]}\n${meansString}\n${mediansString}\n${modesString}`;
 
-
-  const series = statisticLabels.map((label, index) => {
-    return {
-      type: 'boxPlot',
-      data: [{
-        x: label,
-        y: [statisticMins[index], statisticMeans[index], statisticMedians[index], statisticModes[index], statisticMaxs[index]]
-      }]
-    };
-  });
   
   const options = {
     chart: {
@@ -1129,8 +1147,6 @@ const handleLegendClickImplicating = (legendText) => {
     }
   };
 
-
-
   const [currentPageBoxPlot, setcurrentPageBoxPlot] = useState(1);
   const chartsPerPageBoxPlot = 2;
   const totalChartsBoxPlot = Object.keys(statistics.type).length;
@@ -1176,7 +1192,7 @@ const handleLegendClickImplicating = (legendText) => {
 
 
 
-
+  // CHART: MIN MAX
 
   const statisticMin = statisticLabels.map(label => statistics.min[label]);
   const statisticMax = statisticLabels.map(label => statistics.max[label]);  
@@ -1240,6 +1256,9 @@ const handleLegendClickImplicating = (legendText) => {
     };
 
 
+
+  // CHART: NULL VALUES
+
   const calculateNullPercentages = (distribution) => {
     const nullPercentages = {};
     
@@ -1286,44 +1305,44 @@ const handleLegendClickImplicating = (legendText) => {
 
   const nullValuesChartOptions = {
     responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    y: {
-      beginAtZero: true,
-      max: 100,
-      ticks: {
-        color: getColors(darkMode).text,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
-      grid: {
-        color: getColors(darkMode).grid,
+      x: {
+        ticks: {
+          color: getColors(darkMode).text,
+        },
+        grid: {
+          color: getColors(darkMode).grid,
+        },
       },
     },
-    x: {
-      ticks: {
-        color: getColors(darkMode).text,
+    plugins: {
+      legend: {
+        labels: {
+          color: getColors(darkMode).text
+        }
       },
-      grid: {
-        color: getColors(darkMode).grid,
-      },
-    },
-  },
-  plugins: {
-    legend: {
-      labels: {
-        color: getColors(darkMode).text
+      tooltip: {
+        backgroundColor: getColors(darkMode).background,
+        titleColor: getColors(darkMode).text,
+        bodyColor: getColors(darkMode).text,
       }
-    },
-    tooltip: {
-      backgroundColor: getColors(darkMode).background,
-      titleColor: getColors(darkMode).text,
-      bodyColor: getColors(darkMode).text,
     }
-   }
   };
 
 
 
-
+  // CHART: DISTRIBUTION (RELATIVE FREQUENCY)
 
   const calculateRelativeFrequency = (distribution) => {
     const relativeFrequency = {};
@@ -1352,16 +1371,19 @@ const handleLegendClickImplicating = (legendText) => {
     }));
   };
 
+  let allValues = '';
+
   Object.keys(relativeFrequency).forEach(attribute => {
     const dataLimit = chartDataLimit[attribute] || Math.min(Object.keys(relativeFrequency[attribute]).length, 10);
-    const allValues = Object.keys(relativeFrequency[attribute]);
-    const sortedValues = allValues.sort((a, b) => relativeFrequency[attribute][b] - relativeFrequency[attribute][a]);
+    const values = Object.keys(relativeFrequency[attribute]);
+    const sortedValues = values.sort((a, b) => relativeFrequency[attribute][b] - relativeFrequency[attribute][a]);
     const displayedValues = sortedValues.slice(0, dataLimit);
     
-    const total = displayedValues.reduce((acc, value) => acc + relativeFrequency[attribute][value], 0);
-        
-    prompts[`Dataset Value Distribution Analysis`] += `\n${attribute}\n${displayedValues.join('\n')}`;
+    allValues += `\n${attribute}\n${displayedValues.join('\n')}`;
   });
+  
+  prompts[`Dataset Value Distribution Analysis`] = initialPrompts[`Dataset Value Distribution Analysis`] + allValues;
+  
 
   const getChartDataForAttribute = useMemo(() => (attribute) => {
     const dataLimit = chartDataLimit[attribute] || Math.min(Object.keys(relativeFrequency[attribute]).length, 10);
@@ -1372,7 +1394,7 @@ const handleLegendClickImplicating = (legendText) => {
     const total = displayedValues.reduce((acc, value) => acc + relativeFrequency[attribute][value], 0);
   
     const data = displayedValues.map(value => (relativeFrequency[attribute][value] / total) * 100);
-
+  
     return {
       labels: displayedValues.map(value => `${attribute}:${value}`),
       datasets: [{
@@ -1381,44 +1403,44 @@ const handleLegendClickImplicating = (legendText) => {
         label: 'Relative Frequency (%)'
       }]
     };
-  }, [relativeFrequency, chartDataLimit]);
+  }, [relativeFrequency, chartDataLimit, gradientColors]);
   
   
   const distributionChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    tooltip: {
-      callbacks: {
-        label: function(context) {
-          const label = context.label.split(':')[1].trim();
-          const value = context.raw.toFixed(2);
-          return `${label}: ${value}%`;
-        }
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label.split(':')[1].trim();
+            const value = context.raw.toFixed(2);
+            return `${label}: ${value}%`;
+          }
+        },
+        backgroundColor: '#343a40',
+        titleFont: { size: 0 },
+        bodyFont: { size: 14, color: getColors(darkMode).text },
+        padding: 10,
+        caretPadding: 5,
+        caretSize: 5,
+        cornerRadius: 4,
+        borderWidth: 0.5,
+        borderColor: '#ffffff',
+        displayColors: false,
+        titleMarginBottom: 0
       },
-      backgroundColor: getColors(darkMode).background,
-      titleFont: { size: 0 },
-      bodyFont: { size: 14, color: getColors(darkMode).text },
-      padding: 10,
-      caretPadding: 5,
-      caretSize: 5,
-      cornerRadius: 4,
-      borderWidth: 0.5,
-      borderColor: getColors(darkMode).grid,
-      displayColors: false,
-      titleMarginBottom: 0
+      legend: { 
+        display: false 
+      }
     },
-    legend: { 
-      display: false 
+    elements: {
+      arc: {
+        borderColor: getColors(darkMode).text,
+        borderWidth: 0.2
+      }
     }
-  },
-  elements: {
-    arc: {
-      borderColor: getColors(darkMode).text,
-      borderWidth: 0.2
-    }
-  }
-};
+  };
   
   const [currentPage, setCurrentPage] = useState(1);
   const chartsPerPage = 2;
@@ -1452,97 +1474,89 @@ const handleLegendClickImplicating = (legendText) => {
     return pages;
   };
 
-
-
   return (
 
-<div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
-  <div className="title-back-container">
-    <button className="back-btn" onClick={onBack}>
-      <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
-    </button>
-    <div className="toggle-button" onClick={toggleDarkMode}>
-      <SunIcon name="sun" className="sun"></SunIcon>
-      <MoonIcon name="moon" className="moon"></MoonIcon>
-      <div className="toggle"></div>
-      <div className="animateBg"></div>
-    </div>
-    <h2 className="title">File Details: <span style={{ color: '#005AC1' }}>{info.name[0]}</span></h2>
-  </div>
-
-  <div className="container">
-  
-    <h2 className="section">DATASET</h2>
-
-    <div className="card mb-3">
-      <div className="card-header"> 
-        <span className="details-text">Header <DatabaseIcon /></span>
-      </div>
-      {header && header[0] && (
-        <div className="card-body">
-          <div className="horizontal-scroll">
-            {header[0].map((item, index) => (
-              <div key={index} className="item-container">
-                <button
-                  type="button"
-                  className={`btn ${selectedHeaderValues.includes(item) ? 'btn-primary active' : 'btn btn-secondary'}`}
-                  onClick={() => toggleHeaderSelection(item)}
-                  style={{
-                    background: selectedHeaderValues.includes(item) ? 'white' : 'linear-gradient(30deg, #5799E5, #005AC1)',
-                    color: selectedHeaderValues.includes(item) ? 'black' : '',
-                  }}
-                >
-                  <span className={`details-header ${selectedHeaderValues.includes(item) ? 'selected' : ''}`}>{item}</span>
-                </button>
-                <div style={{ height: '5px' }}></div>
-                <button
-                  type="button"
-                  className={`btn ${selectedHeaderValues.includes(statistics.type[item]) ? 'btn-group-toggle active' : 'btn btn-secondary'} no-pulse`}
-                  style={{ background: '#E1E1E1' }}
-                >
-                  <span className="details-header">{statistics.type[item]}</span>
-                </button>
-              </div>
-            ))}
+      <div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
+        <div className="title-back-container">
+          <button className="back-btn" onClick={onBack}>
+            <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
+          </button>
+          <div className="toggle-button" onClick={toggleDarkMode}>
+            <SunIcon name="sun" className="sun"></SunIcon>
+            <MoonIcon name="moon" className="moon"></MoonIcon>
+            <div className="toggle"></div>
+            <div className="animateBg"></div>
           </div>
+          <h2 className="title">File Details: <span style={{ color: '#005AC1' }}>{info.name[0]}</span></h2>
         </div>
-      )}
-    </div>
 
-    <div className="row">
-  <div className="col-md-6">
-    <div className="card mb-3">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">Details <AspectRatioIcon /></span>
-        <div className="toggle-button-cover">
-          <div id="button-3" className="button r">
-            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('sizeAndFormat')} checked={cardVisibility.sizeAndFormat} />
-            <div className="knobs"></div>
-            <div className="layer"></div>
-          </div>
-        </div>
-      </div>
-      {cardVisibility.sizeAndFormat && (
-        <div className="card-body">
-          {info.size.length > 0 ? (
-            info.size.map((item, index) => (
-              <div key={index}>
-                <strong>Size:</strong> {item} <br />
-                <strong>Format:</strong> {info.format[index]} <br />
-                <strong>Separator:</strong> {info.separator[index]}
+        <div className="container">
+          <h2 className="section">DATASET</h2>
+
+          <div className="card mb-3">
+            <div className="card-header"> 
+              <span className="details-text">Header <DatabaseIcon /></span>
+            </div>
+            {header && header[0] && (
+              <div className="card-body">
+                <div className="horizontal-scroll">
+                  {header[0].map((item, index) => (
+                    <div key={index} className="item-container">
+                      <button
+                        type="button"
+                        className={`btn ${selectedHeaderValues.includes(item) ? 'btn-primary active' : 'btn btn-secondary'}`}
+                        onClick={() => toggleHeaderSelection(item)}
+                        style={{
+                          background: selectedHeaderValues.includes(item) ? 'white' : 'linear-gradient(30deg, #5799E5, #005AC1)',
+                          color: selectedHeaderValues.includes(item) ? 'black' : '',
+                        }}
+                      >
+                        <span className={`details-header ${selectedHeaderValues.includes(item) ? 'selected' : ''}`}>{item}</span>
+                      </button>
+                      <div style={{ height: '5px' }}></div>
+                      <button
+                        type="button"
+                        className={`btn ${selectedHeaderValues.includes(statistics.type[item]) ? 'btn-group-toggle active' : 'btn btn-secondary'} no-pulse`}
+                        style={{ background: '#E1E1E1' }}
+                      >
+                        <span className="details-header">{statistics.type[item]}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))
-          ) : (
-            <div>
-                <strong>Size:</strong> N/A <br />
-                <strong>Format:</strong> N/A <br />
-                <strong>Separator:</strong> N/A
+            )}
+          </div>
+
+
+
+        <div className="row">
+      <div className="col-md-6">
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span className="details-text">Details <AspectRatioIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('details')} checked={cardVisibility.details} />
+                <div className="knobs"></div>
+                <div className="layer"></div>
+              </div>
+            </div>
+          </div>
+          {cardVisibility.details && (
+            <div className="card-body">
+              {info.size.map((item, index) => (
+                  <div key={index}>
+                    <strong>Size:</strong> {item} <br />
+                    <strong>Format:</strong> {info.format[index] !== null ? info.format[index] : 'N/A'} <br />
+                    <strong>Separator:</strong> {info.separator[index] !== null ? info.separator[index] : 'N/A'}
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>
-      )}
-    </div>
-  </div>
+      </div>
 
       <div className="col-md-6">
         <div className="card mb-3">
@@ -1553,30 +1567,23 @@ const handleLegendClickImplicating = (legendText) => {
                 <input
                   className="checkbox"
                   type="checkbox"
-                  onChange={() => toggleCardVisibility('columnAndRowNumber')}
-                  checked={cardVisibility.columnAndRowNumber}
+                  onChange={() => toggleCardVisibility('contentSpecifications')}
+                  checked={cardVisibility.contentSpecifications}
                 />
                 <div className="knobs"></div>
                 <div className="layer"></div>
               </div>
             </div>
           </div>
-          {cardVisibility.columnAndRowNumber && (
+          {cardVisibility.contentSpecifications && (
             <div className="card-body">
-              {info.col_number.length > 0 ? (
-                info.col_number.map((item, index) => (
+              {info.col_number.map((item, index) => (
                   <div key={index}>
                     <strong>Column:</strong> {item} <br />
-                    <strong>Row:</strong> {info.row_number[index]} <br />
-                    <strong>Blank char:</strong> {info.blank_char[index]}
+                    <strong>Row:</strong> {info.row_number[index] !== null ? info.row_number[index] : 'N/A'} <br />
+                    <strong>Blank char:</strong> {info.blank_char[index] !== null ? info.blank_char[index] : 'N/A'}
                   </div>
-                ))
-              ) : (
-                <div>
-                  <strong>Column:</strong> N/A <br />
-                  <strong>Row:</strong> N/A <br />
-                  <strong>Blank char:</strong> N/A
-                </div>
+                )
               )}
             </div>
           )}
@@ -1589,7 +1596,7 @@ const handleLegendClickImplicating = (legendText) => {
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">MEAN, MEDIAN, MODE <ChartIcon /></span>
+        <span className="details-text">BOX PLOT <ChartIcon /></span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -1625,182 +1632,182 @@ const handleLegendClickImplicating = (legendText) => {
 
 
     <div className="row">
-    <div className="col-md-12">
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">MIN, MAX <ChartIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('minmax')} checked={cardVisibility.minmax} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
+      <div className="col-md-12">
+          <div className="card mb-3">
+            <div className="d-flex justify-content-between align-items-center card-header">
+              <span className="details-text">MIN, MAX <ChartIcon /></span>
+              <div className="toggle-button-cover">
+                <div id="button-3" className="button r">
+                  <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('minmax')} checked={cardVisibility.minmax} />
+                  <div className="knobs"></div>
+                  <div className="layer"></div>
+                </div>
+              </div>
+              </div>
+          {cardVisibility.minmax && (
+            <div className="card-body">
+              <div style={{ height: '300px' }}>
+                <Bar data={minMaxChartData} options={minMaxChartOptions} />
               </div>
             </div>
-            </div>
-        {cardVisibility.minmax && (
-          <div className="card-body">
-            <div style={{ height: '300px' }}>
-              <Bar data={minMaxChartData} options={minMaxChartOptions} />
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </div>
 
 
     <div className="row">
-    <div className="col-md-12">
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">NULL VALUES <ChartIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('nullValues')} checked={cardVisibility.nullValues} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
+      <div className="col-md-12">
+          <div className="card mb-3">
+            <div className="d-flex justify-content-between align-items-center card-header">
+              <span className="details-text">NULL VALUES <ChartIcon /></span>
+              <div className="toggle-button-cover">
+                <div id="button-3" className="button r">
+                  <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('nullValues')} checked={cardVisibility.nullValues} />
+                  <div className="knobs"></div>
+                  <div className="layer"></div>
+                </div>
+              </div>
+              </div>
+          {cardVisibility.nullValues && (
+              <div className="card-body d-flex flex-column align-items-center">
+              <div style={{ width: '100%', height: '200px' }}>
+                <Bar data={nullValuesChartData} options={nullValuesChartOptions} />
               </div>
             </div>
-            </div>
-        {cardVisibility.nullValues && (
-            <div className="card-body d-flex flex-column align-items-center">
-            <div style={{ width: '100%', height: '200px' }}>
-              <Bar data={nullValuesChartData} options={nullValuesChartOptions} />
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </div>
 
 
     <div className="card mb-3" style={{ marginTop: 0 }}>
-        <div className="d-flex justify-content-between align-items-center card-header">
-          <span className="details-text">CHARTS</span>
-          <div className="toggle-button-cover">
-            <div id="button-3" className="button r">
-              <input
-                className="checkbox"
-                type="checkbox"
-                onChange={() => toggleCardVisibility('column')}
-                checked={cardVisibility.column}
-              />
-              <div className="knobs"></div>
-              <div className="layer"></div>
-            </div>
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span className="details-text">CHARTS</span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('column')}
+              checked={cardVisibility.column}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
         </div>
-        {cardVisibility.column && (
-          <>
-            <div className="card-body d-flex flex-wrap justify-content-center">
-              {getPaginatedCharts().map((attribute) => {
-                const dataForAttribute = getChartDataForAttribute(attribute);
-                const labels = dataForAttribute.labels.map((label, index) => {
-                  const value = dataForAttribute.datasets[0].data[index];
-                  const percentage = value.toFixed(2);
-                  return `${label.split(':')[1]}: ${percentage}%`;
-                });
-
-                const backgroundColors = dataForAttribute.datasets[0].backgroundColor;
-                const maxValues = Object.keys(relativeFrequency[attribute]).length;
-
-                return (
-                  <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
-                    <h3 className="attribute-title text-center">{attribute}</h3>
-                    <div className="label-boxes-container mt-2 mx-auto">
-                      <div className="label-boxes">
-                        {labels.map((label, index) => (
-                          <div key={index} className="label-box">
-                            <div className="color-box" style={{ backgroundColor: backgroundColors[index] }}></div>
-                            {' ' + label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ height: '10px' }}></div>
-                    <div className="chart-container text-center">
-                      <Pie data={dataForAttribute} options={distributionChartOptions} />
-                    </div>
-                    <select
-                      value={chartDataLimit[attribute] ?? (maxValues >= 10 ? 10 : Math.min(maxValues, 10))}
-                      onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
-                      className="form-select mt-2 mx-auto"
-                      style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
-                    >
-                      {maxValues < 5 && <option value={maxValues}>{maxValues} values</option>}
-                      {maxValues >= 5 && maxValues < 10 && (
-                        <>
-                          <option value="5">5 values</option>
-                          <option value={maxValues}>{maxValues} values</option>
-                        </>
-                      )}
-                      {maxValues >= 10 && maxValues < 20 && (
-                        <>
-                          <option value="5">5 values</option>
-                          <option value="10">10 values</option>
-                          <option value={maxValues}>{maxValues} values</option>
-                        </>
-                      )}
-                      {maxValues >= 20 && (
-                        <>
-                          <option value="5">5 values</option>
-                          <option value="10">10 values</option>
-                          <option value="20">20 values</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="pagination-container d-flex justify-content-center mt-3">
-              <div className="pagination-bar">
-                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="pagination-button">{'<'}</button>
-                {renderPaginationButtons()}
-                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-button">{'>'}</button>
-              </div>
-            </div>
-          </>
-        )}
       </div>
+      {cardVisibility.column && (
+        <>
+          <div className="card-body d-flex flex-wrap justify-content-center">
+            {getPaginatedCharts().map((attribute) => {
+              const dataForAttribute = getChartDataForAttribute(attribute);
+              const labels = dataForAttribute.labels.map((label, index) => {
+                const value = dataForAttribute.datasets[0].data[index];
+                const percentage = value.toFixed(2);
+                return `${label.split(':')[1]}: ${percentage}%`;
+              });
+
+              const backgroundColors = dataForAttribute.datasets[0].backgroundColor;
+              const maxValues = Object.keys(relativeFrequency[attribute]).length;
+
+              return (
+                <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
+                  <h3 className="attribute-title text-center">{attribute}</h3>
+                  <div className="label-boxes-container mt-2 mx-auto">
+                    <div className="label-boxes">
+                      {labels.map((label, index) => (
+                        <div key={index} className="label-box">
+                          <div className="color-box" style={{ backgroundColor: backgroundColors[index] }}></div>
+                          {' ' + label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ height: '10px' }}></div>
+                  <div className="chart-container text-center">
+                    <Pie data={dataForAttribute} options={distributionChartOptions} />
+                  </div>
+                  <select
+                    value={chartDataLimit[attribute] ?? (maxValues >= 10 ? 10 : Math.min(maxValues, 10))}
+                    onChange={(e) => handleSliderChange(attribute, parseInt(e.target.value))}
+                    className="form-select mt-2 mx-auto"
+                    style={{ display: 'block', margin: '10px auto 0 auto', width: '80%' }}
+                  >
+                    {maxValues < 5 && <option value={maxValues}>{maxValues} values</option>}
+                    {maxValues >= 5 && maxValues < 10 && (
+                      <>
+                        <option value="5">5 values</option>
+                        <option value={maxValues}>{maxValues} values</option>
+                      </>
+                    )}
+                    {maxValues >= 10 && maxValues < 20 && (
+                      <>
+                        <option value="5">5 values</option>
+                        <option value="10">10 values</option>
+                        <option value={maxValues}>{maxValues} values</option>
+                      </>
+                    )}
+                    {maxValues >= 20 && (
+                      <>
+                        <option value="5">5 values</option>
+                        <option value="10">10 values</option>
+                        <option value="20">20 values</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+          <div className="pagination-container d-flex justify-content-center mt-3">
+            <div className="pagination-bar">
+              <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="pagination-button">{'<'}</button>
+              {renderPaginationButtons()}
+              <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-button">{'>'}</button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
 
 
-      <h2 className="section">ALGORITHM</h2>
+    <h2 className="section">ALGORITHM</h2>
 
 
     <div className="card mb-3">
-  <div className="d-flex justify-content-between align-items-center card-header">
-    <span className="details-text">Algorithm <PcIcon /></span>
-    <div className="toggle-button-cover">
-      <div id="button-3" className="button r">
-        <input
-          className="checkbox"
-          type="checkbox"
-          onChange={() => toggleCardVisibility('algorithm')}
-          checked={cardVisibility.algorithm}
-        />
-        <div className="knobs"></div>
-        <div className="layer"></div>
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span className="details-text">Algorithm <PcIcon /></span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('algorithm')}
+              checked={cardVisibility.algorithm}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-  {cardVisibility.algorithm && (
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                     </div>
-                        {info.language.map((item, index) => (
-                          <div key={index}>
-                            <strong>Name:</strong> {info.name[1]} <br />
-                            <strong>Language:</strong> {info.language[index]} <br />
-                            <strong>Platform:</strong> {info.platform[index]} <br />
-                            <strong>Execution Type:</strong> {info.execution_type[index]}<br />
-                          </div>
-                        ))}
-              </div>
+      {cardVisibility.algorithm && (
+        <div className="card-body">
+          <div className="row">
+            <div className="col-md-6">
+              {info.language.map((item, index) => (
+                <div key={index}>
+                  <strong>Name:</strong> {info.name[index]} <br />
+                  <strong>Language:</strong> {info.language[index]} <br />
+                  <strong>Platform:</strong> {info.platform[index]} <br />
+                  <strong>Execution Type:</strong> {info.execution_type[index]}<br />
+                </div>
+              ))}
             </div>
-          )}
-</div>
+          </div>
+        </div>
+      )}
+    </div>
 
         
         
@@ -1865,234 +1872,238 @@ const handleLegendClickImplicating = (legendText) => {
 
 
     <div className="row d-flex">
-    <div className="col-md-4">
-        <div className={`card mb-3 w-100 ${cardVisibility.timeExecution ? 'h-100' : ''}`}>
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">Time Execution <BugIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution')} checked={cardVisibility.timeExecution} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
-          </div>
-          {cardVisibility.timeExecution && (
-            <div className="card-body">
-              {info.dataset_loading.length > 0 && info.preprocessing.length > 0 && info.discovery.length > 0 ? (
-                info.dataset_loading.map((item, index) => (
-                  <div key={index}>
-                    <strong>Dataset Loading:</strong> {item && (item.endsWith('s') ? parseFloat(item) * 1000 : parseFloat(item))}ms<br />
-                    <strong>Preprocessing:</strong> {info.preprocessing[index] && (info.preprocessing[index].endsWith('s') ? parseFloat(info.preprocessing[index]) * 1000 : parseFloat(info.preprocessing[index]))}ms<br />
-                    <strong>Discovery:</strong> {info.discovery[index] && (info.discovery[index].endsWith('s') ? parseFloat(info.discovery[index]) * 1000 : parseFloat(info.discovery[index]))}ms<br />
-                    <strong>Left:</strong> {left > 1000 ? (left / 1000).toFixed(2).replace('.', ',') + 's' : left + 'ms'}<br />
-                    <strong>Total:</strong> {info.total[index]} <br />
-                  </div>
-                ))
-              ) : (
-                <div>
-                  <strong>Data not available</strong>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div><div className="col-md-4">
-        <div className={`card mb-3 w-100 ${cardVisibility.ramUsage ? 'h-100' : ''}`}>
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">Ram Usage <CpuIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('ramUsage')} checked={cardVisibility.ramUsage} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
-          </div>
-          {cardVisibility.ramUsage && (
-            <div className="card-body">
-              {info.max_ram_used.length > 0 && info.unit.length > 0 ? (
-                info.max_ram_used.map((item, index) => (
-                  <div key={index}>
-                    <strong>Unit:</strong> {info.unit[index]} <br />
-                    <strong>Max Ram Used:</strong> {info.max_ram_used[index]} <br />
-                  </div>
-                ))
-              ) : (
-                <div>
-                    <strong>Unit:</strong> N/A <br />
-                    <strong>Max Ram Used:</strong> N/A <br />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
       <div className="col-md-4">
-        <div className={`card mb-3 w-100 ${cardVisibility.error ? 'h-100' : ''}`}>
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">Error <BugIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('error')} checked={cardVisibility.error} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
+          <div className={`card mb-3 w-100 ${cardVisibility.timeExecution ? 'h-100' : ''}`}>
+            <div className="d-flex justify-content-between align-items-center card-header">
+              <span className="details-text">Time Execution <BugIcon /></span>
+              <div className="toggle-button-cover">
+                <div id="button-3" className="button r">
+                  <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution')} checked={cardVisibility.timeExecution} />
+                  <div className="knobs"></div>
+                  <div className="layer"></div>
+                </div>
               </div>
             </div>
-          </div>
-          {cardVisibility.error && (
-            <div className="card-body">
-              {info.time_limit.length > 0 && info.memory_limit.length > 0 && info.general_error.length > 0 ? (
-                info.time_limit.map((item, index) => (
+            {cardVisibility.timeExecution && (
+              <div className="card-body">
+                {info.dataset_loading.map((item, index) => (
                   <div key={index}>
-                    <strong>Time Limit:</strong> {item} <br />
-                    <strong>Memory Limit:</strong> {info.memory_limit[index]} <br />
-                    <strong>General Error:</strong> {info.general_error[index]} <br />
+                    <strong>Dataset Loading:</strong> {formatTime(item)}<br />
+                    <strong>Preprocessing:</strong> {formatTime(info.preprocessing[index])}<br />
+                    <strong>Discovery:</strong> {formatTime(info.discovery[index])}<br />
+                    <strong>Left:</strong> {formatLeftTime(left) !== '0ms' && formatLeftTime(left) !== '0s' ? formatLeftTime(left) : 'N/A'}<br />
+                    <strong>Total:</strong> {info.total[index] && info.total[index].trim() !== '' ? info.info.total[index] : 'N/A'} <br />
                   </div>
-                ))
-              ) : (
-                <div>
-                    <strong>Time Limit:</strong> N/A <br />
-                    <strong>Memory Limit:</strong> N/A <br />
-                    <strong>General Error:</strong> N/A <br />
+                ))}
+              </div>
+            )}
+          </div>
+        </div><div className="col-md-4">
+          <div className={`card mb-3 w-100 ${cardVisibility.ramUsage ? 'h-100' : ''}`}>
+            <div className="d-flex justify-content-between align-items-center card-header">
+              <span className="details-text">Ram Usage <CpuIcon /></span>
+              <div className="toggle-button-cover">
+                <div id="button-3" className="button r">
+                  <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('ramUsage')} checked={cardVisibility.ramUsage} />
+                  <div className="knobs"></div>
+                  <div className="layer"></div>
+                </div>
+              </div>
+            </div>
+            {cardVisibility.ramUsage && (
+              <div className="card-body">
+                {info.max_ram_used.map((item, index) => (
+                  <div key={index}>
+                    <strong>Unit:</strong> {info.unit[1] && info.unit[1].trim() !== '' ? info.unit[1] : 'N/A'} <br />
+                    <strong>Max Ram Used:</strong> {info.max_ram_used[index] !== null ? info.max_ram_used[index] : 'N/A'} <br />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className={`card mb-3 w-100 ${cardVisibility.error ? 'h-100' : ''}`}>
+            <div className="d-flex justify-content-between align-items-center card-header">
+              <span className="details-text">Error <BugIcon /></span>
+              <div className="toggle-button-cover">
+                <div id="button-3" className="button r">
+                  <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('error')} checked={cardVisibility.error} />
+                  <div className="knobs"></div>
+                  <div className="layer"></div>
+                </div>
+              </div>
+            </div>
+            {cardVisibility.error && (
+                <div className="card-body">
+                  {info.time_limit.map((item, index) => (
+                    <div key={index}>
+                      <strong>Time Limit:</strong> {item !== null ? item : 'N/A'} <br />
+                      <strong>Memory Limit:</strong> {info.memory_limit[index] !== null ? info.memory_limit[index] : 'N/A'} <br />
+                      <strong>General Error:</strong> {info.general_error[index] && info.general_error[index].trim() !== '' ? info.info.general_error[index] : 'N/A'} <br />
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
-          )}
-        </div>
-      </div>
-        <div style={{ marginBottom: '20px' }}></div>
-      </div>
-
-
-      <div className="row">
-    <div className="col-md-12">
-      {shouldDisplayCard && (
-        <div className="card mb-3">
-          <div className="d-flex justify-content-between align-items-center card-header">
-            <span className="details-text">TIME EXECUTION <PcIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution2')} checked={cardVisibility.timeExecution2} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
           </div>
-          {cardVisibility.timeExecution2 && (
-            <div className="card-body d-flex flex-column align-items-center">
-              <div style={{ width: '100%', height: '200px' }}>
-                <Bar data={timeChartData} options={timeChartOptions} />
-              </div>
-            </div>
-          )}
         </div>
-      )}
+      <div style={{ marginBottom: '20px' }}></div>
     </div>
 
 
-      <h2 className="section">RESULT</h2>
+    <div className="row">
+      <div className="col-md-12">
+        {shouldDisplayCard && (
+          <div className="card mb-3">
+            <div className="d-flex justify-content-between align-items-center card-header">
+              <span className="details-text">TIME EXECUTION <PcIcon /></span>
+              <div className="toggle-button-cover">
+                <div id="button-3" className="button r">
+                  <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution2')} checked={cardVisibility.timeExecution2} />
+                  <div className="knobs"></div>
+                  <div className="layer"></div>
+                </div>
+              </div>
+            </div>
+            {cardVisibility.timeExecution2 && (
+              <div className="card-body d-flex flex-column align-items-center">
+                <div style={{ width: '100%', height: '200px' }}>
+                  <Bar data={timeChartData} options={timeChartOptions} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+    </div>
 
+
+    <h2 className="section">RESULT</h2>
   
-   
-  <div className="col-md-12">
-    <div className="card mb-3">
+
+    <div className="col-md-12">
+      <div className="card mb-3">
+        <div className="d-flex justify-content-between align-items-center card-header">
+          <span className="details-text">LHS CARDINALITY <ChartIcon /></span>
+          <div className="toggle-button-cover">
+            <div id="button-3" className="button r">
+              <input
+                className="checkbox"
+                type="checkbox"
+                onChange={() => toggleCardVisibility('cardinality')}
+                checked={cardVisibility.cardinality}
+              />
+              <div className="knobs"></div>
+              <div className="layer"></div>
+            </div>
+          </div>
+        </div>
+        {cardVisibility.cardinality && (
+          <div className="card-body">
+            <div className="label-boxes-container mt-2 mx-auto">
+              <div className="label-boxes">
+                {labelsAndColorsCardinality.map(([label, color], index) => (
+                  <div
+                    key={index}
+                    className={`label-box ${cardinalityValues.includes(label) ? 'label-box-deleted' : ''}`}
+                    onClick={() => handleLegendClickCardinality(label)}
+                  >
+                    <div className="color-box" style={{ backgroundColor: color }}
+                    onClick={() => handleLegendClickCardinality(label)}
+                  >
+                  </div>
+                    {' ' + label}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ width: '100%', height: '300px' }}>
+              <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
+            </div>
+          </div>
+        )}
+      </div>
+     </div>
+    </div>
+    
+
+    <div className="card mb-12">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">LHS CARDINALITY <ChartIcon /></span>
+        <span className="details-text">FREQUENCY <ChartIcon /></span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
-            <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('cardinality')} checked={cardVisibility.cardinality} />
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('frequency')}
+              checked={cardVisibility.frequency}
+            />
             <div className="knobs"></div>
             <div className="layer"></div>
           </div>
         </div>
       </div>
-      {cardVisibility.cardinality && (
+      {cardVisibility.frequency && (
         <div className="card-body">
-                      <div className="label-boxes-container mt-2 mx-auto">
-              <div className="label-boxes">
-                {labelsAndColorsCardinality.map(([label, color], index) => (
-                  <div 
-                        key={index} 
-                        className={`label-box ${cardinalityValues.includes(label) ? 'label-box-deleted' : ''}`} 
-                        onClick={() => handleLegendClickCardinality(label)}
-                      >
-                        <div className="color-box" style={{ backgroundColor: color }}></div>
-                        {' ' + label}
+          <div className="label-boxes-container mt-2 mx-auto">
+            <div className="label-boxes">
+              {labelsAndColorsFrequency.map(([label, color], index) => (
+                <div
+                  key={index}
+                  className={`label-box ${frequencyValues.includes(label) ? 'label-box-deleted' : ''}`}
+                  onClick={() => handleLegendClickFrequency(label)}
+                >
+                  <div className="color-box" style={{ backgroundColor: color }}
+                  onClick={() => handleLegendClickFrequency(label)}
+                  >
+                  </div>
+                  {' ' + label}
                 </div>
-                ))}
-              </div>
-        </div>
-          <div style={{ width: '100%', height:'300px'}}>
-            <Bar data={lhsAttributeChartData} options={lhsAttributeChartOptions} />
+              ))}
+            </div>
+          </div>
+          <div style={{ height: '300px' }}>
+            <Bar data={variableChartData} options={variableChartOptions} />
           </div>
         </div>
       )}
     </div>
-  </div>
-</div>
 
-<div className="card mb-12">
-  <div className="d-flex justify-content-between align-items-center card-header">
-    <span className="details-text">FREQUENCY <ChartIcon /></span>
-    <div className="toggle-button-cover">
-      <div id="button-3" className="button r">
-        <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('frequency')} checked={cardVisibility.frequency} />
-        <div className="knobs"></div>
-        <div className="layer"></div>
-      </div>
-    </div>
-  </div>
-  {cardVisibility.frequency && (
-        <div className="card-body">
-            <div className="label-boxes-container mt-2 mx-auto">
-              <div className="label-boxes">
-                {labelsAndColorsFrequency.map(([label, color], index) => (
-                  <div 
-                    key={index} 
-                    className={`label-box ${frequencyValues.includes(label) ? 'label-box-deleted' : ''}`} 
-                    onClick={() => handleLegendClickFrequency(label)}
-                  >
-                    <div className="color-box" style={{ backgroundColor: color }}></div>
-                    {' ' + label}
-                  </div>
-                ))}
-              </div>
-        </div>
-      <div style={{ height: '300px' }}>
-        <Bar data={variableChartData} options={variableChartOptions} />
-      </div>
-    </div>
-  )}
-</div>
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">IMPLICATING ATTRIBUTES <ChartIcon /> </span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('implicating')} checked={cardVisibility.implicating} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('implicating')}
+              checked={cardVisibility.implicating}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
+        </div>
+      </div>
       {cardVisibility.implicating && (
         <div className="card-body">
-        <div className="label-boxes-container mt-2 mx-auto">
-          <div className="label-boxes">
-            {labelsAndColorsImplicating.map(([label, color], index) => (
-              <div 
-              key={index} 
-              className={`label-box ${implicatingValues.includes(label) ? 'label-box-deleted' : ''}`} 
-              onClick={() => handleLegendClickImplicating(label)}
-              >
-              <div className="color-box" style={{ backgroundColor: color }}></div>
-              {' ' + label}
-              </div>
-            ))}
+          <div className="label-boxes-container mt-2 mx-auto">
+            <div className="label-boxes">
+              {labelsAndColorsImplicating.map(([label, color], index) => (
+                <div
+                  key={index}
+                  className={`label-box ${implicatingValues.includes(label) ? 'label-box-deleted' : ''}`}
+                  onClick={() => handleLegendClickImplicating(label)}
+                >
+                  <div className="color-box" style={{ backgroundColor: color }}
+                  onClick={() => handleLegendClickImplicating(label)}
+                >
+                </div>
+                  {' ' + label}
+                </div>
+              ))}
+            </div>
           </div>
-      </div>
           <div style={{ height: '300px' }}>
             <Bar data={implicatingChartData} options={implicatingChartOptions} />
           </div>
@@ -2100,19 +2111,40 @@ const handleLegendClickImplicating = (legendText) => {
       )}
     </div>
 
-
-
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
-      <span className="details-text">RFDs (total: {allRFDs.length} - filtered: {filteredRFDs.length})</span>
-                <div className="toggle-button-cover">
-                  <div id="button-3" className="button r">
-                    <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('rfd')} checked={cardVisibility.rfd} />
-                    <div className="knobs"></div>
-                    <div className="layer"></div>
-                  </div>
-                </div>
-                </div>
+        <span className="details-text">
+          RFDs (total: {allRFDs.length} - filtered: {filteredRFDs.length})
+        </span>
+        <span
+          className={`menu-trigger ${!cardVisibility.rfd ? 'disabled' : ''}`}
+          onClick={cardVisibility.rfd ? toggleMenu : undefined}
+        >
+          ...
+        </span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => {
+                toggleCardVisibility('rfd');
+              }}
+              checked={cardVisibility.rfd}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
+          </div>
+        </div>
+      </div>
+      <div className={`menu ${menuOpen ? 'open' : ''}`}>
+        <b>FILTERS*</b><br /><br />
+        <b>Attributes header :</b> {selectedHeaderValues.join(', ')}<br />
+        <b>LHS cardinality :</b> {cardinalityValues.join(', ')}<br />
+        <b>Frequency :</b> {frequencyValues.join(', ')}<br />
+        <b>Attributes header implicated :</b> {implicatingValues.join(', ')}<br /><br />
+        <i>* = dependencies with these features are not included in this list</i>
+      </div>
       {cardVisibility.rfd && (
         <div className="card-body">
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -2121,127 +2153,135 @@ const handleLegendClickImplicating = (legendText) => {
               className="select-btn larger-checkbox"
               checked={selectedRows.length === filteredRFDs.length}
               onChange={toggleSelectAll}
-        />
-        <label style={{ marginLeft: '10px' }}>
-          {selectedRows.length === filteredRFDs.length ? "Deselect all" : "Select all"}
-        </label>
-      </div>
-      <div style={{ height: '15px' }}></div>
-
-      <div style={{ whiteSpace: 'pre-wrap' }}>
-        {filteredRFDs.map((rfd, index) => {
-
-          return (
-            <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-              <input
-                type="checkbox"
-                className="larger-checkbox"
-                checked={selectedRows.includes(index)}
-                onChange={() => toggleRowSelection(index)}
-              />
-              <label style={{ marginLeft: '10px' }}>
-                {rfd}
-              </label>
-            </div>
-          );
-        })}
-      </div>
+            />
+            <label style={{ marginLeft: '10px' }}>
+              {selectedRows.length === filteredRFDs.length ? "Deselect all" : "Select all"}
+            </label>
+          </div>
+          <div style={{ height: '15px' }}></div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>
+            {filteredRFDs.map((rfd, index) => (
+              <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  className="larger-checkbox"
+                  checked={selectedRows.includes(index)}
+                  onChange={() => toggleRowSelection(index)}
+                />
+                <label style={{ marginLeft: '10px' }}>
+                  {rfd}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-  )}
-</div>
-    
+
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">PROMPT <CpuIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('prompt')} checked={cardVisibility.prompt} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
-            </div>
-      {cardVisibility.prompt && (
-        <div className="card-body">
-        <textarea
-          type="text"
-          value={customPromptAI}
-          onChange={handleTextareaChange}
-          style={{ width: "100%", minHeight: "200px" }}
-        />
-        
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-        <select
-            className="form-select mt-2"
-            style={{ display: 'block', marginLeft: '0', width: '300px' }}
-            value={selectedPrompt}
-            onChange={handlePromptChange}
-            >
-            {Object.keys(prompts).map((prompt, index) => (
-            <option key={index} value={prompt}>
-            {prompt}
-            </option>
-            ))}
-         </select>
-          <button className="select-btn" onClick={scrollToBottom}>
-            {isLoading ? "LOADING..." : "EXPLANATION"}
-          </button>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('prompt')}
+              checked={cardVisibility.prompt}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
+          </div>
         </div>
       </div>
+      {cardVisibility.prompt && (
+        <div className="card-body">
+          <textarea
+            type="text"
+            value={customPromptAI}
+            onChange={handleTextareaChange}
+            style={{ width: "100%", minHeight: "200px" }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+            <select
+              className="form-select mt-2"
+              style={{ display: 'block', marginLeft: '0', width: '300px' }}
+              value={selectedPrompt}
+              onChange={handlePromptChange}
+            >
+              {Object.keys(prompts).map((prompt, index) => (
+                <option key={index} value={prompt}>
+                  {prompt}
+                </option>
+              ))}
+            </select>
+            <button className="select-btn" onClick={scrollToBottom} disabled={isLoading}>
+              {isLoading ? "LOADING..." : "EXPLANATION"}
+            </button>
+          </div>
+        </div>
       )}
     </div>
 
     <div className="card mb-3">
-  <div className="d-flex justify-content-between align-items-center card-header">
-    <span className="details-text">EXPLANATION <RobotIcon /></span>
-    <div className="toggle-button-cover">
-      <div id="button-3" className="button r">
-        <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('explanation')} checked={cardVisibility.explanation} />
-        <div className="knobs"></div>
-        <div className="layer"></div>
-      </div>
-    </div>
-  </div>
-  {cardVisibility.explanation && (
-    <div className="card-body">
-      {isTextGenerated && (
-        <>
-          <p>{responseAI}</p>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
-            <button className="select-btn" onClick={summarizeText}>
-              {isLoading2 ? "LOADING..." : "SUMMARY"}
-            </button>        
+      <div className="d-flex justify-content-between align-items-center card-header">
+        <span className="details-text">EXPLANATION <RobotIcon /></span>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('explanation')}
+              checked={cardVisibility.explanation}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
           </div>
-        </>
+        </div>
+      </div>
+      {cardVisibility.explanation && (
+        <div className="card-body">
+          {isTextGenerated && (
+            <>
+              <p>{responseAI}</p>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button className="select-btn" onClick={summarizeText} disabled={isLoading2}>
+                  {isLoading2 ? "LOADING..." : "SUMMARY"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
-  )}
-</div>
-
-
 
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">SUMMARY <RobotIcon /></span>
-            <div className="toggle-button-cover">
-              <div id="button-3" className="button r">
-                <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('summary')} checked={cardVisibility.summary} />
-                <div className="knobs"></div>
-                <div className="layer"></div>
-              </div>
-            </div>
-            </div>
-          {cardVisibility.summary && (
-            <div className="card-body">
-              {isTextGenerated2 && (
-                <p>{responseAI2}</p>
-              )}
-            </div>
+        <div className="toggle-button-cover">
+          <div id="button-3" className="button r">
+            <input
+              className="checkbox"
+              type="checkbox"
+              onChange={() => toggleCardVisibility('summary')}
+              checked={cardVisibility.summary}
+            />
+            <div className="knobs"></div>
+            <div className="layer"></div>
+          </div>
+        </div>
+      </div>
+      {cardVisibility.summary && (
+        <div className="card-body">
+          {isTextGenerated2 && (
+            <p>{responseAI2}</p>
           )}
-      </div>
-      </div>
+        </div>
+      )}
     </div>
+    </div>
+  </div>
 
     
 
