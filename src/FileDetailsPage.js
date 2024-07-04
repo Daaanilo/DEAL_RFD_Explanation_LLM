@@ -1892,7 +1892,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                     <strong>Preprocessing:</strong> {formatTime(info.preprocessing[index])}<br />
                     <strong>Discovery:</strong> {formatTime(info.discovery[index])}<br />
                     <strong>Left:</strong> {formatLeftTime(left) !== '0ms' && formatLeftTime(left) !== '0s' ? formatLeftTime(left) : 'N/A'}<br />
-                    <strong>Total:</strong> {info.total[index] && info.total[index].trim() !== '' ? info.info.total[index] : 'N/A'} <br />
+                    <strong>Total:</strong> {info.total[index] && info.total[index].trim() !== '' ? info.total[index] : 'N/A'} <br />
                   </div>
                 ))}
               </div>
