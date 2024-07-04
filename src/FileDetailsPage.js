@@ -497,26 +497,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   // CHART: TIME EXECUTION
 
-  const formatTime = (timeString) => {
-    if (timeString) {
-      let time = parseFloat(timeString);
-      if (timeString.endsWith('s')) {
-        return `${(time * 1000).toFixed(2)}ms`;
-      } else {
-        return `${time}ms`;
-      }
-    } else {
+  const formatTime = (time) => {
+    if (time === 0) {
       return 'N/A';
-    }
-  };
-
-  const formatLeftTime = (left) => {
-    if (left === 0) {
-      return 'N/A';
-    } else if (left > 1000) {
-      return `${(left / 1000).toFixed(2).replace('.', ',')}s`;
+    } else if (time > 1000) {
+      return `${(time / 1000).toFixed(2).replace('.', ',')}s`;
     } else {
-      return `${left}ms`;
+      return `${time}ms`;
     }
   };
 
@@ -1888,11 +1875,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               <div className="card-body">
                 {info.dataset_loading.map((item, index) => (
                   <div key={index}>
-                    <strong>Dataset Loading:</strong> {formatTime(item)}<br />
-                    <strong>Preprocessing:</strong> {formatTime(info.preprocessing[index])}<br />
-                    <strong>Discovery:</strong> {formatTime(info.discovery[index])}<br />
-                    <strong>Left:</strong> {formatLeftTime(left) !== '0ms' && formatLeftTime(left) !== '0s' ? formatLeftTime(left) : 'N/A'}<br />
-                    <strong>Total:</strong> {info.total[index] && info.total[index].trim() !== '' ? info.total[index] : 'N/A'} <br />
+                    <strong>Dataset Loading:</strong> {info.dataset_loading[index] !== null ? formatTime(info.dataset_loading[index]) : 'N/A'} <br />
+                    <strong>Preprocessing:</strong> {info.preprocessing[index] !== null ? formatTime(info.preprocessing[index]) : 'N/A'} <br />
+                    <strong>Discovery:</strong> {info.discovery[index] !== null ? formatTime(info.discovery[index]) : 'N/A'} <br />
+                    <strong>Left:</strong> {formatTime(left) !== '0ms' && formatTime(left) !== '0s' ? formatTime(left) : 'N/A'} <br />
+                    <strong>Total:</strong> {info.total[index] && info.total[index].trim() !== '' ? formatTime(info.total[index]) : 'N/A'} <br />
                   </div>
                 ))}
               </div>
