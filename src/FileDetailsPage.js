@@ -39,13 +39,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const initialPrompts = useMemo(() => ({
     'RFDs Overview': "",
-    'Statistical Measures Analysis': "I would like a thorough understanding of the following statistics, including a detailed analysis of the variables "+
-        "involved and their measures of central tendency and dispersion. I'm looking for an overall summary that explains the concept of each statistic, "+
-        "how these measures interact with each other, and their impact on data. The statistics are as follows: mean, median, and mode:\n",
-    'Dataset Value Distribution Analysis': "I would like to gain a comprehensive understanding of the dataset headers and the distribution of most frequent "+
-        "values associated with each. This includes a detailed analysis of header names and the prevalent values within them. I'm seeking an overarching summary "+
-        "that explains how these values are distributed across different headers and the significance of this distribution for an overall understanding of the dataset. "+
-        "The values are as follows:\n"
+    'Mean, Median, and Mode': "Additionally, given these dependencies, the values of mean, median, and mode are as follows:\n",
+    'Most Common Values': "This is the distribution of the most common values ​​for each column header:\n",
+    'Stats': "I also would like an overall summary that explains how these statistics interact with each other, "+
+      "and their impact on data, how these values are distributed across different headers and the significance of this distribution for an overall understanding of the dataset."
   }), []);
 
   const prompts = useMemo(() => ({
@@ -53,8 +50,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
         "I want an overall summary that explains the general concept of these dependencies, "+
         "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n",
-    'Statistical Measures Analysis': "",
-    'Dataset Value Distribution Analysis': ""
+    'RFDs Analysis with Stats': ""
   }), []);
 
   const getColors = (darkMode) => {
@@ -72,21 +68,26 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   useEffect(() => {
     const newBasePrompt = prompts[selectedPrompt];
     setBasePrompt(newBasePrompt);
+  
     if (newBasePrompt !== basePrompt) {
-
       const selectedRFDs = selectedRows.map(index => allRFDs[index]);
-
+  
       let newPrompt = newBasePrompt;
-      if(selectedPrompt === "RFDs Overview") {
-        newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
-      }
-      else {
-        newPrompt = [newBasePrompt];
-      }
+        const promptLines = newBasePrompt.split('\n');
+        const appIndex = promptLines.findIndex(line => line.includes('###'));
+  
+        if (appIndex !== -1) {
+          promptLines.splice(appIndex, 0, ...selectedRFDs);
+          newPrompt = promptLines.join('\n');
+        } else {
+          newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
+        }
+
+  
       setCustomPromptAI(newPrompt);
     }
-
   }, [selectedPrompt, selectedRows]);
+  
   
   
  
@@ -263,30 +264,36 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const toggleSelectAll = () => {
     const visibleRFDsIndexes = filteredRFDs.map((_, index) => index);
-
+  
     setSelectedRows(prevSelectedRows => {
       const newSelectedRows = prevSelectedRows.length === visibleRFDsIndexes.length ? [] : visibleRFDsIndexes;
-
-
-      if(selectedPrompt === "RFDs Overview"){
-        setCustomPromptAI(prevPrompt => {
-          const promptLines = prevPrompt.split('\n');
-          const baseLines = promptLines.filter(line => !allRFDs.includes(line));
-
-          if (newSelectedRows.length === 0) {
-
-            return baseLines.join('\n');
+  
+      setCustomPromptAI(prevPrompt => {
+        const promptString = String(prevPrompt);
+        const promptLines = promptString.split('\n');
+        const baseLines = promptLines.filter(line => !allRFDs.includes(line));
+  
+        if (newSelectedRows.length === 0) {
+          return baseLines.join('\n');
+        } else {
+          const selectedRFDs = newSelectedRows.map(index => allRFDs[index]);
+          const appIndex = baseLines.findIndex(line => line.includes('###'));
+  
+          if (appIndex !== -1) {
+            baseLines.splice(appIndex, 0, ...selectedRFDs);
           } else {
-
-            const selectedRFDs = newSelectedRows.map(index => allRFDs[index]);
-            return [...baseLines, ...selectedRFDs].join('\n');
+            baseLines.push(...selectedRFDs);
           }
-        });
-      }
-
+  
+          return baseLines.join('\n');
+        }
+      });
+  
       return newSelectedRows;
     });
   };
+  
+  
 
   const [selectedHeaderValues, setSelectedHeaderValues] = useState([]);
   const toggleHeaderSelection = (value) => {
@@ -323,26 +330,36 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const updateCustomPrompt = (index, isAdding) => {
     const rfdToToggle = allRFDs[index];
   
-    if (selectedPrompt === "RFDs Overview") {
       setCustomPromptAI(prevPrompt => {
-        const promptLines = prevPrompt.split('\n');
+        const promptString = String(prevPrompt);
+        const promptLines = promptString.split('\n');
+  
+        const appIndex = promptLines.findIndex(line => line.includes('###'));
   
         if (isAdding) {
           if (!promptLines.includes(rfdToToggle)) {
-            return prevPrompt + '\n' + rfdToToggle;
+            if (appIndex !== -1) {
+              promptLines.splice(appIndex, 0, rfdToToggle);
+            } else {
+              promptLines.push(rfdToToggle);
+            }
+            return promptLines.join('\n');
           }
         } else {
-          return promptLines.filter(line => line !== rfdToToggle).join('\n');
+          const filteredLines = promptLines.filter(line => line !== rfdToToggle);
+          return filteredLines.join('\n');
         }
   
-        return prevPrompt;
+        return promptString;
       });
-    }
+    
   };
+  
+  
   
   const scrollToBottom = async () => {
 
-    if (selectedPrompt === "RFDs Overview" && selectedRows.length === 0) {
+    if (selectedRows.length === 0) {
       alert('Select one or more RFDs');
       return;
     }
@@ -715,6 +732,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           color: getColors(darkMode).text,
         },
       }
+    },
+    onClick: (event, elements) => {
+      if (elements.length > 0) {
+        const clickedBarIndex = elements[0].index;
+        const clickedBarLabel = lhsAttributeChartData.labels[clickedBarIndex];
+        handleLegendClickCardinality(clickedBarLabel);
+      }
     }
   };
   
@@ -896,7 +920,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         },
       },
     },
+    onClick: (event, elements) => {
+      if (elements.length > 0) {
+        const hoveredElement = elements[0];
+        const datasetIndex = hoveredElement.datasetIndex;
+        const dataset = variableChartData.datasets[datasetIndex];
+        const label = dataset.label;
+        handleLegendClickFrequency(label);
+      }
+    }
   };
+  
 
   const variableFrequency = countVariableFrequency(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   
@@ -969,45 +1003,52 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
 
   const implicatingChartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          stacked: true,
-          ticks: {
-            color: getColors(darkMode).text,
-          },
-          grid: {
-            color: getColors(darkMode).grid,
-          },
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        stacked: true,
+        ticks: {
+          color: getColors(darkMode).text,
         },
-        y: {
-          ticks: {
-            color: getColors(darkMode).text,
-          },
-          grid: {
-            color: getColors(darkMode).grid,
-          },
+        grid: {
+          color: getColors(darkMode).grid,
         },
       },
-      plugins: {
-        legend: {
-          display: false,
+      y: {
+        ticks: {
+          color: getColors(darkMode).text,
         },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const attribute = context.label;
-              const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
-              return `${attribute}: ${implicatingAttrs}`;
-            }
-          },
-          backgroundColor: getColors(darkMode).background,
-          titleColor: getColors(darkMode).text,
-          bodyColor: getColors(darkMode).text,
-        }
+        grid: {
+          color: getColors(darkMode).grid,
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const attribute = context.label;
+            const implicatingAttrs = Array.from(implicatingAttributes[attribute]).join(', ');
+            return `${attribute}: ${implicatingAttrs}`;
+          }
+        },
+        backgroundColor: getColors(darkMode).background,
+        titleColor: getColors(darkMode).text,
+        bodyColor: getColors(darkMode).text,
+      },
+    },
+    onClick: (event, elements) => {
+      if (elements.length > 0) {
+        const clickedBarIndex = elements[0].index;
+        const clickedBarLabel = implicatingChartData.labels[clickedBarIndex];
+        handleLegendClickImplicating(clickedBarLabel);
       }
-  };
+    }
+  }; 
 
 
   const [labelsAndColorsImplicating, setLabelsAndColorsImplicating] = useState([]);
@@ -1057,7 +1098,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const mediansString = statisticMedians.join(' ');
   const modesString = statisticModes.join(' ');
   
-  prompts[`Statistical Measures Analysis`] = initialPrompts[`Statistical Measures Analysis`] + `\n${header[0]}\n${meansString}\n${mediansString}\n${modesString}`;
+  const appPrompt1 = initialPrompts[`Mean, Median, and Mode`] + `\n${header[0]}\n${meansString}\n${mediansString}\n${modesString}`;
 
   
   const options = {
@@ -1171,12 +1212,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     return pages;
   };
-
-
-
-
-
-
 
 
   // CHART: MIN MAX
@@ -1369,8 +1404,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     allValues += `\n${attribute}\n${displayedValues.join('\n')}`;
   });
   
-  prompts[`Dataset Value Distribution Analysis`] = initialPrompts[`Dataset Value Distribution Analysis`] + allValues;
+  const appPrompt2 = initialPrompts[`Most Common Values`] + allValues;
   
+  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\n### ' + appPrompt1 + '\n\n### ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
+
 
   const getChartDataForAttribute = useMemo(() => (attribute) => {
     const dataLimit = chartDataLimit[attribute] || Math.min(Object.keys(relativeFrequency[attribute]).length, 10);

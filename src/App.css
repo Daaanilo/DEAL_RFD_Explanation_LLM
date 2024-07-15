@@ -1,4 +1,5 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap');
 
 :root {
   --background-color-light: #f8f8f8;
@@ -209,7 +210,7 @@ ul li button.delete-button:hover,
   display: grid;
   place-content: center;
   font-size: 10em;
-  font-family: "Oswald", sans-serif;
+  font-family: "Oswald", Arial, sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-color);
