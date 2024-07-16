@@ -800,12 +800,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return variableFrequency;
   };
   
-  
   const prepareChartData = (variableFrequency, header) => {
     const labels = Object.keys(variableFrequency);
     const datasets = [];
   
-    const getColor = (index) => gradientColors[index % 2 === 0 ? index / 2 : (gradientColors.length - 1) - (index - 1) / 2];
+    const getColor = (index) => gradientColors[index % gradientColors.length];
   
     labels.sort((a, b) => {
       return header.indexOf(a) - header.indexOf(b);
@@ -815,19 +814,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     labels.forEach(col => {
       Object.keys(variableFrequency[col]).forEach(value => allValues.add(value));
     });
-
-
+  
     const uniqueValues = Array.from(allValues).sort();
   
-    if(labelsAndColorsFrequency.length === 0) {
+    if (labelsAndColorsFrequency.length === 0) {
       uniqueValues.forEach((value, index) => {
-
         const colorLHS = getColor(index * 2);
         const colorRHS = getColor(index * 2 + 1);
   
         labelsAndColorsFrequency.push([`${value} LHS`, colorLHS]);
         labelsAndColorsFrequency.push([`${value} RHS`, colorRHS]);
-
+  
         datasets.push(
           {
             label: `${value} LHS`,
@@ -849,11 +846,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       });
     } else {
       uniqueValues.forEach((value, index) => {
-        
         const colorLHS = getColor(index * 2);
         const colorRHS = getColor(index * 2 + 1);
-
-
+  
         datasets.push(
           {
             label: `${value} LHS`,
@@ -874,7 +869,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         );
       });
     }
-    
+  
     return { labels, datasets };
   };
   
@@ -1291,7 +1286,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
       for (const key in colData) {
         totalCount += colData[key].count;
-        if (key === "") {
+        if (key === "" || key === "?" || key === "null" || key === "NA" || key === "NaN") {
           nullCount += colData[key].count;
         }
       }
@@ -1821,7 +1816,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <div className="col-md-6">
               {info.language.map((item, index) => (
                 <div key={index}>
-                  <strong>Name:</strong> {info.name[index]} <br />
+                  <strong>Name:</strong> {info.name[1]} <br />
                   <strong>Language:</strong> {info.language[index]} <br />
                   <strong>Platform:</strong> {info.platform[index]} <br />
                   <strong>Execution Type:</strong> {info.execution_type[index]}<br />
