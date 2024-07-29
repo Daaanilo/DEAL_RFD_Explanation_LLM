@@ -70,7 +70,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     setBasePrompt(newBasePrompt);
   
     if (newBasePrompt !== basePrompt) {
-      const selectedRFDs = selectedRows.map(index => allRFDs[index]);
+      const selectedRFDs = selectedRows.map(index => filteredRFDs[index]);
   
       let newPrompt = newBasePrompt;
         const promptLines = newBasePrompt.split('\n');
@@ -271,12 +271,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setCustomPromptAI(prevPrompt => {
         const promptString = String(prevPrompt);
         const promptLines = promptString.split('\n');
-        const baseLines = promptLines.filter(line => !allRFDs.includes(line));
+        const baseLines = promptLines.filter(line => !filteredRFDs.includes(line));
   
         if (newSelectedRows.length === 0) {
           return baseLines.join('\n');
         } else {
-          const selectedRFDs = newSelectedRows.map(index => allRFDs[index]);
+          const selectedRFDs = newSelectedRows.map(index => filteredRFDs[index]);
           const appIndex = baseLines.findIndex(line => line.includes('###'));
   
           if (appIndex !== -1) {
@@ -328,7 +328,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const updateCustomPrompt = (index, isAdding) => {
-    const rfdToToggle = allRFDs[index];
+    const rfdToToggle = filteredRFDs[index];
   
       setCustomPromptAI(prevPrompt => {
         const promptString = String(prevPrompt);
