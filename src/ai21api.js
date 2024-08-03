@@ -25,7 +25,7 @@ async function ai21HandleUserInput(prompt, model = 'j2-ultra', maxTokens = 100) 
       const data = await response.json();
       return data.completions[0].data.text;
     } catch (error) {
-      console.error('Si Ã¨ verificato un errore:', error);
+      console.error('An error occurred:', error);
       return null;
     }
   }
