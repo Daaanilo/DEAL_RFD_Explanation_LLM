@@ -20,7 +20,10 @@ import './DarkModeProvider.css';
 
 import axios from 'axios';
 
-const { handleUserInput } = require('./chatgptapi.js');
+import ai21HandleUserInput from './ai21api.js';
+const { chatGPTHandleUserInput } = require('./chatgptapi.js');
+const { llamaHandleUserInput } = require('./llamaapi.js');
+
 
 const FileDetailsPage = ({ fileName, onBack }) => {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
@@ -397,7 +400,18 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     if (window.confirm('Are you sure you want to generate the text?')) {
       setIsLoading(true);
 
-      const response = await handleUserInput(JSON.stringify(customPromptAI));
+      let response = "";
+
+      if (selectedLLM === 'ChatGPT3.5') {
+        response = await chatGPTHandleUserInput(JSON.stringify(customPromptAI));
+      } else if (selectedLLM === 'Llama 2') {
+        response = await llamaHandleUserInput(JSON.stringify(customPromptAI));
+      } else if (selectedLLM === 'AI21') {
+        response = await ai21HandleUserInput(JSON.stringify(customPromptAI));
+      } else {  
+        response = 'Invalid LLM selected';
+      }
+
 
       setResponseAI(response);
       setIsTextGenerated(true);
@@ -429,7 +443,17 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     if (window.confirm('Are you sure you want to summarize the text?')) {
       setIsLoading2(true);
 
-      const response = await handleUserInput('Can you give me a little summary of this: ' + responseAI);
+      let response = "";
+      
+      if (selectedLLM === 'ChatGPT3.5') {
+        response = await chatGPTHandleUserInput('Can you give me a little summary of this: ' + responseAI);
+      } else if (selectedLLM === 'Llama 2') {
+        response = await llamaHandleUserInput('Can you give me a little summary of this: ' + responseAI);
+      } else if (selectedLLM === 'AI21') {
+        response = await ai21HandleUserInput('Can you give me a little summary of this: ' + responseAI);
+      } else {  
+        response = 'Invalid LLM selected';
+      }
 
       setResponseAI2(response);
       setIsTextGenerated2(true);
@@ -1529,7 +1553,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <div className="toggle"></div>
             <div className="animateBg"></div>
           </div>
-          <h2 className="title">File Details:{info.name[0]}</h2>
+          <h2 className="title">File Details: {info.name[0]}</h2>
         </div>
 
         <div className="container">
@@ -2272,8 +2296,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                 onChange={handleLLMChange}
               >
                 <option value="ChatGPT3.5">ChatGPT3.5</option>
-                <option value="Prova2">Prova2</option>
-                <option value="Prova3">Prova3</option>
+                <option value="Llama 2">Llama 2</option>
+                <option value="AI21">AI21</option>
               </select>
             </div>
             <button className="select-btn" onClick={scrollToBottom} disabled={isLoading}>

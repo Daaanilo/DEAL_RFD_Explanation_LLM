@@ -1,7 +1,7 @@
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: "sk-proj-4aB1sWHFnSNiMVXgpWKrT3BlbkFJwhGWWAqvwV1YTxZ6yCte", dangerouslyAllowBrowser: true});
 
-const handleUserInput = async (input) => {
+const chatGPTHandleUserInput = async (input) => {
 
   try {
     const response = await openai.chat.completions.create({
@@ -17,4 +17,4 @@ const handleUserInput = async (input) => {
   }
 };
 
-module.exports = { handleUserInput };
+module.exports = { chatGPTHandleUserInput };
