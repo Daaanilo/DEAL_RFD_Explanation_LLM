@@ -46,11 +46,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   }), []);
 
   const prompts = useMemo(() => ({
-    'RFDs Overview': "I would like a thorough understanding of the RFD dependencies listed below, "+
-        "including a detailed analysis of the variables involved and the related tolerance thresholds. "+
-        "I want an overall summary that explains the general concept of these dependencies, "+
-        "how variables interact with each other and how tolerance thresholds affect these relationships. The dependencies are as follows:\n",
-    'RFDs Analysis with Stats': ""
+    'RFDs Overview':
+    'I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below' +
+        'An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. '+
+        'The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], where the square brackets indicate the tolerance threshold. '+
+        'Provide an overall summary explaining the concept of these dependencies, how the variables interact with each other, and how the tolerance thresholds affect these relationships.'+
+        'The dependencies are as follows:\n',
+    'RFDs Analysis with Stats': ''
   }), []);
 
   const getColors = (darkMode) => {
@@ -61,6 +63,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     };
   };
 
+  const [selectedLLM, setSelectedLLM] = useState('ChatGPT3.5');
   const [selectedPrompt, setSelectedPrompt] = useState('RFDs Overview');
   const [customPromptAI, setCustomPromptAI] = useState('');
   const [basePrompt, setBasePrompt] = useState('');
@@ -118,6 +121,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     explanation: true,
     summary: true
   });
+
+  const [visibility, setVisibility] = useState({
+    explanation2: false,
+    summary2: false
+  })
+
 
   const info = {
     name: [],
@@ -318,6 +327,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
 
   // GENERATE TEXT
+  const handleLLMChange = (e) => {
+    setSelectedLLM(e.target.value);
+  };
 
   const handlePromptChange = (event) => {
     setSelectedPrompt(event.target.value);
@@ -377,6 +389,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       checkIfScrolled();
     });
 
+    setVisibility({
+      ...cardVisibility,
+      explanation2: true,
+    });
+
     if (window.confirm('Are you sure you want to generate the text?')) {
       setIsLoading(true);
 
@@ -403,6 +420,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       checkIfScrolled();
     });
 
+    setVisibility({
+      ...cardVisibility,
+      summary2: true,
+      explanation2: true
+    });
     
     if (window.confirm('Are you sure you want to summarize the text?')) {
       setIsLoading2(true);
@@ -1493,6 +1515,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return pages;
   };
 
+
   return (
 
       <div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
@@ -1506,7 +1529,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <div className="toggle"></div>
             <div className="animateBg"></div>
           </div>
-          <h2 className="title">File Details: <span style={{ color: '#005AC1' }}>{info.name[0]}</span></h2>
+          <h2 className="title">File Details:{info.name[0]}</h2>
         </div>
 
         <div className="container">
@@ -2178,7 +2201,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             </label>
           </div>
           <div style={{ height: '15px' }}></div>
-          <div style={{ whiteSpace: 'pre-wrap' }}>
+          <div
+            style={{
+              maxHeight: filteredRFDs.length > 50 ? '400px' : 'auto',
+              overflowY: filteredRFDs.length > 50 ? 'scroll' : 'visible',
+              whiteSpace: 'pre-wrap'
+            }}
+          >
             {filteredRFDs.map((rfd, index) => (
               <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
                 <input
@@ -2223,18 +2252,30 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             style={{ width: "100%", minHeight: "200px" }}
           />
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-            <select
-              className="form-select mt-2"
-              style={{ display: 'block', marginLeft: '0', width: '300px' }}
-              value={selectedPrompt}
-              onChange={handlePromptChange}
-            >
-              {Object.keys(prompts).map((prompt, index) => (
-                <option key={index} value={prompt}>
-                  {prompt}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <select
+                className="form-select mt-2"
+                style={{ display: 'block', marginLeft: '0', width: '300px' }}
+                value={selectedPrompt}
+                onChange={handlePromptChange}
+              >
+                {Object.keys(prompts).map((prompt, index) => (
+                  <option key={index} value={prompt}>
+                    {prompt}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="form-select mt-2"
+                style={{ display: 'block', marginLeft: '0', width: '300px' }}
+                value={selectedLLM}
+                onChange={handleLLMChange}
+              >
+                <option value="ChatGPT3.5">ChatGPT3.5</option>
+                <option value="Prova2">Prova2</option>
+                <option value="Prova3">Prova3</option>
+              </select>
+            </div>
             <button className="select-btn" onClick={scrollToBottom} disabled={isLoading}>
               {isLoading ? "LOADING..." : "EXPLANATION"}
             </button>
@@ -2242,40 +2283,47 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
       )}
     </div>
-
-    <div className="card mb-3">
-      <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">EXPLANATION <RobotIcon /></span>
-        <div className="toggle-button-cover">
-          <div id="button-3" className="button r">
-            <input
-              className="checkbox"
-              type="checkbox"
-              onChange={() => toggleCardVisibility('explanation')}
-              checked={cardVisibility.explanation}
-            />
-            <div className="knobs"></div>
-            <div className="layer"></div>
-          </div>
-        </div>
-      </div>
-      {cardVisibility.explanation && (
-        <div className="card-body">
-          {isTextGenerated && (
-            <>
-              <p>{responseAI}</p>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
-                <button className="select-btn" onClick={summarizeText} disabled={isLoading2}>
-                  {isLoading2 ? "LOADING..." : "SUMMARY"}
-                </button>
+    
+    {
+      visibility.explanation2 ? (
+        <div className="card mb-3">
+          <div className="d-flex justify-content-between align-items-center card-header">
+            <span className="details-text">EXPLANATION <RobotIcon /></span>
+            <div className="toggle-button-cover">
+              <div id="button-3" className="button r">
+                <input
+                  className="checkbox"
+                  type="checkbox"
+                  onChange={() => toggleCardVisibility('explanation')}
+                  checked={cardVisibility.explanation}
+                />
+                <div className="knobs"></div>
+                <div className="layer"></div>
               </div>
-            </>
+            </div>
+          </div>
+          {cardVisibility.explanation && (
+            <div className="card-body">
+              {isTextGenerated && (
+                <>
+                  <p>{responseAI}</p>
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px" }}>
+                    <button className="select-btn" onClick={summarizeText} disabled={isLoading2}>
+                      {isLoading2 ? "LOADING..." : "SUMMARY"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
-      )}
-    </div>
+      ) : ( null )
+    }
+    
 
-    <div className="card mb-3">
+    {
+      visibility.summary2 ? (
+        <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">SUMMARY <RobotIcon /></span>
         <div className="toggle-button-cover">
@@ -2299,6 +2347,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         </div>
       )}
     </div>
+
+      ) : (null)
+    }
+    
     </div>
   </div>
 

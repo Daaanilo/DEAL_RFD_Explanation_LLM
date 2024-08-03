@@ -72,3 +72,8 @@
 .dark-mode .animateBg {
   clip-path: circle(150% at 50% 50%);
 }
+
+.dark-mode .title,
+.dark-mode .section {
+  color: white; 
+}
