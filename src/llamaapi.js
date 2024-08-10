@@ -8,6 +8,7 @@ const llamaHandleUserInput = async (input) => {
     "messages": [
       { "role": "user", "content": input }
     ],
+    "max_tokens": 1024,
     "stream": false,
     "function_call": null
   };

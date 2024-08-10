@@ -24,7 +24,6 @@ import ai21HandleUserInput from './ai21api.js';
 const { chatGPTHandleUserInput } = require('./chatgptapi.js');
 const { llamaHandleUserInput } = require('./llamaapi.js');
 
-
 const FileDetailsPage = ({ fileName, onBack }) => {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
 
@@ -50,7 +49,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const prompts = useMemo(() => ({
     'RFDs Overview':
-    'I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below' +
+    'I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. ' +
         'An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. '+
         'The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], where the square brackets indicate the tolerance threshold. '+
         'Provide an overall summary explaining the concept of these dependencies, how the variables interact with each other, and how the tolerance thresholds affect these relationships.'+

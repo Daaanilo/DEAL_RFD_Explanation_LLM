@@ -2,7 +2,6 @@ const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: "sk-proj-4aB1sWHFnSNiMVXgpWKrT3BlbkFJwhGWWAqvwV1YTxZ6yCte", dangerouslyAllowBrowser: true});
 
 const chatGPTHandleUserInput = async (input) => {
-
   try {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',

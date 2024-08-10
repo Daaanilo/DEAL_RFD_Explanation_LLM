@@ -11,7 +11,7 @@ async function ai21HandleUserInput(prompt, model = 'j2-ultra', maxTokens = 100) 
         },
         body: JSON.stringify({
           prompt: prompt,
-          maxTokens: maxTokens,
+          maxTokens: 1024,
           temperature: 0.7,
           topKReturn: 0,
           topP: 1,

@@ -84,7 +84,7 @@ body {
 }
 
 .title {
-  color: black;
+  color: rgb(236, 236, 236);
   margin: 0;
   text-align: center;
   flex-grow: 1;
@@ -99,7 +99,7 @@ body {
 }
 
 .section {
-  color: black;
+  color: rgb(236, 236, 236);
   margin: 0;
   text-align: center;
   flex-grow: 1;
