@@ -52,7 +52,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     'I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. ' +
         'An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. '+
         'The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], where the square brackets indicate the tolerance threshold. '+
-        'Provide an overall summary explaining the concept of these dependencies, how the variables interact with each other, and how the tolerance thresholds affect these relationships.'+
+        'Provide an explanation for each of the dependencies, a general summary that explains the concept of these dependencies, how the variables interact with each other, and how the tolerance thresholds affect these relationships. '+
         'The dependencies are as follows:\n',
     'RFDs Analysis with Stats': ''
   }), []);
@@ -445,11 +445,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       let response = "";
       
       if (selectedLLM === 'ChatGPT3.5') {
-        response = await chatGPTHandleUserInput('Can you give me a little summary of this: ' + responseAI);
+        response = await chatGPTHandleUserInput('Can you give me a summary of this: ' + responseAI);
       } else if (selectedLLM === 'Llama 2') {
-        response = await llamaHandleUserInput('Can you give me a little summary of this: ' + responseAI);
+        response = await llamaHandleUserInput('Can you give me a summary of this: ' + responseAI);
       } else if (selectedLLM === 'AI21') {
-        response = await ai21HandleUserInput('Can you give me a little summary of this: ' + responseAI);
+        response = await ai21HandleUserInput('Can you give me a summary of this: ' + responseAI);
       } else {  
         response = 'Invalid LLM selected';
       }
@@ -2296,7 +2296,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               >
                 <option value="ChatGPT3.5">ChatGPT3.5</option>
                 <option value="Llama 2">Llama 2</option>
-                <option value="AI21">AI21</option>
+                <option value="Jurassic-2 Ultra">Jurassic-2 Ultra</option>
               </select>
             </div>
             <button className="select-btn" onClick={scrollToBottom} disabled={isLoading}>

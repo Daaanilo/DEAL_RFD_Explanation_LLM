@@ -6,6 +6,7 @@ const chatGPTHandleUserInput = async (input) => {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: input }],
+      max_tokens: 1024,
     });
 
     const assistantResponse = response.choices[0].message.content;
