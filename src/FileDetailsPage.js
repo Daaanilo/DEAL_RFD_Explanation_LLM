@@ -405,7 +405,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         response = await chatGPTHandleUserInput(JSON.stringify(customPromptAI));
       } else if (selectedLLM === 'Llama 2') {
         response = await llamaHandleUserInput(JSON.stringify(customPromptAI));
-      } else if (selectedLLM === 'AI21') {
+      } else if (selectedLLM === 'Jurassic-2 Ultra') {
         response = await ai21HandleUserInput(JSON.stringify(customPromptAI));
       } else {  
         response = 'Invalid LLM selected';
@@ -448,7 +448,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         response = await chatGPTHandleUserInput('Can you give me a summary of this: ' + responseAI);
       } else if (selectedLLM === 'Llama 2') {
         response = await llamaHandleUserInput('Can you give me a summary of this: ' + responseAI);
-      } else if (selectedLLM === 'AI21') {
+      } else if (selectedLLM === 'Jurassic-2 Ultra') {
         response = await ai21HandleUserInput('Can you give me a summary of this: ' + responseAI);
       } else {  
         response = 'Invalid LLM selected';
@@ -559,6 +559,26 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   // CHART: TIME EXECUTION
 
+  const convertTimestampToReadable = (timestamp, locale = 'it-IT', options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+  }) => {
+
+      if (timestamp.toString().length === 10) {
+
+          const date = new Date(timestamp * 1000);
+          
+          return date.toLocaleString(locale, options);
+      } else {
+          return timestamp;
+      }
+  };
+
   const formatTime = (time) => {
     if (time === 0) {
       return 'N/A';
@@ -595,7 +615,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     discovery: convertToFloatArray(info.discovery),
     total: convertToFloatArray(info.total),
   };
-  
+
+
   const left = temp.total.map((total, index) => {
     const discovery = temp.discovery[index] || 0;
     const preprocessing = temp.preprocessing[index] || 0;
@@ -1695,7 +1716,6 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
     </div>
 
-
     <div className="row">
       <div className="col-md-12">
           <div className="card mb-3">
@@ -1748,7 +1768,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3" style={{ marginTop: 0 }}>
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">CHARTS</span>
+        <span className="details-text">PIE CHARTS</span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -1924,8 +1944,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                   <strong>Execution Command:</strong> {item} <br />
                   <strong>Max Execution Time:</strong> {info.max_execution_time[index]} <br />
                   <strong>Max Ram Usage:</strong> {info.max_ram_usage[index]} <br />
-                  <strong>Start Time:</strong> {info.start_time[index]} <br />
-                  <strong>End Time:</strong> {info.end_time[index]} <br />
+                  <strong>Start Time:</strong> {convertTimestampToReadable(info.start_time[index])} <br />
+                  <strong>End Time:</strong> {convertTimestampToReadable(info.end_time[index])} <br />
                 </div>
               ))}
             </div>

@@ -238,3 +238,24 @@ ul li button.delete-button:hover,
   -webkit-background-clip: text;
   transform: translateX(-0.02em);
 }
+
+
+
+.wrapper2 {
+  display: grid;
+  place-content: center;
+  font-size: 2em;
+  font-family: "Oswald", Arial, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-color);
+  background-color: var(--background-color-light);
+}
+
+.wrapper2 > div {
+  grid-area: 1/1/-1/-1;
+}
+
+.dark-mode .wrapper2 {
+  background-color: var(--text-color-light);
+}

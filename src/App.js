@@ -241,10 +241,15 @@ function App() {
       {!selectedFileName && (
         <>
           <section className="wrapper">
-            <div className="top">JSONInsight</div>
-            <div className="bottom" aria-hidden="true">JSONInsight</div>
+            <div className="top">D.E.A.L.</div>
+            <div className="bottom" aria-hidden="true">D.E.A.L.</div>
           </section>
 
+          <section className="wrapper2">
+            <div className="top2">Dependencies Exploration with Advanced Languages</div>
+            {/*<div className="bottom2" aria-hidden="true">Dependencies Exploration with Advanced Languages</div>*/}
+          </section>
+          
           <div className="search-section">
             <input
               type="text"
