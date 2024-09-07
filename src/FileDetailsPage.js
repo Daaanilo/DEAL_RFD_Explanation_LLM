@@ -2246,8 +2246,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div style={{ height: '15px' }}></div>
           <div
             style={{
-              maxHeight: filteredRFDs.length > 50 ? '400px' : 'auto',
-              overflowY: filteredRFDs.length > 50 ? 'scroll' : 'visible',
+              maxHeight: filteredRFDs.length > 12 ? '400px' : 'auto',
+              overflowY: filteredRFDs.length > 12 ? 'scroll' : 'visible',
               whiteSpace: 'pre-wrap'
             }}
           >
