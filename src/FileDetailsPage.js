@@ -22,7 +22,7 @@ import axios from 'axios';
 
 import ai21HandleUserInput from './ai21api.js'; // If it doesn't work, replace the key in 'ai21api.js'
 const { chatGPTHandleUserInput } = require('./chatgptapi.js'); // If it doesn't work, replace the key in 'chatgptapi.js'
-const { llamaHandleUserInput } = require('./llamaapi-backup.js'); // If it doesn't work, replace 'llamaapi.js' with 'llamaapi-backup.js'
+const { llamaHandleUserInput } = require('./llamaapi.js'); // If it doesn't work, replace 'llamaapi.js' with 'llamaapi-backup.js'
 
 const FileDetailsPage = ({ fileName, onBack }) => {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
