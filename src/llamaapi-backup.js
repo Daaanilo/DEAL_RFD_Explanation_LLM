@@ -1,21 +1,27 @@
-import LlamaAI from 'llamaai';
+const Groq = require('groq-sdk');
 
-const apiToken = 'LL-te88EB5bX94nttzrvoqnWQ0R03GMKUsgYvZ66fcUzUvg1X9GeC3nfckXkNyzYYQH';
-// LL-te88EB5bX94nttzrvoqnWQ0R03GMKUsgYvZ66fcUzUvg1X9GeC3nfckXkNyzYYQH
-const llamaAPI = new LlamaAI(apiToken);
+const apiKey = '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';
+// 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
+const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
 
-const llamaHandleUserInput = async (input) => {
+async function llamaHandleUserInput(input) {
   const apiRequestJson = {
     "messages": [
-      { "role": "user", "content": input }
+      {
+        "role": "user",
+        "content": input
+      }
     ],
+    "model": "llama3-8b-8192",
+    "temperature": 1,
     "max_tokens": 2048,
+    "top_p": 1,
     "stream": false,
-    "function_call": null
+    "stop": null
   };
 
   try {
-    const response = await llamaAPI.run(apiRequestJson);
+    const response = await groq.chat.completions.create(apiRequestJson);
 
     if (response.choices && response.choices.length > 0) {
       const message = response.choices[0].message;

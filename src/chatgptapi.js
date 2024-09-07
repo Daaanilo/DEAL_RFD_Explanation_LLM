@@ -1,5 +1,6 @@
 const { OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: "sk-proj-4aB1sWHFnSNiMVXgpWKrT3BlbkFJwhGWWAqvwV1YTxZ6yCte", dangerouslyAllowBrowser: true});
+// sk-proj-4aB1sWHFnSNiMVXgpWKrT3BlbkFJwhGWWAqvwV1YTxZ6yCte or sk-F7RcVEi656cOuVLUasOHkzoIjasZ2hc8y3p1OblvOQT3BlbkFJH_DKu7w1JRM9wRI2Nep5wGTDUAGfhqHdfwtTZGVScA
 
 const chatGPTHandleUserInput = async (input) => {
   try {

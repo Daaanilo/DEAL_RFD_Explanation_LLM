@@ -20,9 +20,9 @@ import './DarkModeProvider.css';
 
 import axios from 'axios';
 
-import ai21HandleUserInput from './ai21api.js';
-const { chatGPTHandleUserInput } = require('./chatgptapi.js');
-const { llamaHandleUserInput } = require('./llamaapi.js');
+import ai21HandleUserInput from './ai21api.js'; // If it doesn't work, replace the key in 'ai21api.js'
+const { chatGPTHandleUserInput } = require('./chatgptapi.js'); // If it doesn't work, replace the key in 'chatgptapi.js'
+const { llamaHandleUserInput } = require('./llamaapi-backup.js'); // If it doesn't work, replace 'llamaapi.js' with 'llamaapi-backup.js'
 
 const FileDetailsPage = ({ fileName, onBack }) => {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
@@ -403,7 +403,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
       if (selectedLLM === 'ChatGPT3.5') {
         response = await chatGPTHandleUserInput(JSON.stringify(customPromptAI));
-      } else if (selectedLLM === 'Llama 2') {
+      } else if (selectedLLM === 'Llama3') {
         response = await llamaHandleUserInput(JSON.stringify(customPromptAI));
       } else if (selectedLLM === 'Jurassic-2 Ultra') {
         response = await ai21HandleUserInput(JSON.stringify(customPromptAI));
@@ -446,7 +446,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       
       if (selectedLLM === 'ChatGPT3.5') {
         response = await chatGPTHandleUserInput('Can you give me a summary of this: ' + responseAI);
-      } else if (selectedLLM === 'Llama 2') {
+      } else if (selectedLLM === 'Llama3') {
         response = await llamaHandleUserInput('Can you give me a summary of this: ' + responseAI);
       } else if (selectedLLM === 'Jurassic-2 Ultra') {
         response = await ai21HandleUserInput('Can you give me a summary of this: ' + responseAI);
@@ -2315,7 +2315,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                 onChange={handleLLMChange}
               >
                 <option value="ChatGPT3.5">ChatGPT3.5</option>
-                <option value="Llama 2">Llama 2</option>
+                <option value="Llama3">Llama3</option>
                 <option value="Jurassic-2 Ultra">Jurassic-2 Ultra</option>
               </select>
             </div>

@@ -18,6 +18,7 @@
     "cohere": "^1.1.1",
     "cohere-ai": "^7.11.2",
     "express": "^4.19.2",
+    "groq-sdk": "^0.7.0",
     "llamaai": "^1.0.4",
     "mongoose": "^8.3.2",
     "multer": "^1.4.5-lts.1",

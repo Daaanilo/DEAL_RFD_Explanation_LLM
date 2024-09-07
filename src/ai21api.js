@@ -1,5 +1,6 @@
-async function ai21HandleUserInput(prompt, model = 'j2-ultra', maxTokens = 100) {
+async function ai21HandleUserInput(prompt, model = 'j2-ultra', maxTokens = 1000) {
     const apiKey = 'TMizVfcAqTQAUO0dYf66csA2igrq5edX';
+    // TMizVfcAqTQAUO0dYf66csA2igrq5edX or RALv692HUse02IpqxXV7XN0T7a9iBUzi
     const apiUrl = `https://api.ai21.com/studio/v1/${model}/complete`;
   
     try {
