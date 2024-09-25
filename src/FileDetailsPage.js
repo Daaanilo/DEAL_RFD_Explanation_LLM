@@ -51,7 +51,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     'RFDs Overview':
     'I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. ' +
         'An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. '+
-        'The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], where the square brackets indicate the tolerance threshold. '+
+        'The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], where the square brackets contain the tolerance threshold used to compare the similarity of the attribute\'s values. '+
         'Provide an explanation for each of the dependencies, a general summary that explains the concept of these dependencies, how the variables interact with each other, and how the tolerance thresholds affect these relationships. '+
         'The dependencies are as follows:\n',
     'RFDs Analysis with Stats': ''
@@ -2062,7 +2062,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
 
 
-    <h2 className="section">RESULT</h2>
+    <h2 className="section">DEPENDENCIES ANALYSIS</h2> {/* Result */}
   
 
     <div className="col-md-12">

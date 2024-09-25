@@ -246,8 +246,8 @@ function App() {
           </section>
 
           <section className="wrapper2">
-            <div className="top2">Dependencies Exploration with Advanced Languages</div>
-            {/*<div className="bottom2" aria-hidden="true">Dependencies Exploration with Advanced Languages</div>*/}
+            <div className="top2">Dependencies Explanation with Advanced Language Models</div>
+            {/*<div className="bottom2" aria-hidden="true">Dependencies Explanation with Advanced Languages</div>*/}
           </section>
           
           <div className="search-section">
@@ -266,50 +266,52 @@ function App() {
         <div>
           <div className="file-container">
           {pinnedFilesList.map((file, index) => (
-              <div
-                key={file._id}
-                className={`desktop-icon ${file._id}`}
-                onClick={() => handleFileNameClick(file._id)}
-                draggable
-                onDragStart={(e) => handleDragStart(e, file._id)}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}
-              >
-                <i className="fas fa-file"></i>
-                <p>{file.fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
-                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon fill="#f00" />
-                </button>
-                <button className="edit-btn" onClick={(event) => event.stopPropagation()} onMouseDown={() => handleEditFileName(file._id, file.fileName)}>
-                  <PencilIcon fill={darkMode ? "#fff" : "#000"} />
-                </button>
-                <p>{file.timestamp}</p>
-              </div>
-            ))}
-            {otherFilesList.map((file, index) => (
-              <div
-                key={file._id}
-                className={`desktop-icon ${file._id}`}
-                onClick={() => handleFileNameClick(file._id)}
-                draggable
-                onDragStart={(e) => handleDragStart(e, file._id)}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, pinnedFilesList.length + index)}>
-                <i className="fas fa-file"></i>
-                <p>{file.fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
-                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon fill={darkMode ? "#fff" : (pinnedFiles.includes(file._id) ? "#f00" : "#000")} />
-                </button>
-                <button className="edit-btn" onClick={(event) => event.stopPropagation()} onMouseDown={() => handleEditFileName(file._id, file.fileName)}>
-                  <PencilIcon fill={darkMode ? "#fff" : "#000"} />
-                </button>
-                <p>{file.timestamp}</p>
-              </div>
-            ))}
+            <div
+              key={file._id}
+              className={`desktop-icon ${file._id}`}
+              onClick={() => handleFileNameClick(file._id)}
+              draggable
+              onDragStart={(e) => handleDragStart(e, file._id)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+            >
+              <i className="fas fa-file"></i>
+              <p className="file-name" title={file.fileName}>{file.fileName}</p>
+              <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
+              <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
+                <PinIcon fill="#f00" />
+              </button>
+              <button className="edit-btn" onClick={(event) => event.stopPropagation()} onMouseDown={() => handleEditFileName(file._id, file.fileName)}>
+                <PencilIcon fill={darkMode ? "#fff" : "#000"} />
+              </button>
+              <p className="timestamp">{file.timestamp}</p>
+            </div>
+          ))}
+
+          {otherFilesList.map((file, index) => (
+            <div
+              key={file._id}
+              className={`desktop-icon ${file._id}`}
+              onClick={() => handleFileNameClick(file._id)}
+              draggable
+              onDragStart={(e) => handleDragStart(e, file._id)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, pinnedFilesList.length + index)}
+            >
+              <i className="fas fa-file"></i>
+              <p className="file-name" title={file.fileName}>{file.fileName}</p>
+              <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
+              <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
+                <PinIcon fill={darkMode ? "#fff" : (pinnedFiles.includes(file._id) ? "#f00" : "#000")} />
+              </button>
+              <button className="edit-btn" onClick={(event) => event.stopPropagation()} onMouseDown={() => handleEditFileName(file._id, file.fileName)}>
+                <PencilIcon fill={darkMode ? "#fff" : "#000"} />
+              </button>
+              <p className="timestamp">{file.timestamp}</p>
+            </div>
+          ))}
           </div>
         </div>
       ) : (
