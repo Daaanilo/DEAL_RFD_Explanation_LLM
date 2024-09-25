@@ -49,11 +49,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const prompts = useMemo(() => ({
     'RFDs Overview':
-    'I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. ' +
-        'An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. '+
-        'The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], where the square brackets contain the tolerance threshold used to compare the similarity of the attribute\'s values. '+
-        'Provide an explanation for each of the dependencies, a general summary that explains the concept of these dependencies, how the variables interact with each other, and how the tolerance thresholds affect these relationships. '+
-        'The dependencies are as follows:\n',
+    "I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) "+
+    "determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], "+
+    "where the square brackets contain the tolerance threshold used to compare the similarity of the attribute's values. Provide an explanation of each dependency, based on the attribute names and associated tolerance thresholds, "+
+    "describing how this information affects these relationships. You have to explain how the semantic meaning of the attribute names characterizes the dependency in the real world. The dependencies are as follows:\n",
     'RFDs Analysis with Stats': ''
   }), []);
 
@@ -79,7 +78,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
       let newPrompt = newBasePrompt;
         const promptLines = newBasePrompt.split('\n');
-        const appIndex = promptLines.findIndex(line => line.includes('###'));
+        const appIndex = promptLines.findIndex(line => line.includes('Below'));
   
         if (appIndex !== -1) {
           promptLines.splice(appIndex, 0, ...selectedRFDs);
@@ -288,7 +287,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           return baseLines.join('\n');
         } else {
           const selectedRFDs = newSelectedRows.map(index => filteredRFDs[index]);
-          const appIndex = baseLines.findIndex(line => line.includes('###'));
+          const appIndex = baseLines.findIndex(line => line.includes('Below'));
   
           if (appIndex !== -1) {
             baseLines.splice(appIndex, 0, ...selectedRFDs);
@@ -348,7 +347,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         const promptString = String(prevPrompt);
         const promptLines = promptString.split('\n');
   
-        const appIndex = promptLines.findIndex(line => line.includes('###'));
+        const appIndex = promptLines.findIndex(line => line.includes('Below'));
   
         if (isAdding) {
           if (!promptLines.includes(rfdToToggle)) {
@@ -1467,7 +1466,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const appPrompt2 = initialPrompts[`Most Common Values`] + allValues;
   
-  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\n### ' + appPrompt1 + '\n\n### ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
+  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\nBelow you will find statistical values that will better enable you to understand the semantic meaning of dependence. Use them to describe dependencies.' + '\n### ' + appPrompt1 + '\n\n### ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
 
 
   const getChartDataForAttribute = useMemo(() => (attribute) => {
