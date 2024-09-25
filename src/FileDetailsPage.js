@@ -79,7 +79,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       let newPrompt = newBasePrompt;
         const promptLines = newBasePrompt.split('\n');
         const appIndex = promptLines.findIndex(line => line.includes('Below'));
-  
+      
         if (appIndex !== -1) {
           promptLines.splice(appIndex, 0, ...selectedRFDs);
           newPrompt = promptLines.join('\n');
