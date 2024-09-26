@@ -10,6 +10,7 @@ import { ReactComponent as RobotIcon } from 'bootstrap-icons/icons/robot.svg';
 import { ReactComponent as PcIcon } from 'bootstrap-icons/icons/pc-horizontal.svg';
 import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
+import { ReactComponent as InfoIcon } from 'bootstrap-icons/icons/info.svg';
 import { DarkModeContext } from './DarkModeProvider';
 
 import ReactApexChart from 'react-apexcharts';
@@ -78,9 +79,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
       let newPrompt = newBasePrompt;
         const promptLines = newBasePrompt.split('\n');
-        const appIndex = promptLines.findIndex(line => line.includes('Below'));
+        let appIndex = promptLines.findIndex(line => line.includes('Below'));
       
         if (appIndex !== -1) {
+          appIndex--;
           promptLines.splice(appIndex, 0, ...selectedRFDs);
           newPrompt = promptLines.join('\n');
         } else {
@@ -287,9 +289,10 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           return baseLines.join('\n');
         } else {
           const selectedRFDs = newSelectedRows.map(index => filteredRFDs[index]);
-          const appIndex = baseLines.findIndex(line => line.includes('Below'));
-  
+          let appIndex = baseLines.findIndex(line => line.includes('Below'));
+
           if (appIndex !== -1) {
+            appIndex--;
             baseLines.splice(appIndex, 0, ...selectedRFDs);
           } else {
             baseLines.push(...selectedRFDs);
@@ -320,8 +323,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const toggleCardVisibility = (cardName) => {
     if(cardName === 'rfd' && cardVisibility.rfd) {
-      setMenuOpen(false);
+      setMenuOpenInfoRFD(false);
     }
+    if(cardName === 'rfd' && cardVisibility.rfd) {
+      setMenuOpenFilter(false);
+    }
+    if(cardName === 'prompt' && cardVisibility.prompt) {
+      setMenuOpenInfoPrompt(false);
+    }
+    
     
     setCardVisibility({ ...cardVisibility, [cardName]: !cardVisibility[cardName] });
   };
@@ -347,11 +357,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         const promptString = String(prevPrompt);
         const promptLines = promptString.split('\n');
   
-        const appIndex = promptLines.findIndex(line => line.includes('Below'));
+        let appIndex = promptLines.findIndex(line => line.includes('Below'));
   
         if (isAdding) {
           if (!promptLines.includes(rfdToToggle)) {
             if (appIndex !== -1) {
+              appIndex--;
               promptLines.splice(appIndex, 0, rfdToToggle);
             } else {
               promptLines.push(rfdToToggle);
@@ -521,12 +532,39 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues]);
 
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
+  
+  const [menuOpenInfoRFD, setMenuOpenInfoRFD] = useState(false);
+  const toggleMenuInfoRFD = () => {
     if (cardVisibility.rfd) {
-      setMenuOpen(!menuOpen);
+      setMenuOpenInfoRFD(!menuOpenInfoRFD);
     }
+  };
+
+  const [menuOpenFilter, setMenuOpenFilter] = useState(false);
+  const toggleMenuFilter = () => {
+    if (cardVisibility.rfd) {
+      setMenuOpenFilter(!menuOpenFilter);
+    }
+  };
+  
+  const [menuOpenInfoPrompt, setMenuOpenInfoPrompt] = useState(false);
+  const toggleMenuInfoPrompt = () => {
+    if (cardVisibility.prompt) {
+      setMenuOpenInfoPrompt(!menuOpenInfoPrompt);
+    }
+  };
+
+  const [activeButtons, setActiveButtons] = useState({
+    infoRFD: false,
+    filter: false,
+    infoPrompt: false,
+  });
+
+  const handleMenuClick = (buttonType) => {
+    setActiveButtons(prevState => ({
+      ...prevState,
+      [buttonType]: !prevState[buttonType],
+    }));
   };
 
   // CHARTS
@@ -1166,6 +1204,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       type: 'boxPlot',
       height: 350,
       background: getColors(darkMode).background,
+      toolbar: {
+        show: false
+      }
     },
     title: {
       text: 'Box Plot',
@@ -1466,7 +1507,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const appPrompt2 = initialPrompts[`Most Common Values`] + allValues;
   
-  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\nBelow you will find statistical values that will better enable you to understand the semantic meaning of dependence. Use them to describe dependencies.' + '\n### ' + appPrompt1 + '\n\n### ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
+  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\n\nBelow you will find statistical values that will better enable you to understand the semantic meaning of dependence. Use them to describe dependencies.' + '\n### ' + appPrompt1 + '\n\n### ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
 
 
   const getChartDataForAttribute = useMemo(() => (attribute) => {
@@ -2200,12 +2241,32 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <span className="details-text">
           RFDs (total: {allRFDs.length} - filtered: {filteredRFDs.length})
         </span>
-        <span
-          className={`menu-trigger ${!cardVisibility.rfd ? 'disabled' : ''}`}
-          onClick={cardVisibility.rfd ? toggleMenu : undefined}
-        >
-          ...
-        </span>
+
+        
+          <span
+            className={`menu-trigger infoRFD ${!cardVisibility.rfd ? 'disabled' : ''} ${activeButtons.infoRFD ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.rfd) {
+                toggleMenuInfoRFD();
+                handleMenuClick('infoRFD');
+              }
+            }}
+          >
+            <InfoIcon />
+          </span>
+
+          <span
+            className={`menu-trigger ${!cardVisibility.rfd ? 'disabled' : ''} ${activeButtons.filter ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.rfd) {
+                toggleMenuFilter();
+                handleMenuClick('filter');
+              }
+            }}
+          >
+            ...
+          </span>
+      
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -2221,7 +2282,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           </div>
         </div>
       </div>
-      <div className={`menu ${menuOpen ? 'open' : ''}`}>
+
+      <div className={`menu infoRFD ${menuOpenInfoRFD ? 'open' : ''}`}>
+        A Relaxed Functional Dependency (RFD) is a relationship between attributes where the left-hand side<br/> (LHS) set of attributes determines the right-hand side (RHS) 
+        attribute, with specified tolerance thresholds.<br/> The notation follows this format: <i>attribute@[x.x], attribute@[x.x], ... -&gt; attribute@[x.x]</i>, with the 
+        LHS<br/> attributes separated from the RHS attribute by the symbol -&gt; and each attribute is associated with a<br/> tolerance threshold in square brackets.
+      </div>
+
+      <div className={`menu ${menuOpenFilter ? 'open' : ''}`}>
         <b>FILTERS*</b><br /><br />
         <b>Attributes header :</b> {selectedHeaderValues.join(', ')}<br />
         <b>LHS cardinality :</b> {cardinalityValues.join(', ')}<br />
@@ -2229,6 +2297,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <b>Attributes header implicated :</b> {implicatingValues.join(', ')}<br /><br />
         <i>* = dependencies with these features are not included in this list</i>
       </div>
+
       {cardVisibility.rfd && (
         <div className="card-body">
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -2242,12 +2311,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               {selectedRows.length === filteredRFDs.length ? "Deselect all" : "Select all"}
             </label>
           </div>
-          <div style={{ height: '15px' }}></div>
+          <hr></hr>
           <div
             style={{
               maxHeight: filteredRFDs.length > 12 ? '400px' : 'auto',
               overflowY: filteredRFDs.length > 12 ? 'scroll' : 'visible',
-              whiteSpace: 'pre-wrap'
+              whiteSpace: 'pre-wrap',
+              //border: '1px solid black'
             }}
           >
             {filteredRFDs.map((rfd, index) => (
@@ -2269,9 +2339,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
 
 
+
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">PROMPT <CpuIcon /></span>
+
+      <span
+            className={`menu-trigger infoPrompt ${!cardVisibility.prompt ? 'disabled' : ''} ${activeButtons.infoPrompt ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.prompt) {
+                toggleMenuInfoPrompt();
+                handleMenuClick('infoPrompt');
+              }
+            }}
+          >
+            <InfoIcon />
+      </span>
+
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -2285,13 +2369,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           </div>
         </div>
       </div>
+
+      <div className={`menu infoPrompt ${menuOpenInfoPrompt ? 'open' : ''}`}>
+        There are two types of automatically generated prompts available. The first prompt solely requires an<br/> explanation and analysis of the selected dependencies. 
+        The second prompt, similar to the first, adds a<br/> request for an explanation of the dependencies while incorporating distribution values, such as the most<br/>
+        common values for each column in the dataset, along with the mean, median, and mode. You can select<br/> from a dropdown menu one of the three available LLMs 
+        (Large Language Models) to use for sending<br/> the prompts and requesting a summary.
+      </div>
+
       {cardVisibility.prompt && (
         <div className="card-body">
           <textarea
             type="text"
             value={customPromptAI}
             onChange={handleTextareaChange}
-            style={{ width: "100%", minHeight: "200px" }}
+            style={{ width: "100%", minHeight: "220px" }}
           />
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
             <div style={{ display: "flex", gap: "10px" }}>
