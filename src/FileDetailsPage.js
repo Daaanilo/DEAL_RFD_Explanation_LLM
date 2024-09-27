@@ -2252,7 +2252,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               }
             }}
           >
-            <InfoIcon />
+            <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
           </span>
 
           <span
@@ -2353,7 +2353,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               }
             }}
           >
-            <InfoIcon />
+              <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
       </span>
 
         <div className="toggle-button-cover">
