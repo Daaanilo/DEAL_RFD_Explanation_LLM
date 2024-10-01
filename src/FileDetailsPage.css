@@ -571,3 +571,9 @@ body {
   font-weight: bold;
   margin: 0 6px; 
 }
+
+.sticky-container {
+  position: sticky; /* Oppure position: fixed; se desideri che rimanga fisso rispetto alla finestra */
+  top: 0;
+  z-index: 1000; /* Assicura che rimanga sopra altri elementi */
+}

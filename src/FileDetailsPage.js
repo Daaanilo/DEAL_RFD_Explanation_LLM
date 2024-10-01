@@ -1618,7 +1618,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
         <div className="container">
           <h2 className="section">DATASET</h2>
-
+          <div className="sticky-container">
           <div className="card mb-3">
             <div className="card-header"> 
               <span className="details-text">Header <DatabaseIcon /></span>
@@ -1653,7 +1653,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               </div>
             )}
           </div>
-
+          </div>
 
 
         <div className="row">
