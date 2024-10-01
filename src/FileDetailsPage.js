@@ -1808,7 +1808,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3" style={{ marginTop: 0 }}>
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">PIE CHARTS</span>
+        <span className="details-text">TOP K PIE CHARTS</span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -2153,7 +2153,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-12">
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">FREQUENCY <ChartIcon /></span>
+        <span className="details-text">ATTRIBUTE/THRESHOLD FREQUENCY <ChartIcon /></span>
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
