@@ -59,9 +59,9 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const getColors = (darkMode) => {
     return {
-      text: darkMode ? '#ffffff' : '#000000',
+      text: darkMode ? '#e0e0e0' : '#000000',
       grid: darkMode ? '#444444' : '#e0e0e0',
-      background: darkMode ? '#343a40' : '#ffffff',
+      background: darkMode ? '#1e1e1e' : '#ffffff',
     };
   };
 
@@ -93,9 +93,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setCustomPromptAI(newPrompt);
     }
   }, [selectedPrompt, selectedRows]);
-  
-  
-  
+
+  const handleScroll = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
  
   const [cardVisibility, setCardVisibility] = useState({
     infoDataset: true,
@@ -1601,7 +1605,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
 
   return (
-
+      
       <div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
         <div className="title-back-container">
           <button className="back-btn" onClick={onBack}>
@@ -1616,8 +1620,16 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <h2 className="title">File Details: {info.name[0]}</h2>
         </div>
 
+        <nav className="index-container">
+        <div className="index-bar">
+          <button onClick={() => handleScroll('dataset')} className="index-button">Dataset</button>
+          <button onClick={() => handleScroll('algorithm')} className="index-button">Algorithm</button>
+          <button onClick={() => handleScroll('dependencies')} className="index-button">Dependencies Analysis</button>
+        </div>
+      </nav>
+      
         <div className="container">
-          <h2 className="section">DATASET</h2>
+          <h2 id="dataset" className="section">DATASET</h2>
           <div className="sticky-container">
           <div className="card mb-3">
             <div className="card-header"> 
@@ -1653,7 +1665,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               </div>
             )}
           </div>
-          </div>
+        </div>
 
 
         <div className="row">
@@ -1897,7 +1909,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
 
 
-    <h2 className="section">ALGORITHM</h2>
+    <h2 id="algorithm" className="section">ALGORITHM</h2>
 
 
     <div className="card mb-3">
@@ -2102,7 +2114,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     </div>
 
 
-    <h2 className="section">DEPENDENCIES ANALYSIS</h2> {/* Result */}
+    <h2 id="dependencies"className="section">DEPENDENCIES ANALYSIS</h2> 
   
 
     <div className="col-md-12">
