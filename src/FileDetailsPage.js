@@ -326,17 +326,65 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   fileContent.forEach(row => formatData(row));
 
   const toggleCardVisibility = (cardName) => {
-    if(cardName === 'rfd' && cardVisibility.rfd) {
-      setMenuOpenInfoRFD(false);
+    if (cardName === 'header' && cardVisibility.header) {
+      setMenuOpenInfoHeader(false);
     }
-    if(cardName === 'rfd' && cardVisibility.rfd) {
+    if (cardName === 'details' && cardVisibility.details) {
+      setMenuOpenInfoDetails(false);
+    }
+    if (cardName === 'contentSpecifications' && cardVisibility.contentSpecifications) {
+      setMenuOpenInfoContentSpecifications(false);
+    }
+    if (cardName === 'boxPlot' && cardVisibility.boxPlot) {
+      setMenuOpenInfoBoxPlot(false);
+    }
+    if (cardName === 'minMax' && cardVisibility.minMax) {
+      setMenuOpenInfoMinMax(false);
+    }
+    if (cardName === 'nullValues' && cardVisibility.nullValues) {
+      setMenuOpenInfoNullValues(false);
+    }
+    if (cardName === 'column' && cardVisibility.column) {
+      setMenuOpenInfoColumn(false);
+    }
+    if (cardName === 'algorithm' && cardVisibility.algorithm) {
+      setMenuOpenInfoAlgorithm(false);
+    }
+    if (cardName === 'system' && cardVisibility.system) {
+      setMenuOpenInfoSystem(false);
+    }
+    if (cardName === 'executionParameters' && cardVisibility.executionParameters) {
+      setMenuOpenInfoExecutionParameters(false);
+    }
+    if (cardName === 'timeExecution' && cardVisibility.timeExecution) {
+      setMenuOpenInfoTimeExecution(false);
+    }
+    if (cardName === 'timeExecution2' && cardVisibility.timeExecution2) {
+      setMenuOpenInfoTimeExecution2(false);
+    }
+    if (cardName === 'ramUsage' && cardVisibility.ramUsage) {
+      setMenuOpenInfoRamUsage(false);
+    }
+    if (cardName === 'error' && cardVisibility.error) {
+      setMenuOpenInfoError(false);
+    }
+    if (cardName === 'cardinality' && cardVisibility.cardinality) {
+      setMenuOpenInfoCardinality(false);
+    }
+    if (cardName === 'frequency' && cardVisibility.frequency) {
+      setMenuOpenInfoFrequency(false);
+    }
+    if (cardName === 'implicating' && cardVisibility.implicating) {
+      setMenuOpenInfoImplicating(false);
+    }  
+    if (cardName === 'rfd' && cardVisibility.rfd) {
+      setMenuOpenInfoRFD(false);
       setMenuOpenFilter(false);
     }
-    if(cardName === 'prompt' && cardVisibility.prompt) {
+    if (cardName === 'prompt' && cardVisibility.prompt) {
       setMenuOpenInfoPrompt(false);
     }
-    
-    
+
     setCardVisibility({ ...cardVisibility, [cardName]: !cardVisibility[cardName] });
   };
 
@@ -536,6 +584,124 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   }, [allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues]);
 
+  const [menuOpenInfoHeader, setMenuOpenInfoHeader] = useState(false);
+  const toggleMenuInfoHeader = () => {
+    if (cardVisibility.header) {
+      setMenuOpenInfoHeader(!menuOpenInfoHeader);
+    }
+  };
+
+  const [menuOpenInfoDetails, setMenuOpenInfoDetails] = useState(false);
+  const toggleMenuInfoDetails = () => {
+    if (cardVisibility.details) {
+      setMenuOpenInfoDetails(!menuOpenInfoDetails);
+    }
+  };
+
+  const [menuOpenInfoContentSpecifications, setMenuOpenInfoContentSpecifications] = useState(false);
+  const toggleMenuInfoContentSpecifications = () => {
+    if (cardVisibility.contentSpecifications) {
+      setMenuOpenInfoContentSpecifications(!menuOpenInfoContentSpecifications);
+    }
+  };
+
+  const [menuOpenInfoBoxPlot, setMenuOpenInfoBoxPlot] = useState(false);
+  const toggleMenuInfoBoxPlot = () => {
+    if (cardVisibility.boxplot) {
+      setMenuOpenInfoBoxPlot(!menuOpenInfoBoxPlot);
+    }
+  };
+
+  const [menuOpenInfoMinMax, setMenuOpenInfoMinMax] = useState(false);
+  const toggleMenuInfoMinMax = () => {
+    if (cardVisibility.minmax) {
+      setMenuOpenInfoMinMax(!menuOpenInfoMinMax);
+    }
+  };
+
+  const [menuOpenInfoNullValues, setMenuOpenInfoNullValues] = useState(false);
+  const toggleMenuInfoNullValues = () => {
+    if (cardVisibility.nullValues) {
+      setMenuOpenInfoNullValues(!menuOpenInfoNullValues);
+    }
+  };
+
+  const [menuOpenInfoColumn, setMenuOpenInfoColumn] = useState(false);
+  const toggleMenuInfoColumn = () => {
+    if (cardVisibility.column) {
+      setMenuOpenInfoColumn(!menuOpenInfoColumn);
+    }
+  };
+
+  const [menuOpenInfoAlgorithm, setMenuOpenInfoAlgorithm] = useState(false);
+  const toggleMenuInfoAlgorithm = () => {
+    if (cardVisibility.algorithm) {
+      setMenuOpenInfoAlgorithm(!menuOpenInfoAlgorithm);
+    }
+  };
+
+  const [menuOpenInfoSystem, setMenuOpenInfoSystem] = useState(false);
+  const toggleMenuInfoSystem = () => {
+    if (cardVisibility.system) {
+      setMenuOpenInfoSystem(!menuOpenInfoSystem);
+    }
+  };
+
+  const [menuOpenInfoExecutionParameters, setMenuOpenInfoExecutionParameters] = useState(false);
+  const toggleMenuInfoExecutionParameters = () => {
+    if (cardVisibility.executionParameters) {
+      setMenuOpenInfoExecutionParameters(!menuOpenInfoExecutionParameters);
+    }
+  };
+
+  const [menuOpenInfoTimeExecution, setMenuOpenInfoTimeExecution] = useState(false);
+  const toggleMenuInfoTimeExecution = () => {
+    if (cardVisibility.timeExecution) {
+      setMenuOpenInfoTimeExecution(!menuOpenInfoTimeExecution);
+    }
+  };
+
+  const [menuOpenInfoTimeExecution2, setMenuOpenInfoTimeExecution2] = useState(false);
+  const toggleMenuInfoTimeExecution2 = () => {
+    if (cardVisibility.timeExecution2) {
+      setMenuOpenInfoTimeExecution2(!menuOpenInfoTimeExecution2);
+    }
+  };
+
+  const [menuOpenInfoRamUsage, setMenuOpenInfoRamUsage] = useState(false);
+  const toggleMenuInfoRamUsage = () => {
+    if (cardVisibility.ramUsage) {
+      setMenuOpenInfoRamUsage(!menuOpenInfoRamUsage);
+    }
+  };
+
+  const [menuOpenInfoError, setMenuOpenInfoError] = useState(false);
+  const toggleMenuInfoError = () => {
+    if (cardVisibility.error) {
+      setMenuOpenInfoError(!menuOpenInfoError);
+    }
+  };
+
+  const [menuOpenInfoCardinality, setMenuOpenInfoCardinality] = useState(false);
+  const toggleMenuInfoCardinality = () => {
+    if (cardVisibility.cardinality) {
+      setMenuOpenInfoCardinality(!menuOpenInfoCardinality);
+    }
+  };
+
+  const [menuOpenInfoFrequency, setMenuOpenInfoFrequency] = useState(false);
+  const toggleMenuInfoFrequency = () => {
+    if (cardVisibility.frequency) {
+      setMenuOpenInfoFrequency(!menuOpenInfoFrequency);
+    }
+  };
+
+  const [menuOpenInfoImplicating, setMenuOpenInfoImplicating] = useState(false);
+  const toggleMenuInfoImplicating = () => {
+    if (cardVisibility.implicating) {
+      setMenuOpenInfoImplicating(!menuOpenInfoImplicating);
+    }
+  };
   
   const [menuOpenInfoRFD, setMenuOpenInfoRFD] = useState(false);
   const toggleMenuInfoRFD = () => {
@@ -559,6 +725,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   };
 
   const [activeButtons, setActiveButtons] = useState({
+    infoHeader: false,
+    infoDetails: false,
+    infoContentSpecifications: false,
+    infoBoxPlot: false,
+    infoMinMax: false,
+    infoNullValues: false,
+    infoColumn: false,
+    infoAlgorithm: false,
+    infoSystem: false,
+    infoExecutionParameters: false,
+    infoTimeExecution: false,
+    infoTimeExecution2: false,
+    infoRamUsage: false,
+    infoError: false,
+    infoCardinality: false,
+    infoFrequency: false,
+    infoImplicating: false,
     infoRFD: false,
     filter: false,
     infoPrompt: false,
@@ -1634,6 +1817,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className="card mb-3">
             <div className="card-header"> 
               <span className="details-text">Header <DatabaseIcon /></span>
+
+              <span
+            className={`menu-trigger infoHeader ${!cardVisibility.header ? 'disabled' : ''} ${activeButtons.infoHeader ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.header) {
+                toggleMenuInfoHeader();
+                handleMenuClick('infoHeader');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoHeader ${menuOpenInfoHeader ? 'open' : ''}`}>
+              Contains the dataset column headers. The data type can be selected to filter the RFDs.
+          </div>
+
             </div>
             {header && header[0] && (
               <div className="card-body">
@@ -1673,6 +1873,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
             <span className="details-text">Details <AspectRatioIcon /></span>
+
+
+            <span
+            className={`menu-trigger infoDetails ${!cardVisibility.details ? 'disabled' : ''} ${activeButtons.infoDetails ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.details) {
+                toggleMenuInfoDetails();
+                handleMenuClick('infoDetails');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoDetails ${menuOpenInfoDetails ? 'open' : ''}`}>
+            Provides a report on dataset information (size, format, separator character).
+          </div>
+
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('details')} checked={cardVisibility.details} />
@@ -1700,6 +1918,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
             <span className="details-text">Content Specifications <ColumnsIcon /></span>
+            
+            
+            <span
+            className={`menu-trigger infoContentSpecifications ${!cardVisibility.contentSpecifications ? 'disabled' : ''} ${activeButtons.infoContentSpecifications ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.contentSpecifications) {
+                toggleMenuInfoContentSpecifications();
+                handleMenuClick('infoContentSpecifications');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoContentSpecifications ${menuOpenInfoContentSpecifications ? 'open' : ''}`}>
+            Provides three specifications on the contents of the dataset (number of columns, rows, character to represent null values).
+          </div>
+            
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input
@@ -1735,6 +1971,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">BOX PLOT <ChartIcon /></span>
+
+        
+        <span
+            className={`menu-trigger infoBoxPlot ${!cardVisibility.boxplot ? 'disabled' : ''} ${activeButtons.infoBoxPlot ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.boxplot) {
+                toggleMenuInfoBoxPlot();
+                handleMenuClick('infoBoxPlot');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoBoxPlot ${menuOpenInfoBoxPlot ? 'open' : ''}`}>
+            Shows the distribution of variable values ​​for each column of the dataset.
+          </div>
+
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -1773,6 +2027,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className="card mb-3">
             <div className="d-flex justify-content-between align-items-center card-header">
               <span className="details-text">MIN, MAX <ChartIcon /></span>
+
+              
+              <span
+            className={`menu-trigger infoMinMax ${!cardVisibility.minmax ? 'disabled' : ''} ${activeButtons.infoMinMax ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.minmax) {
+                toggleMenuInfoMinMax();
+                handleMenuClick('infoMinMax');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoMinMax ${menuOpenInfoMinMax ? 'open' : ''}`}>
+            Indicates the minimum and maximum values ​​of each column using a bar graph.
+          </div>
+
               <div className="toggle-button-cover">
                 <div id="button-3" className="button r">
                   <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('minmax')} checked={cardVisibility.minmax} />
@@ -1798,6 +2070,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className="card mb-3">
             <div className="d-flex justify-content-between align-items-center card-header">
               <span className="details-text">NULL VALUES <ChartIcon /></span>
+
+              
+              <span
+            className={`menu-trigger infoNullValues ${!cardVisibility.nullValues ? 'disabled' : ''} ${activeButtons.infoNullValues ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.nullValues) {
+                toggleMenuInfoNullValues();
+                handleMenuClick('infoNullValues');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoNullValues ${menuOpenInfoNullValues ? 'open' : ''}`}>
+            Shows the percentage amount of null values ​​in each column as a bar graph.
+          </div>
+
               <div className="toggle-button-cover">
                 <div id="button-3" className="button r">
                   <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('nullValues')} checked={cardVisibility.nullValues} />
@@ -1820,7 +2110,25 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     <div className="card mb-3" style={{ marginTop: 0 }}>
       <div className="d-flex justify-content-between align-items-center card-header">
-        <span className="details-text">TOP K PIE CHARTS</span>
+        <span className="details-text">TOP K PIE CHARTS <ChartIcon /></span>
+
+        
+              <span
+            className={`menu-trigger infoColumn ${!cardVisibility.column ? 'disabled' : ''} ${activeButtons.infoColumn ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.column) {
+                toggleMenuInfoColumn();
+                handleMenuClick('infoColumn');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoColumn ${menuOpenInfoColumn ? 'open' : ''}`}>
+            Contains a pie chart for each column showing the percentage distribution of their values ​​sorted from the most frequent ones.
+          </div>
+
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -1919,6 +2227,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">Algorithm <PcIcon /></span>
+
+        
+        <span
+            className={`menu-trigger infoAlgorithm ${!cardVisibility.algorithm ? 'disabled' : ''} ${activeButtons.infoAlgorithm ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.algorithm) {
+                toggleMenuInfoAlgorithm();
+                handleMenuClick('infoAlgorithm');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoAlgorithm ${menuOpenInfoAlgorithm ? 'open' : ''}`}>
+            Contains general details about the algorithm (name, programming language, platform, execution type).
+          </div>
+
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -1958,6 +2284,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
             <span className="details-text">System <PcDisplayIcon /></span>
+
+            
+            <span
+            className={`menu-trigger infoSystem ${!cardVisibility.system ? 'disabled' : ''} ${activeButtons.infoSystem ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.system) {
+                toggleMenuInfoSystem();
+                handleMenuClick('infoSystem');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoSystem ${menuOpenInfoSystem ? 'open' : ''}`}>
+            Provides details about the system on which the algorithm was used for discovery (operating system, processor, cores and threads, available RAM).
+          </div>
+
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('system')} checked={cardVisibility.system} />
@@ -1985,6 +2329,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         <div className="card mb-3">
           <div className="d-flex justify-content-between align-items-center card-header">
             <span className="details-text">Execution Parameters <CpuIcon /></span>
+            
+            <span
+            className={`menu-trigger infoExecutionParameters ${!cardVisibility.executionParameters ? 'disabled' : ''} ${activeButtons.infoExecutionParameters ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.executionParameters) {
+                toggleMenuInfoExecutionParameters();
+                handleMenuClick('infoPrompt');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoExecutionParameters ${menuOpenInfoExecutionParameters ? 'open' : ''}`}>
+            Specifies the settings and conditions under which the algorithm was executed (command, max execution time, max RAM usage, execution start time, execution end time).
+          </div>
+
+
             <div className="toggle-button-cover">
               <div id="button-3" className="button r">
                 <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('executionParameters')} checked={cardVisibility.executionParameters} />
@@ -2017,6 +2379,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className={`card mb-3 w-100 ${cardVisibility.timeExecution ? 'h-100' : ''}`}>
             <div className="d-flex justify-content-between align-items-center card-header">
               <span className="details-text">Time Execution <BugIcon /></span>
+              
+              <span
+            className={`menu-trigger infoTimeExecution ${!cardVisibility.timeExecution ? 'disabled' : ''} ${activeButtons.infoTimeExecution ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.timeExecution) {
+                toggleMenuInfoTimeExecution();
+                handleMenuClick('timeExecution');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoTimeExecution ${menuOpenInfoTimeExecution? 'open' : ''}`}>
+            Provides an overview of the times taken to execute the various phases of the algorithm (dataset loading, preprocessing, discovery, left, total).
+          </div>
+
+
               <div className="toggle-button-cover">
                 <div id="button-3" className="button r">
                   <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution')} checked={cardVisibility.timeExecution} />
@@ -2043,6 +2423,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className={`card mb-3 w-100 ${cardVisibility.ramUsage ? 'h-100' : ''}`}>
             <div className="d-flex justify-content-between align-items-center card-header">
               <span className="details-text">Ram Usage <CpuIcon /></span>
+
+              
+              <span
+            className={`menu-trigger infoRamUsage ${!cardVisibility.ramUsage ? 'disabled' : ''} ${activeButtons.infoRamUsage ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.ramUsage) {
+                toggleMenuInfoRamUsage();
+                handleMenuClick('infoRamUsage');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoRamUsage ${menuOpenInfoRamUsage ? 'open' : ''}`}>
+            Reports information about RAM usage during the execution of the algorithm (units of measurement, max amount of RAM used).
+          </div>
+
               <div className="toggle-button-cover">
                 <div id="button-3" className="button r">
                   <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('ramUsage')} checked={cardVisibility.ramUsage} />
@@ -2067,6 +2465,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className={`card mb-3 w-100 ${cardVisibility.error ? 'h-100' : ''}`}>
             <div className="d-flex justify-content-between align-items-center card-header">
               <span className="details-text">Error <BugIcon /></span>
+
+              
+              <span
+            className={`menu-trigger infoError ${!cardVisibility.error ? 'disabled' : ''} ${activeButtons.infoError ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.error) {
+                toggleMenuInfoError();
+                handleMenuClick('infoError');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoError ${menuOpenInfoError ? 'open' : ''}`}>
+            Shows any errors or anomalies found during the execution of the algorithm (time limit, memory limit, general error).
+          </div>
+
               <div className="toggle-button-cover">
                 <div id="button-3" className="button r">
                   <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('error')} checked={cardVisibility.error} />
@@ -2098,6 +2514,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           <div className="card mb-3">
             <div className="d-flex justify-content-between align-items-center card-header">
               <span className="details-text">TIME EXECUTION <PcIcon /></span>
+
+              
+              <span
+            className={`menu-trigger infoTimeExecution2 ${!cardVisibility.timeExecution2 ? 'disabled' : ''} ${activeButtons.infoTimeExecution2 ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.timeExecution2) {
+                toggleMenuInfoTimeExecution2();
+                handleMenuClick('infoTimeExecution2');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoTimeExecution2 ${menuOpenInfoTimeExecution2 ? 'open' : ''}`}>
+            It is a single horizontal bar graph that reports in percentage all four timings of the execution algorithm (dataset loading, preprocessing, discovery, left).
+          </div>
+
               <div className="toggle-button-cover">
                 <div id="button-3" className="button r">
                   <input className="checkbox" type="checkbox" onChange={() => toggleCardVisibility('timeExecution2')} checked={cardVisibility.timeExecution2} />
@@ -2125,6 +2559,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       <div className="card mb-3">
         <div className="d-flex justify-content-between align-items-center card-header">
           <span className="details-text">LHS CARDINALITY <ChartIcon /></span>
+
+          
+          <span
+            className={`menu-trigger infoCardinality ${!cardVisibility.cardinality ? 'disabled' : ''} ${activeButtons.infoCardinality ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.cardinality) {
+                toggleMenuInfoCardinality();
+                handleMenuClick('infoCardinality');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoCardinality ${menuOpenInfoCardinality ? 'open' : ''}`}>
+            It is a bar chart that shows the amount of dependencies for each cardinality of the left side of a relationship. Values ​​in the legend can be selected to filter RFDs.
+          </div>
+
           <div className="toggle-button-cover">
             <div id="button-3" className="button r">
               <input
@@ -2174,6 +2626,24 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <div className="card mb-12">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">ATTRIBUTE/THRESHOLD FREQUENCY <ChartIcon /></span>
+        
+        
+        <span
+            className={`menu-trigger infoFrequency ${!cardVisibility.frequency ? 'disabled' : ''} ${activeButtons.infoFrequency ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.frequency) {
+                toggleMenuInfoFrequency();
+                handleMenuClick('infoFrequency');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoFrequency ${menuOpenInfoFrequency? 'open' : ''}`}>
+            It is a bar chart showing for each attribute the frequency of comparison thresholds. The values ​​in the legend can be selected to filter the RFDs.
+          </div>
+        
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input
@@ -2221,6 +2691,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     <div className="card mb-3">
       <div className="d-flex justify-content-between align-items-center card-header">
         <span className="details-text">IMPLICATING ATTRIBUTES <ChartIcon /> </span>
+      
+        <span
+            className={`menu-trigger infoImplicating ${!cardVisibility.implicating ? 'disabled' : ''} ${activeButtons.infoImplicating ? 'active' : ''}`}
+            onClick={() => {
+              if (cardVisibility.implicating) {
+                toggleMenuInfoImplicating();
+                handleMenuClick('infoImplicating');
+              }
+            }}
+              >
+                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+          </span>
+
+          <div className={`menu infoImplicating ${menuOpenInfoImplicating ? 'open' : ''}`}>
+            It is a bar chart that lists for each column the union of all the attributes that imply it. The values ​​in the legend can be selected to filter the RFDs.
+          </div>
+
         <div className="toggle-button-cover">
           <div id="button-3" className="button r">
             <input

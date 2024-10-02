@@ -297,10 +297,103 @@ body {
   display: none;
   padding: 10px;
   border-radius: 5px;
+  font-weight: normal;
 }
 
 .menu.open {
   display: block;
+}
+
+.menu.open.infoHeader {
+  top: 3%;
+  right: 3%;
+}
+
+.menu.open.infoDetails {
+  width: 55%;
+  right: 12%;
+  top: 12%;
+}
+
+.menu.open.infoContentSpecifications {
+  width: 55%;
+  right: 12%;
+  top: 12%;
+}
+
+.menu.open.infoBoxPlot {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoMinMax {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoNullValues {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoColumn {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoAlgorithm {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoSystem {
+  width: 55%;
+  right: 12%;
+  top: 12%;
+}
+
+.menu.open.infoExecutionParameters {
+  width: 55%;
+  right: 12%;
+  top: 12%;
+}
+
+.menu.open.infoTimeExecution {
+  width: 60%;
+  top: 15%;
+  right: 18%;
+}
+
+.menu.open.infoRamUsage {
+  width: 60%;
+  top: 15%;
+  right: 18%;
+}
+
+.menu.open.infoError {
+  width: 60%;
+  top: 15%;
+  right: 18%;
+}
+
+.menu.open.infoTimeExecution2 {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoCardinality {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoFrequency {
+  top: 1%;
+  right: 6%;
+}
+
+.menu.open.infoImplicating {
+  top: 1%;
+  right: 6%;
 }
 
 .menu.open.infoRFD {
@@ -350,6 +443,39 @@ body {
   color: white;
 }
 
+.menu-trigger.infoHeader {
+  top: 3%;
+  right: 3%;
+}
+
+.menu-trigger.infoDetails {
+  right: 12%;
+}
+
+.menu-trigger.infoContentSpecifications {
+  right: 12%;
+}
+
+.menu-trigger.infoSystem {
+  right: 12%;
+}
+
+.menu-trigger.infoExecutionParameters {
+  right: 12%;
+}
+
+.menu-trigger.infoTimeExecution {
+  right: 18%;
+}
+
+.menu-trigger.infoRamUsage {
+  right: 18%;
+}
+
+.menu-trigger.infoError {
+  right: 18%;
+}
+
 .menu-trigger.infoRFD {
   right: 9%;
 }
@@ -357,6 +483,7 @@ body {
 .menu-trigger.infoPrompt {
   right: 6%;
 }
+
 
 /* CHART BOXES */
 
