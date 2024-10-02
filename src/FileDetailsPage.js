@@ -1852,7 +1852,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
                 <div key={attribute} className="col-lg-6 mb-4" style={{ marginBottom: '50px' }}>
                   <h3 className="attribute-title text-center">{attribute}</h3>
                   <div className="label-boxes-container mt-2 mx-auto">
-                    <div className="label-boxes">
+                    <div className="label-boxes"
+                      style={{
+                        backgroundColor: darkMode ? '#1e1e1e' : '#ffffff' 
+                      }}
+                    >
                       {labels.map((label, index) => (
                         <div key={index} className="label-box">
                           <div className="color-box" style={{ backgroundColor: backgroundColors[index] }}></div>
@@ -2137,7 +2141,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         {cardVisibility.cardinality && (
           <div className="card-body">
             <div className="label-boxes-container mt-2 mx-auto">
-              <div className="label-boxes">
+              <div className="label-boxes"
+                style={{
+                backgroundColor: darkMode ? '#1e1e1e' : '#ffffff' 
+                }}
+              >
                 {labelsAndColorsCardinality.map(([label, color], index) => (
                   <div
                     key={index}
@@ -2182,7 +2190,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {cardVisibility.frequency && (
         <div className="card-body">
           <div className="label-boxes-container mt-2 mx-auto">
-            <div className="label-boxes">
+            <div className="label-boxes"
+              style={{
+              backgroundColor: darkMode ? '#1e1e1e' : '#ffffff' 
+              }}
+            >
               {labelsAndColorsFrequency.map(([label, color], index) => (
                 <div
                   key={index}
@@ -2225,7 +2237,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       {cardVisibility.implicating && (
         <div className="card-body">
           <div className="label-boxes-container mt-2 mx-auto">
-            <div className="label-boxes">
+            <div className="label-boxes"
+              style={{
+              backgroundColor: darkMode ? '#1e1e1e' : '#ffffff' 
+              }}
+            >
               {labelsAndColorsImplicating.map(([label, color], index) => (
                 <div
                   key={index}
