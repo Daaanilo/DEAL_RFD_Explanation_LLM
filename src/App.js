@@ -1,63 +1,191 @@
-
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button } from 'react-bootstrap';
-import FileDetailsPage from './FileDetailsPage';
-import './App.css';
-import './DarkModeProvider.css';
-import { DarkModeContext } from './DarkModeProvider';
+import { Modal, Button } from 'react-bootstrap'; 
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
 import { ReactComponent as SearchIcon } from 'bootstrap-icons/icons/search.svg';
 import { ReactComponent as PinIcon } from 'bootstrap-icons/icons/pin-fill.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil-square.svg';
 import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
-import 'bootstrap/dist/css/bootstrap.min.css'; 
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
+import { ReactComponent as UploadIcon } from 'bootstrap-icons/icons/upload.svg'; 
+import './App.css'; 
+import './DarkModeProvider.css'; 
+import { DarkModeContext } from './DarkModeProvider'; 
 
 const MySwal = withReactContent(Swal);
+
+const UploadModal = ({
+  showModal,
+  handleCloseModal,
+  handleUpload,
+  setSelectedFile, 
+  selectedFile,
+  newFileName,
+  setNewFileName,
+}) => {
+  const [isDragActive, setIsDragActive] = useState(false);
+  const fileInputRef = useRef(null);
+
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragActive) setIsDragActive(true);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragActive) setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === e.currentTarget) setIsDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/json') {
+        setSelectedFile(file);
+        setNewFileName(file.name.replace('.json', '')); 
+      } else {
+        MySwal.fire('Invalid File', 'Please upload a JSON file.', 'error');
+      }
+      e.dataTransfer.clearData();
+    }
+  };
+
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type === 'application/json') {
+        setSelectedFile(file);
+        setNewFileName(file.name.replace('.json', '')); 
+      } else {
+        MySwal.fire('Invalid File', 'Please upload a JSON file.', 'error');
+      }
+    }
+  };
+
+  return (
+    <Modal show={showModal} onHide={handleCloseModal} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Upload a File</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <div
+          className={`dropzone ${isDragActive ? 'active' : ''}`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current.click()}
+        >
+          <UploadIcon className="upload-icon" />
+          <p>Drag and drop a JSON file here, or click to select a file</p>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+            accept=".json"
+          />
+        </div>
+        {selectedFile && (
+          <div className="mt-3">
+            <p>
+              Selected File: <strong>{selectedFile.name}</strong>
+            </p>
+            <label htmlFor="new-file-name">New File Name:</label>
+            <input
+              type="text"
+              id="new-file-name"
+              value={newFileName}
+              onChange={(e) => setNewFileName(e.target.value)}
+              placeholder="Enter new file name"
+              className="form-control mt-2"
+            />
+          </div>
+        )}
+      </Modal.Body>
+      <Modal.Footer className="d-flex justify-content-between">
+        <Button variant="secondary" onClick={handleCloseModal}>
+          Close
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleUpload}
+          disabled={!selectedFile || !newFileName.trim()}
+        >
+          Upload File
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
+const FileDetailsPage = ({ fileName, onBack }) => {
+  return (
+    <div className="file-details-page">
+      <Button variant="secondary" onClick={onBack} className="mb-3">
+        Back
+      </Button>
+      <h2>Details for {fileName}</h2>
+    </div>
+  );
+};
 
 function App() {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [newFileName, setNewFileName] = useState('');  
+  const [newFileName, setNewFileName] = useState('');
   const [files, setFiles] = useState([]);
   const [selectedFileNameId, setSelectedFileNameId] = useState(null); 
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadButtonColor, setUploadButtonColor] = useState('#007bff');
   const [pinnedFiles, setPinnedFiles] = useState([]);
 
-  
+
   const [showModal, setShowModal] = useState(false);
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedFile(null); 
-    setNewFileName(''); 
+    setNewFileName('');
   };
   const handleShowModal = () => setShowModal(true);
 
  
   const fileInputRefModal = useRef(null);
 
+
   useEffect(() => {
     document.body.style.backgroundColor = darkMode ? 'black' : '#f8f8f8';
 
-    axios.get('http://localhost:5000/files')
-      .then(response => {
+    axios
+      .get('http://localhost:5000/files')
+      .then((response) => {
         setFiles(response.data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
-        MySwal.fire('Error', 'Failed to retrieve file names', 'error');
+        MySwal.fire('Error', 'Failed to retrieve file names.', 'error');
       });
   }, [darkMode]);
 
-  
   const handleUpload = async () => {
-    if (!selectedFile) {
-      MySwal.fire('Warning', 'Please select a JSON file to upload', 'warning');
+    if (!selectedFile || !newFileName.trim()) {
+      MySwal.fire('Warning', 'Please select a file and enter a new file name.', 'warning');
       return;
     }
 
@@ -67,87 +195,47 @@ function App() {
       fileNameToUpload += '.json';
     }
 
-    if (fileNameToUpload === selectedFile.name) {
-     
-    } else {
    
-      const fileExists = files.some(file => file.fileName.toLowerCase() === fileNameToUpload.toLowerCase());
+    const fileExists = files.some(
+      (file) => file.fileName.toLowerCase() === fileNameToUpload.toLowerCase()
+    );
 
-      if (fileExists) {
-        const { isConfirmed } = await MySwal.fire({
-          title: 'File Name Exists',
-          text: `A file named "${fileNameToUpload}" already exists. Do you want to overwrite it?`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Yes, overwrite',
-          cancelButtonText: 'No, choose another name'
-        });
+    if (fileExists) {
+      const { isConfirmed } = await MySwal.fire({
+        title: 'File Name Exists',
+        text: `A file named "${fileNameToUpload}" already exists. Do you want to overwrite it?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, overwrite',
+        cancelButtonText: 'No, choose another name',
+      });
 
-        if (isConfirmed) {
-          
-        } else {
-      
-          const { value: newName } = await MySwal.fire({
-            title: 'Enter a Different File Name',
-            input: 'text',
-            inputPlaceholder: 'New file name',
-            inputValue: fileNameToUpload.replace('.json', ''),
-            showCancelButton: true,
-            inputValidator: (value) => {
-              if (!value.trim()) {
-                return 'File name cannot be empty!';
-              }
-              return null;
-            }
-          });
-
-          if (newName) {
-            fileNameToUpload = newName.trim();
-            if (!fileNameToUpload.endsWith('.json')) {
-              fileNameToUpload += '.json';
-            }
-
-          
-            handleUploadWithName(fileNameToUpload);
-            return;
-          } else {
-       
-            return;
-          }
-        }
+      if (!isConfirmed) {
+        return;
       }
     }
 
-    
-    await handleUploadWithName(fileNameToUpload);
-  };
-
-
-  const handleUploadWithName = async (fileNameToUpload) => {
     const formData = new FormData();
     formData.append('file', selectedFile, fileNameToUpload);
 
     try {
       const response = await axios.post('http://localhost:5000/upload', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
+
       MySwal.fire('Success', response.data, 'success');
       const filesResponse = await axios.get('http://localhost:5000/files');
       setFiles(filesResponse.data);
-      setSelectedFile(null); 
-      setNewFileName(''); 
-      handleCloseModal(); 
+      handleCloseModal();
     } catch (error) {
       console.error(error);
-      MySwal.fire('Error', 'Failed to upload the JSON file', 'error');
+      MySwal.fire('Error', 'Failed to upload the JSON file.', 'error');
     }
   };
 
-  
   const handleEditFileName = async (fileId, currentFileName) => {
-   
     const { value: newName } = await MySwal.fire({
       title: 'Enter New File Name',
       input: 'text',
@@ -159,7 +247,7 @@ function App() {
           return 'File name cannot be empty!';
         }
         return null;
-      }
+      },
     });
 
     if (newName) {
@@ -176,15 +264,19 @@ function App() {
 
       try {
         const response = await axios.get('http://localhost:5000/files');
-        const existingFileNames = response.data.map(file => file.fileName);
+        const existingFileNames = response.data.map((file) => file.fileName);
 
         if (existingFileNames.includes(updatedName)) {
-          MySwal.fire('Error', `The file name "${updatedName}" already exists. Please choose a different name.`, 'error');
+          MySwal.fire(
+            'Error',
+            `The file name "${updatedName}" already exists. Please choose a different name.`,
+            'error'
+          );
           return;
         }
 
         const trimmedNewName = updatedName.trim();
-        const updatedFiles = files.map(file => {
+        const updatedFiles = files.map((file) => {
           if (file._id === fileId) {
             return { ...file, fileName: trimmedNewName };
           }
@@ -193,30 +285,17 @@ function App() {
 
         setFiles(updatedFiles);
 
-        const putResponse = await axios.put(`http://localhost:5000/files/${fileId}`, { fileName: trimmedNewName });
+        const putResponse = await axios.put(`http://localhost:5000/files/${fileId}`, {
+          fileName: trimmedNewName,
+        });
         MySwal.fire('Success', putResponse.data.message, 'success');
       } catch (error) {
         console.error(error);
-        MySwal.fire('Error', 'Failed to update the file name', 'error');
+        MySwal.fire('Error', 'Failed to update the file name.', 'error');
       }
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setNewFileName(file.name.replace('.json', '')); 
-    }
-    setUploadButtonColor('#4caf50');
-  };
-
- 
-  const handleFileNameClick = (fileId) => {
-    setSelectedFileNameId(fileId);
-  };
-
-  
   const handleDelete = (fileId, event) => {
     event.stopPropagation();
     MySwal.fire({
@@ -225,23 +304,23 @@ function App() {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, delete it',
-      cancelButtonText: 'No, cancel'
+      cancelButtonText: 'No, cancel',
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.delete(`http://localhost:5000/files/${fileId}`)
-          .then(response => {
+        axios
+          .delete(`http://localhost:5000/files/${fileId}`)
+          .then((response) => {
             MySwal.fire('Deleted!', response.data.message, 'success');
-            setFiles(files.filter(file => file._id !== fileId));
+            setFiles(files.filter((file) => file._id !== fileId));
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
-            MySwal.fire('Error', 'Failed to delete the file', 'error');
+            MySwal.fire('Error', 'Failed to delete the file.', 'error');
           });
       }
     });
   };
 
-  
   const handlePinToggle = (fileId, event) => {
     event.stopPropagation();
     const index = pinnedFiles.indexOf(fileId);
@@ -254,12 +333,14 @@ function App() {
     }
   };
 
+  const handleFileNameClick = (fileId) => {
+    setSelectedFileNameId(fileId);
+  };
 
   const handleBack = () => {
     setSelectedFileNameId(null);
   };
 
- 
   const handleDragStart = (e, fileId) => {
     e.dataTransfer.setData('fileId', fileId);
     e.currentTarget.classList.add('dragging');
@@ -276,18 +357,19 @@ function App() {
   const handleDrop = (e, targetIndex) => {
     e.preventDefault();
     const draggedFileId = e.dataTransfer.getData('fileId');
-    const draggedFile = files.find(file => file._id === draggedFileId);
+    const draggedFile = files.find((file) => file._id === draggedFileId);
     const updatedFiles = [...files];
-    const currentIndex = updatedFiles.findIndex(file => file._id === draggedFileId);
+    const currentIndex = updatedFiles.findIndex((file) => file._id === draggedFileId);
     updatedFiles.splice(currentIndex, 1);
     updatedFiles.splice(targetIndex, 0, draggedFile);
     setFiles(updatedFiles);
   };
 
-  
-  const filteredFiles = files.filter(file => file.fileName.toLowerCase().includes(searchTerm.toLowerCase()));
-  const pinnedFilesList = filteredFiles.filter(file => pinnedFiles.includes(file._id));
-  const otherFilesList = filteredFiles.filter(file => !pinnedFiles.includes(file._id));
+  const filteredFiles = files.filter((file) =>
+    file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const pinnedFilesList = filteredFiles.filter((file) => pinnedFiles.includes(file._id));
+  const otherFilesList = filteredFiles.filter((file) => !pinnedFiles.includes(file._id));
 
   return (
     <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
@@ -309,8 +391,9 @@ function App() {
               placeholder="Search by file name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="form-control"
             />
-            <SearchIcon />
+            <SearchIcon className="search-icon" />
           </div>
         </>
       )}
@@ -376,54 +459,19 @@ function App() {
           <Button variant="primary" onClick={handleShowModal} className="mt-3">
             Upload File
           </Button>
-          <Modal show={showModal} onHide={handleCloseModal}>
-            <Modal.Header closeButton>
-              <Modal.Title>Upload a File</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <input
-                type="file"
-                ref={fileInputRefModal}
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    setSelectedFile(file);
-                    setNewFileName(file.name.replace('.json', '')); 
-                  }
-                }}
-                style={{ display: 'none' }}
-                accept=".json" 
-              />
-              <Button variant="secondary" onClick={() => fileInputRefModal.current.click()} className="mb-3">
-                Choose File
-              </Button>
-              {selectedFile && (
-                <div>
-                  <p>Selected File: {selectedFile.name}</p>
-                  <label htmlFor="new-file-name">Rename file:</label>
-                  <input
-                    type="text"
-                    id="new-file-name"
-                    value={newFileName}
-                    onChange={(e) => setNewFileName(e.target.value)}
-                    placeholder="Enter new file name"
-                    className="form-control"
-                  />
-                </div>
-              )}
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={handleCloseModal}>
-                Close
-              </Button>
-              <Button variant="primary" onClick={handleUpload} disabled={!selectedFile}>
-                Upload File
-              </Button>
-            </Modal.Footer>
-          </Modal>
         </div>
       )}
-     
+
+      <UploadModal
+        showModal={showModal}
+        handleCloseModal={handleCloseModal}
+        handleUpload={handleUpload}
+        setSelectedFile={setSelectedFile}
+        selectedFile={selectedFile}
+        newFileName={newFileName}
+        setNewFileName={setNewFileName}
+      />
+
       <div className="toggle-button" onClick={toggleDarkMode}>
         <SunIcon name="sun" className="sun" />
         <MoonIcon name="moon" className="moon" />
