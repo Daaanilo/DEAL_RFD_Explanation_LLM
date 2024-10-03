@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import FileDetailsPage from './FileDetailsPage';
 import './App.css';
@@ -11,6 +11,8 @@ import { ReactComponent as PinIcon } from 'bootstrap-icons/icons/pin-fill.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil-square.svg';
 import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
+import { Modal, Button } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
@@ -116,6 +118,7 @@ function App() {
       alert(response.data);
       const filesResponse = await axios.get('http://localhost:5000/files');
       setFiles(filesResponse.data);
+      handleCloseModal();
     } catch (error) {
       console.error(error);
       alert('Error uploading JSON file');
@@ -235,6 +238,17 @@ function App() {
   const pinnedFilesList = filteredFiles.filter(file => pinnedFiles.includes(file._id));
   const otherFilesList = filteredFiles.filter(file => !pinnedFiles.includes(file._id));  
 
+  const [showModal, setShowModal] = useState(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedFile(null); 
+  };
+  
+  const handleShowModal = () => setShowModal(true);
+  
+    
+  const fileInputRefModal = useRef(null);
+
   return (
     <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
 
@@ -318,12 +332,45 @@ function App() {
         <FileDetailsPage fileName={selectedFileName} onBack={handleBack} />
       )}
 
-      {!selectedFileName && (
+{!selectedFileName && (
         <div className="upload-section">
-          <input id="file-upload" type="file" onChange={handleFileChange} />
-          <button id="upload" style={{ backgroundColor: uploadButtonColor }} onClick={promptForNewFileName}><CloudArrowUpFillIcon /></button>
+          <Button variant="primary" onClick={handleShowModal} className="mt-3">
+            Launch demo modal
+          </Button>
+          <Modal show={showModal} onHide={handleCloseModal}>
+            <Modal.Header closeButton>
+              <Modal.Title>Carica un File</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <input
+                type="file"
+                ref={fileInputRefModal}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setSelectedFile(file);
+                  }
+                }}
+                style={{ display: 'none' }}
+                accept=".json" 
+              />
+              <Button variant="secondary" onClick={() => fileInputRefModal.current.click()} className="mb-3">
+                Scegli File
+              </Button>
+              {selectedFile && <p>File Selezionato: {selectedFile.name}</p>}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleCloseModal}>
+                Chiudi
+              </Button>
+              <Button variant="primary" onClick={promptForNewFileName} disabled={!selectedFile}>
+                Carica File
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </div>
       )}
+
 
       <div className="toggle-button" onClick={toggleDarkMode}>
         <SunIcon name="sun" className="sun" />

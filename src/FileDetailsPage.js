@@ -458,7 +458,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       explanation2: true,
     });
 
-    if (window.confirm('Are you sure you want to generate the text?')) {
+    
       setIsLoading(true);
 
       let response = "";
@@ -477,7 +477,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setResponseAI(response);
       setIsTextGenerated(true);
       setIsLoading(false);
-    }
+    
   };
 
   const summarizeText = async () => {
@@ -501,7 +501,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       explanation2: true
     });
     
-    if (window.confirm('Are you sure you want to summarize the text?')) {
+    
       setIsLoading2(true);
 
       let response = "";
@@ -519,7 +519,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       setResponseAI2(response);
       setIsTextGenerated2(true);
       setIsLoading2(false);
-    }
+    
   };
 
   // FILTER RFD
@@ -1785,32 +1785,54 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
     return pages;
   };
+  
 
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleMenuItemClick = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setDropdownOpen(false); 
+  };
 
   return (
       
       <div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
-        <div className="title-back-container">
-          <button className="back-btn" onClick={onBack}>
-            <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
-          </button>
-          <div className="toggle-button" onClick={toggleDarkMode}>
-            <SunIcon name="sun" className="sun"></SunIcon>
-            <MoonIcon name="moon" className="moon"></MoonIcon>
-            <div className="toggle"></div>
-            <div className="animateBg"></div>
-          </div>
-          <h2 className="title">File Details: {info.name[0]}</h2>
-        </div>
 
-        <nav className="index-container">
-        <div className="index-bar">
-          <button onClick={() => handleScroll('dataset')} className="index-button">Dataset</button>
-          <button onClick={() => handleScroll('algorithm')} className="index-button">Algorithm</button>
-          <button onClick={() => handleScroll('dependencies')} className="index-button">Dependencies Analysis</button>
-        </div>
-      </nav>
-      
+        <button className="back-btn" onClick={onBack}>
+            <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
+        </button>
+
+          <div className="title-back-container">
+            <div className="dropdown">
+              <button onClick={toggleDropdown} style={{ border: 'none', outline: 'none', background: 'none', cursor: 'pointer' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" className="bi bi-list" viewBox="0 0 16 16">
+                <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+              </svg>
+              </button>
+              <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
+                <li onClick={() => handleMenuItemClick('dataset')}>Dataset</li>
+                <li onClick={() => handleMenuItemClick('algorithm')}>Algorithm</li>
+                <li onClick={() => handleMenuItemClick('dependencies')}>Dependencies Analysis</li>
+              </ul>
+            </div>
+            
+            <h2 className="title">File Details: {info.name[0]}</h2>
+            
+            <div className="toggle-button" onClick={toggleDarkMode}>
+              <SunIcon name="sun" className="sun"></SunIcon>
+              <MoonIcon name="moon" className="moon"></MoonIcon>
+              <div className="toggle"></div>
+              <div className="animateBg"></div>
+            </div>
+          </div>
+
         <div className="container">
           <h2 id="dataset" className="section">DATASET</h2>
           <div className="sticky-container">
