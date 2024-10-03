@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button } from 'react-bootstrap'; 
+import { Modal, Button } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
@@ -9,24 +9,26 @@ import { ReactComponent as PinIcon } from 'bootstrap-icons/icons/pin-fill.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil-square.svg';
 import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
-import { ReactComponent as UploadIcon } from 'bootstrap-icons/icons/upload.svg'; 
-import './App.css'; 
-import './DarkModeProvider.css'; 
-import { DarkModeContext } from './DarkModeProvider'; 
+import { ReactComponent as UploadIcon } from 'bootstrap-icons/icons/upload.svg';
+import { DarkModeContext } from './DarkModeProvider';
+import FileDetailsPage from './FileDetailsPage';
+import './App.css';
 
 const MySwal = withReactContent(Swal);
+
 
 const UploadModal = ({
   showModal,
   handleCloseModal,
   handleUpload,
-  setSelectedFile, 
+  setSelectedFile,
   selectedFile,
   newFileName,
   setNewFileName,
 }) => {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const { darkMode } = useContext(DarkModeContext);
 
 
   const handleDragOver = (e) => {
@@ -126,22 +128,12 @@ const UploadModal = ({
           variant="primary"
           onClick={handleUpload}
           disabled={!selectedFile || !newFileName.trim()}
+          className="upload-button"
         >
           Upload File
         </Button>
       </Modal.Footer>
     </Modal>
-  );
-};
-
-const FileDetailsPage = ({ fileName, onBack }) => {
-  return (
-    <div className="file-details-page">
-      <Button variant="secondary" onClick={onBack} className="mb-3">
-        Back
-      </Button>
-      <h2>Details for {fileName}</h2>
-    </div>
   );
 };
 
@@ -153,25 +145,13 @@ function App() {
   const [files, setFiles] = useState([]);
   const [selectedFileNameId, setSelectedFileNameId] = useState(null); 
   const [searchTerm, setSearchTerm] = useState('');
-  const [uploadButtonColor, setUploadButtonColor] = useState('#007bff');
   const [pinnedFiles, setPinnedFiles] = useState([]);
-
-
   const [showModal, setShowModal] = useState(false);
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedFile(null); 
-    setNewFileName('');
-  };
-  const handleShowModal = () => setShowModal(true);
-
- 
-  const fileInputRefModal = useRef(null);
-
 
   useEffect(() => {
-    document.body.style.backgroundColor = darkMode ? 'black' : '#f8f8f8';
-
+    document.body.style.backgroundColor = darkMode ? 'var(--background-color-dark)' : 'var(--background-color-light)';
+    document.body.style.color = darkMode ? 'var(--text-color-dark)' : 'var(--text-color-light)';
+    
     axios
       .get('http://localhost:5000/files')
       .then((response) => {
@@ -182,6 +162,13 @@ function App() {
         MySwal.fire('Error', 'Failed to retrieve file names.', 'error');
       });
   }, [darkMode]);
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedFile(null);
+    setNewFileName('');
+  };
+  const handleShowModal = () => setShowModal(true);
 
   const handleUpload = async () => {
     if (!selectedFile || !newFileName.trim()) {
@@ -195,7 +182,6 @@ function App() {
       fileNameToUpload += '.json';
     }
 
-   
     const fileExists = files.some(
       (file) => file.fileName.toLowerCase() === fileNameToUpload.toLowerCase()
     );
@@ -225,7 +211,7 @@ function App() {
         },
       });
 
-      MySwal.fire('Success', response.data, 'success');
+      MySwal.fire('Success', response.data.message || 'File uploaded successfully!', 'success');
       const filesResponse = await axios.get('http://localhost:5000/files');
       setFiles(filesResponse.data);
       handleCloseModal();
@@ -263,10 +249,8 @@ function App() {
       }
 
       try {
-        const response = await axios.get('http://localhost:5000/files');
-        const existingFileNames = response.data.map((file) => file.fileName);
-
-        if (existingFileNames.includes(updatedName)) {
+        const existingFileNames = files.map((file) => file.fileName.toLowerCase());
+        if (existingFileNames.includes(updatedName.toLowerCase())) {
           MySwal.fire(
             'Error',
             `The file name "${updatedName}" already exists. Please choose a different name.`,
@@ -275,20 +259,15 @@ function App() {
           return;
         }
 
-        const trimmedNewName = updatedName.trim();
-        const updatedFiles = files.map((file) => {
-          if (file._id === fileId) {
-            return { ...file, fileName: trimmedNewName };
-          }
-          return file;
-        });
-
-        setFiles(updatedFiles);
-
         const putResponse = await axios.put(`http://localhost:5000/files/${fileId}`, {
-          fileName: trimmedNewName,
+          fileName: updatedName,
         });
-        MySwal.fire('Success', putResponse.data.message, 'success');
+
+        MySwal.fire('Success', putResponse.data.message || 'File name updated successfully!', 'success');
+        const updatedFiles = files.map((file) =>
+          file._id === fileId ? { ...file, fileName: updatedName } : file
+        );
+        setFiles(updatedFiles);
       } catch (error) {
         console.error(error);
         MySwal.fire('Error', 'Failed to update the file name.', 'error');
@@ -297,7 +276,8 @@ function App() {
   };
 
   const handleDelete = (fileId, event) => {
-    event.stopPropagation();
+    event.stopPropagation(); 
+
     MySwal.fire({
       title: 'Are you sure?',
       text: 'Do you really want to delete this file?',
@@ -310,8 +290,9 @@ function App() {
         axios
           .delete(`http://localhost:5000/files/${fileId}`)
           .then((response) => {
-            MySwal.fire('Deleted!', response.data.message, 'success');
+            MySwal.fire('Deleted!', response.data.message || 'File has been deleted.', 'success');
             setFiles(files.filter((file) => file._id !== fileId));
+            setPinnedFiles(pinnedFiles.filter((id) => id !== fileId));
           })
           .catch((error) => {
             console.error(error);
@@ -323,13 +304,11 @@ function App() {
 
   const handlePinToggle = (fileId, event) => {
     event.stopPropagation();
-    const index = pinnedFiles.indexOf(fileId);
-    if (index === -1) {
-      setPinnedFiles([...pinnedFiles, fileId]);
+
+    if (pinnedFiles.includes(fileId)) {
+      setPinnedFiles(pinnedFiles.filter((id) => id !== fileId));
     } else {
-      const updatedPinnedFiles = [...pinnedFiles];
-      updatedPinnedFiles.splice(index, 1);
-      setPinnedFiles(updatedPinnedFiles);
+      setPinnedFiles([...pinnedFiles, fileId]);
     }
   };
 
@@ -341,39 +320,15 @@ function App() {
     setSelectedFileNameId(null);
   };
 
-  const handleDragStart = (e, fileId) => {
-    e.dataTransfer.setData('fileId', fileId);
-    e.currentTarget.classList.add('dragging');
-  };
-
-  const handleDragEnd = (e) => {
-    e.currentTarget.classList.remove('dragging');
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e, targetIndex) => {
-    e.preventDefault();
-    const draggedFileId = e.dataTransfer.getData('fileId');
-    const draggedFile = files.find((file) => file._id === draggedFileId);
-    const updatedFiles = [...files];
-    const currentIndex = updatedFiles.findIndex((file) => file._id === draggedFileId);
-    updatedFiles.splice(currentIndex, 1);
-    updatedFiles.splice(targetIndex, 0, draggedFile);
-    setFiles(updatedFiles);
-  };
-
   const filteredFiles = files.filter((file) =>
     file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   const pinnedFilesList = filteredFiles.filter((file) => pinnedFiles.includes(file._id));
   const otherFilesList = filteredFiles.filter((file) => !pinnedFiles.includes(file._id));
 
   return (
     <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
-
       {!selectedFileNameId && (
         <>
           <section className="wrapper">
@@ -384,7 +339,7 @@ function App() {
           <section className="wrapper2">
             <div className="top2">Dependencies Explanation with Advanced Language Models</div>
           </section>
-          
+
           <div className="search-section">
             <input
               type="text"
@@ -397,7 +352,6 @@ function App() {
           </div>
         </>
       )}
-
       {!selectedFileNameId ? (
         <div>
           <div className="file-container">
@@ -407,19 +361,40 @@ function App() {
                 className={`desktop-icon ${file._id}`}
                 onClick={() => handleFileNameClick(file._id)}
                 draggable
-                onDragStart={(e) => handleDragStart(e, file._id)}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('fileId', file._id);
+                  e.currentTarget.classList.add('dragging');
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.classList.remove('dragging');
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const draggedFileId = e.dataTransfer.getData('fileId');
+                  const draggedFile = files.find((f) => f._id === draggedFileId);
+                  const updatedFiles = [...files];
+                  const currentIndex = updatedFiles.findIndex((f) => f._id === draggedFileId);
+                  updatedFiles.splice(currentIndex, 1);
+                  updatedFiles.splice(index, 0, draggedFile);
+                  setFiles(updatedFiles);
+                }}
               >
                 <i className="fas fa-file"></i>
                 <p className="file-name" title={file.fileName}>{file.fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
-                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon fill="#f00" />
+                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}>
+                  <TrashIcon />
                 </button>
-                <button className="edit-btn" onClick={(event) => { event.stopPropagation(); handleEditFileName(file._id, file.fileName); }}>
-                  <PencilIcon fill={darkMode ? "#fff" : "#000"} />
+                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
+                  <PinIcon className="pin-icon" />
+                </button>
+                <button
+                  className="edit-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleEditFileName(file._id, file.fileName);
+                  }}
+                >
+                  <PencilIcon className="edit-icon" />
                 </button>
                 <p className="timestamp">{file.timestamp}</p>
               </div>
@@ -431,19 +406,40 @@ function App() {
                 className={`desktop-icon ${file._id}`}
                 onClick={() => handleFileNameClick(file._id)}
                 draggable
-                onDragStart={(e) => handleDragStart(e, file._id)}
-                onDragEnd={handleDragEnd}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, pinnedFilesList.length + index)}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('fileId', file._id);
+                  e.currentTarget.classList.add('dragging');
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.classList.remove('dragging');
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const draggedFileId = e.dataTransfer.getData('fileId');
+                  const draggedFile = files.find((f) => f._id === draggedFileId);
+                  const updatedFiles = [...files];
+                  const currentIndex = updatedFiles.findIndex((f) => f._id === draggedFileId);
+                  updatedFiles.splice(currentIndex, 1);
+                  updatedFiles.splice(pinnedFilesList.length + index, 0, draggedFile);
+                  setFiles(updatedFiles);
+                }}
               >
                 <i className="fas fa-file"></i>
                 <p className="file-name" title={file.fileName}>{file.fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}><TrashIcon /></button>
-                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon fill={darkMode ? "#fff" : (pinnedFiles.includes(file._id) ? "#f00" : "#000")} />
+                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}>
+                  <TrashIcon />
                 </button>
-                <button className="edit-btn" onClick={(event) => { event.stopPropagation(); handleEditFileName(file._id, file.fileName); }}>
-                  <PencilIcon fill={darkMode ? "#fff" : "#000"} />
+                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
+                  <PinIcon className="pin-icon" />
+                </button>
+                <button
+                  className="edit-btn"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleEditFileName(file._id, file.fileName);
+                  }}
+                >
+                  <PencilIcon className="edit-icon" />
                 </button>
                 <p className="timestamp">{file.timestamp}</p>
               </div>
@@ -456,7 +452,7 @@ function App() {
 
       {!selectedFileNameId && (
         <div className="upload-section">
-          <Button variant="primary" onClick={handleShowModal} className="mt-3">
+          <Button variant="primary" onClick={handleShowModal} className="mt-3 upload-button">
             Upload File
           </Button>
         </div>
@@ -473,12 +469,11 @@ function App() {
       />
 
       <div className="toggle-button" onClick={toggleDarkMode}>
-        <SunIcon name="sun" className="sun" />
-        <MoonIcon name="moon" className="moon" />
+        <SunIcon className="sun" />
+        <MoonIcon className="moon" />
         <div className="toggle"></div>
         <div className="animateBg"></div>
       </div>
-
     </div>
   );
 }
