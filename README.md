@@ -28,3 +28,6 @@ It is divided into two main pages:
        - Allows filtering of the discovered RFD (Relational Functional Dependencies) through specific cards.
        - Includes default instructions generated via prompt engineering and prompt tuning.
        - Instructions are dynamically generated and modifiable in real time.
+
+- **And much more**:
+  - The platform is designed to provide an intuitive and flexible user experience, with ongoing enhancements and additional features planned for future releases.
