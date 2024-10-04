@@ -50,12 +50,13 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const prompts = useMemo(() => ({
     'RFDs Overview':
-    "I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) "+
-    "determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. The notation for an RFD is structured as follows: attribute@[x.x], attribute@[x.x], ... -> attribute@[x.x], "+
-    "where the square brackets contain the tolerance threshold used to compare the similarity of the attribute's values. Provide an explanation of each dependency, based on the attribute names and associated tolerance thresholds, "+
-    "describing how this information affects these relationships. You have to explain how the semantic meaning of the attribute names characterizes the dependency in the real world. The dependencies are as follows:\n",
+      "I would like a thorough understanding of the RFD (Relational Functional Dependency) dependencies listed below. An RFD is a relationship between variables where a set of attributes (lhs - left-hand side) " +
+      "determines another attribute (rhs - right-hand side), with specific tolerance thresholds indicated. The notation for an RFD is structured as follows: attribute@[thr_x], attribute@[thr_y], ... -> attribute@[thr_z], " +
+      "where the square brackets contain the tolerance threshold used to compare the similarity of the attribute's values. Provide an explanation of each dependency, based on the attribute names and associated tolerance thresholds, " +
+      "delving into the semantic aspects of how these attributes interact. Describe how this information affects these relationships and how the semantic meaning of the attribute names characterizes the dependency in the real world. The dependencies are as follows:\n",
     'RFDs Analysis with Stats': ''
   }), []);
+  
 
   const getColors = (darkMode) => {
     return {
@@ -253,8 +254,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         if (item.execution && item.execution.result && item.execution.result.data && item.execution.result.data.length) {
           item.execution.result.data.forEach(resultData => {
             if (resultData.lhs && resultData.rhs) {
-              const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@[${lhsItem.comparison_relaxation.toFixed(1)}]`).join(', ');
-              const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@[${rhsItem.comparison_relaxation.toFixed(1)}]`).join(', ');
+              const lhsColumns = resultData.lhs.map((lhsItem, idx) => `${lhsItem.column}@[thr_${idx + 1}]`).join(', ');
+              const rhsColumns = resultData.rhs.map((rhsItem, idx) => `${rhsItem.column}@[thr_${idx + 1}]`).join(', ');
               const rfdString = `${lhsColumns} -> ${rhsColumns}`;
               extractedRFDs.push(rfdString);
             }
@@ -483,7 +484,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const summarizeText = async () => {
   
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-
+  
     await new Promise(resolve => {
       const checkIfScrolled = () => {
         if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
@@ -494,34 +495,33 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       };
       checkIfScrolled();
     });
-
+  
     setVisibility({
       ...cardVisibility,
       summary2: true,
       explanation2: true
     });
     
-    
       setIsLoading2(true);
-
+  
       let response = "";
       
       if (selectedLLM === 'ChatGPT3.5') {
-        response = await chatGPTHandleUserInput('Can you give me a summary of this: ' + responseAI);
+        response = await chatGPTHandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
       } else if (selectedLLM === 'Llama3') {
-        response = await llamaHandleUserInput('Can you give me a summary of this: ' + responseAI);
+        response = await llamaHandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
       } else if (selectedLLM === 'Jurassic-2 Ultra') {
-        response = await ai21HandleUserInput('Can you give me a summary of this: ' + responseAI);
+        response = await ai21HandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
       } else {  
         response = 'Invalid LLM selected';
       }
-
+  
       setResponseAI2(response);
       setIsTextGenerated2(true);
       setIsLoading2(false);
     
   };
-
+  
   // FILTER RFD
 
   const [cardinalityValues, setCardinalityValues] = useState([]);
