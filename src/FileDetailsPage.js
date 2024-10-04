@@ -12,13 +12,12 @@ import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg'
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
 import { ReactComponent as InfoIcon } from 'bootstrap-icons/icons/info.svg';
 import { DarkModeContext } from './DarkModeProvider';
-
+import { v4 as uuidv4 } from 'uuid';
 import ReactApexChart from 'react-apexcharts';
 import { Bar, Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 import './FileDetailsPage.css';
-import './DarkModeProvider.css';
-
+import './DarkModeProvider.css'; 
 import axios from 'axios';
 
 import ai21HandleUserInput from './ai21api.js'; // If it doesn't work, replace the key in 'ai21api.js'
@@ -29,9 +28,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
 
   const [fileContent, setFileContent] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [allRFDs, setAllRFDs] = useState([]);
-  
+  const [allRFDs, setAllRFDs] = useState([]); 
+  const [selectedRFDIds, setSelectedRFDIds] = useState([]); 
   const [isLoading, setIsLoading] = useState(false);
   const [isTextGenerated, setIsTextGenerated] = useState(false);
   const [responseAI, setResponseAI] = useState();
@@ -75,25 +73,16 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     const newBasePrompt = prompts[selectedPrompt];
     setBasePrompt(newBasePrompt);
   
-    if (newBasePrompt !== basePrompt) {
-      const selectedRFDs = selectedRows.map(index => filteredRFDs[index]);
+    const selectedRFDs = selectedRFDIds.map(id => {
+      const rfdObj = allRFDs.find(rfd => rfd.id === id);
+      return rfdObj ? rfdObj.rfd : '';
+    }).filter(rfd => rfd !== '');
   
-      let newPrompt = newBasePrompt;
-        const promptLines = newBasePrompt.split('\n');
-        let appIndex = promptLines.findIndex(line => line.includes('Below'));
-      
-        if (appIndex !== -1) {
-          appIndex--;
-          promptLines.splice(appIndex, 0, ...selectedRFDs);
-          newPrompt = promptLines.join('\n');
-        } else {
-          newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
-        }
-
+    const newPrompt = [newBasePrompt, ...selectedRFDs].join('\n');
+    setCustomPromptAI(newPrompt);
+  }, [selectedPrompt, selectedRFDIds, allRFDs, prompts]);
   
-      setCustomPromptAI(newPrompt);
-    }
-  }, [selectedPrompt, selectedRows]);
+  
 
   const handleScroll = (id) => {
     const element = document.getElementById(id);
@@ -257,7 +246,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               const lhsColumns = resultData.lhs.map((lhsItem, idx) => `${lhsItem.column}@[thr_${idx + 1}]`).join(', ');
               const rhsColumns = resultData.rhs.map((rhsItem, idx) => `${rhsItem.column}@[thr_${idx + 1}]`).join(', ');
               const rfdString = `${lhsColumns} -> ${rhsColumns}`;
-              extractedRFDs.push(rfdString);
+              extractedRFDs.push({ id: uuidv4(), rfd: rfdString });
             }
           });
         }
@@ -265,51 +254,41 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
     setAllRFDs(extractedRFDs);
   };
-
+  
   // HIDE/SELECT ROWS/CARDS
 
-  const toggleRowSelection = (index) => {
-    setSelectedRows(prevSelectedRows => {
-      const selectedIndex = prevSelectedRows.indexOf(index);
-
-      const updatedSelectedRows = selectedIndex === -1 ? [...prevSelectedRows, index] : prevSelectedRows.filter(i => i !== index);
-      updateCustomPrompt(index, selectedIndex === -1);
-
-      return updatedSelectedRows;
+  const toggleRowSelection = (id) => {
+    setSelectedRFDIds(prevSelectedIds => {
+      const selectedIndex = prevSelectedIds.indexOf(id);
+  
+      const updatedSelectedIds = selectedIndex === -1 ? [...prevSelectedIds, id] : prevSelectedIds.filter(i => i !== id);
+      updateCustomPrompt(id, selectedIndex === -1);
+  
+      return updatedSelectedIds;
     });
   };
+  
   
   const toggleSelectAll = () => {
-    const visibleRFDsIndexes = filteredRFDs.map((_, index) => index);
-  
-    setSelectedRows(prevSelectedRows => {
-      const newSelectedRows = prevSelectedRows.length === visibleRFDsIndexes.length ? [] : visibleRFDsIndexes;
-  
-      setCustomPromptAI(prevPrompt => {
-        const promptString = String(prevPrompt);
-        const promptLines = promptString.split('\n');
-        const baseLines = promptLines.filter(line => !filteredRFDs.includes(line));
-  
-        if (newSelectedRows.length === 0) {
-          return baseLines.join('\n');
-        } else {
-          const selectedRFDs = newSelectedRows.map(index => filteredRFDs[index]);
-          let appIndex = baseLines.findIndex(line => line.includes('Below'));
+  const visibleRFDsIds = filteredRFDs.map(rfdObj => rfdObj.id);
 
-          if (appIndex !== -1) {
-            appIndex--;
-            baseLines.splice(appIndex, 0, ...selectedRFDs);
-          } else {
-            baseLines.push(...selectedRFDs);
-          }
-  
-          return baseLines.join('\n');
-        }
-      });
-  
-      return newSelectedRows;
+  setSelectedRFDIds(prevSelectedIds => {
+    const newSelectedIds = prevSelectedIds.length === visibleRFDsIds.length ? [] : visibleRFDsIds;
+
+    setCustomPromptAI(prevPrompt => {
+      const promptString = String(initialPrompts[selectedPrompt]); 
+      const selectedRFDs = newSelectedIds.map(id => {
+        const rfdObj = allRFDs.find(rfd => rfd.id === id);
+        return rfdObj ? rfdObj.rfd : '';
+      }).filter(rfd => rfd !== '');
+      
+      return [promptString, ...selectedRFDs].join('\n');
     });
-  };
+
+    return newSelectedIds;
+  });
+};
+
   
   
 
@@ -403,40 +382,28 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     setCustomPromptAI(e.target.value);
   };
 
-  const updateCustomPrompt = (index, isAdding) => {
-    const rfdToToggle = filteredRFDs[index];
+  const updateCustomPrompt = (id, isAdding) => {
+    const rfdObj = allRFDs.find(rfd => rfd.id === id);
+    if (!rfdObj) return;
+    const rfdToToggle = rfdObj.rfd;
   
-      setCustomPromptAI(prevPrompt => {
-        const promptString = String(prevPrompt);
-        const promptLines = promptString.split('\n');
+    setCustomPromptAI(prevPrompt => {
+      const basePrompt = prompts[selectedPrompt];
+      const selectedRFDs = selectedRFDIds.map(rfdId => {
+        const rfd = allRFDs.find(r => r.id === rfdId);
+        return rfd ? rfd.rfd : '';
+      }).filter(rfd => rfd !== '');
   
-        let appIndex = promptLines.findIndex(line => line.includes('Below'));
-  
-        if (isAdding) {
-          if (!promptLines.includes(rfdToToggle)) {
-            if (appIndex !== -1) {
-              appIndex--;
-              promptLines.splice(appIndex, 0, rfdToToggle);
-            } else {
-              promptLines.push(rfdToToggle);
-            }
-            return promptLines.join('\n');
-          }
-        } else {
-          const filteredLines = promptLines.filter(line => line !== rfdToToggle);
-          return filteredLines.join('\n');
-        }
-  
-        return promptString;
-      });
-    
+      return [basePrompt, ...selectedRFDs].join('\n');
+    });
   };
+  
   
   
   
   const scrollToBottom = async () => {
 
-    if (selectedRows.length === 0) {
+    if (selectedRFDIds.length === 0) {
       alert('Select one or more RFDs');
       return;
     }
@@ -533,9 +500,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const filterRFDs = (rfdArray, attributesHeader, cardinality, frequency, implicating) => {
     if (!Array.isArray(rfdArray)) return [];
     
-    let filteredArray = rfdArray.filter(rfd => {
+    let filteredArray = rfdArray.filter(rfdObj => {
+      const rfd = rfdObj.rfd;
       return !attributesHeader.some(attribute => rfd.includes(attribute));
     });
+    
     
     if (frequency.length > 0) {
       frequency.forEach(freq => {
@@ -544,14 +513,14 @@ const FileDetailsPage = ({ fileName, onBack }) => {
           const value = match[1];
           const type = match[2];
   
-          filteredArray = filteredArray.filter(rfd => {
-            const [lhs, rhs] = rfd.split(' -> ');
+          filteredArray = filteredArray.filter(rfdObj => {
+            const [lhs, rhs] = rfdObj.rfd.split(' -> ');
             if (type === 'LHS') {
               return !lhs.includes(`[${value}]`);
             } else if (type === 'RHS') {
               return !rhs.includes(`[${value}]`);
             }
-
+    
             return false;
           });
         }
@@ -561,8 +530,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     if (cardinality.length > 0) {
       const cardinalityValues = cardinality.map(card => parseInt(card.match(/^(\d+)/)[1]));
   
-      filteredArray = filteredArray.filter(rfd => {
-        const lhs = rfd.split(' -> ')[0];
+      filteredArray = filteredArray.filter(rfdObj => {
+        const lhs = rfdObj.rfd.split(' -> ')[0];
         const lhsAttributesCount = lhs.split(',').length;
   
         return !cardinalityValues.includes(lhsAttributesCount);
@@ -570,8 +539,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     }
   
     if (implicating.length > 0) {
-      filteredArray = filteredArray.filter(rfd => {
-        const rhs = rfd.split(' -> ')[1];
+      filteredArray = filteredArray.filter(rfdObj => {
+        const rhs = rfdObj.rfd.split(' -> ')[1];
         const rhsAttributes = rhs.split(',').map(attr => attr.split('@')[0].trim());
         return !implicating.some(value => rhsAttributes.includes(value));
       });
@@ -579,6 +548,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     
     return filteredArray;
   };
+  
   
   useEffect(() => {
     setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
@@ -958,8 +928,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   const countLHSAttributes = (rfdArray) => {
     const lhsCount = {};
-    rfdArray.forEach(rfd => {
-      const lhs = rfd.split(' -> ')[0];
+    rfdArray.forEach(rfdObj => { 
+      if (typeof rfdObj.rfd !== 'string') {
+        console.error('RFD is not a string:', rfdObj);
+        return; 
+      }
+      const lhs = rfdObj.rfd.split(' -> ')[0];
       const attributes = lhs.split(',').map(attr => attr.trim()).filter(attr => attr !== '');
       const numAttributes = attributes.length;
       if (!lhsCount[numAttributes]) {
@@ -971,20 +945,23 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     return lhsCount;
   };
   
-  const lhsAttributesCount = countLHSAttributes(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
-  const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
-  const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
   
-  const lhsAttributeChartData = {
-    labels: lhsAttributeLabels.map(label => `${label} attribute(s)`),
-    datasets: lhsAttributeLabels.map((label, index) => ({
-      label: `${label} attribute(s)`,
-      data: lhsAttributeLabels.map((_, i) => i === index ? lhsAttributeData[index] : null),
-      backgroundColor: gradientColors[13],
-      borderColor: 'rgba(0, 0, 0, 1)',
-      borderWidth: 0.5,
-    })),
-  };
+  const lhsAttributesCount = countLHSAttributes(filteredRFDs); 
+
+const lhsAttributeLabels = Object.keys(lhsAttributesCount).sort((a, b) => a - b);
+const lhsAttributeData = lhsAttributeLabels.map(label => lhsAttributesCount[label]);
+
+const lhsAttributeChartData = {
+  labels: lhsAttributeLabels.map(label => `${label} attribute(s)`),
+  datasets: [{
+    label: 'LHS Cardinality',
+    data: lhsAttributeData,
+    backgroundColor: gradientColors[13],
+    borderColor: 'rgba(0, 0, 0, 1)',
+    borderWidth: 0.5,
+  }],
+};
+
   
   const lhsAttributeChartOptions = {
     responsive: true,
@@ -1065,10 +1042,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   const countVariableFrequency = (rfdArray) => {
     const variableFrequency = {};
     
-    rfdArray.forEach(rfd => {
+    rfdArray.forEach(rfdObj => {
+      if (typeof rfdObj.rfd !== 'string') {
+        console.error('RFD is not a string:', rfdObj);
+        return; 
+      }
+      const rfd = rfdObj.rfd;
       const [lhs, rhs] = rfd.split(' -> ');
-      const lhsAttributes = lhs.split(', ');
-      const rhsAttributes = rhs.split(', ');
+      const lhsAttributes = lhs.split(', ').map(attr => attr.trim());
+      const rhsAttributes = rhs.split(', ').map(attr => attr.trim());
       
       const processAttributes = (attributes, side) => {
         attributes.forEach(attribute => {
@@ -1089,6 +1071,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     
     return variableFrequency;
   };
+  
   
   const prepareChartData = (variableFrequency, header) => {
     const labels = Object.keys(variableFrequency);
@@ -1248,11 +1231,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
     attributesHeader.forEach(attribute => {
       implicatingAttributes[attribute] = new Set();
-      rfdArray.forEach(rfd => {
+      rfdArray.forEach(rfdObj => {
+        if (typeof rfdObj.rfd !== 'string') {
+          console.error('RFD is not a string:', rfdObj);
+          return; 
+        }
+        const rfd = rfdObj.rfd;
         const [lhs, rhs] = rfd.split(' -> ');
-
+  
+        if (!rhs) {
+          console.error('Invalid RFD format:', rfd);
+          return; 
+        }
+  
         const rhsAttribute = rhs.substring(0, rhs.indexOf('@')).trim();
-        
+  
         if (rhsAttribute === attribute) {
           const leftAttributes = extractAttributes(lhs);
           leftAttributes.forEach(attr => implicatingAttributes[attribute].add(attr.trim()));
@@ -1262,6 +1255,7 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
     return implicatingAttributes;
   };
+  
 
   let implicatingAttributes = 0;
   if(header[0]) {
@@ -1369,15 +1363,21 @@ const FileDetailsPage = ({ fileName, onBack }) => {
     setFilteredRFDs(filterRFDs(allRFDs, selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues));
   };
 
+  useEffect(() => {
+    setSelectedRFDIds([]);
+    const newBasePrompt = prompts[selectedPrompt];
+    setCustomPromptAI(newBasePrompt);
+  }, [selectedHeaderValues, cardinalityValues, frequencyValues, implicatingValues, selectedPrompt]);
+  
+
 
   // CHART: BOX PLOT
 
-  const statisticLabels = Object.keys(statistics.type);
-  const statisticMeans = statisticLabels.map(label => statistics.mean[label]);
-  const statisticMedians = statisticLabels.map(label => statistics.median[label]);
-  const statisticModes = statisticLabels.map(label => statistics.mode[label]);
-  //const statisticMins = statisticLabels.map(label => statistics.min[label]);
-  //const statisticMaxs = statisticLabels.map(label => statistics.max[label]);
+const filteredStatisticLabels = Object.keys(statistics.type).filter(label => !selectedHeaderValues.includes(label));
+const statisticMeans = filteredStatisticLabels.map(label => statistics.mean[label]);
+const statisticMedians = filteredStatisticLabels.map(label => statistics.median[label]);
+const statisticModes = filteredStatisticLabels.map(label => statistics.mode[label]);
+
 
   const meansString = statisticMeans.join(' ');
   const mediansString = statisticMedians.join(' ');
@@ -1504,11 +1504,12 @@ const FileDetailsPage = ({ fileName, onBack }) => {
 
   // CHART: MIN MAX
 
-  const statisticMin = statisticLabels.map(label => statistics.min[label]);
-  const statisticMax = statisticLabels.map(label => statistics.max[label]);  
+  const minMaxLabels = Object.keys(statistics.type).filter(label => !selectedHeaderValues.includes(label));
+const statisticMin = minMaxLabels.map(label => statistics.min[label]);
+const statisticMax = minMaxLabels.map(label => statistics.max[label]);   
 
   const minMaxChartData = {
-    labels: statisticLabels,
+    labels:  minMaxLabels,
     datasets: [
       {
         label: 'Min',
@@ -1597,11 +1598,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
   
   const nullPercentages = calculateNullPercentages(statistics.distribution);
 
-  const NullPercentageLabels = Object.keys(nullPercentages);
-  const nullPercentageValues = NullPercentageLabels.map(label => parseFloat(nullPercentages[label].nullPercentage || 0));
+  const nullValuesLabels = Object.keys(nullPercentages).filter(label => !selectedHeaderValues.includes(label));
+  const nullPercentageValues = nullValuesLabels.map(label => parseFloat(nullPercentages[label].nullPercentage || 0));
 
   const nullValuesChartData = {
-    labels: statisticLabels,
+    labels: nullValuesLabels,
     datasets: [
       {
         label: 'Null Percentage',
@@ -2353,16 +2354,18 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <span className="details-text">Execution Parameters <CpuIcon /></span>
             
             <span
-            className={`menu-trigger infoExecutionParameters ${!cardVisibility.executionParameters ? 'disabled' : ''} ${activeButtons.infoExecutionParameters ? 'active' : ''}`}
-            onClick={() => {
-              if (cardVisibility.executionParameters) {
-                toggleMenuInfoExecutionParameters();
-                handleMenuClick('infoPrompt');
-              }
-            }}
-              >
-                  <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
-          </span>
+              className={`menu-trigger infoPrompt ${!cardVisibility.prompt ? 'disabled' : ''} ${activeButtons.infoPrompt ? 'active' : ''}`}
+              onClick={() => {
+                if (cardVisibility.prompt) {
+                  toggleMenuInfoPrompt();
+                  handleMenuClick('infoPrompt');
+                }
+              }}            
+            >
+              <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
+            </span>
+
+
 
           <div className={`menu infoExecutionParameters ${menuOpenInfoExecutionParameters ? 'open' : ''}`}>
             Specifies the settings and conditions under which the algorithm was executed (command, max execution time, max RAM usage, execution start time, execution end time).
@@ -2827,13 +2830,15 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       </div>
 
       <div className={`menu ${menuOpenFilter ? 'open' : ''}`}>
-        <b>FILTERS*</b><br /><br />
-        <b>Attributes header :</b> {selectedHeaderValues.join(', ')}<br />
-        <b>LHS cardinality :</b> {cardinalityValues.join(', ')}<br />
-        <b>Frequency :</b> {frequencyValues.join(', ')}<br />
-        <b>Attributes header implicated :</b> {implicatingValues.join(', ')}<br /><br />
-        <i>* = dependencies with these features are not included in this list</i>
-      </div>
+  <b>FILTERS*</b><br /><br />
+  <b>Attributes header :</b> {selectedHeaderValues.join(', ')}<br />
+  <b>LHS cardinality :</b> {cardinalityValues.join(', ')}<br />
+  <b>Frequency :</b> {frequencyValues.join(', ')}<br />
+  <b>Attributes header implicated :</b> {implicatingValues.join(', ')}<br />
+  <b>Selected Dependencies :</b> {selectedRFDIds.length} <br /><br />
+  <i>* = dependencies with these features are not included in this list</i>
+</div>
+
 
       {cardVisibility.rfd && (
         <div className="card-body">
@@ -2841,11 +2846,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
             <input
               type="checkbox"
               className="select-btn larger-checkbox"
-              checked={selectedRows.length === filteredRFDs.length}
+              checked={selectedRFDIds.length === filteredRFDs.length}
               onChange={toggleSelectAll}
             />
             <label style={{ marginLeft: '10px' }}>
-              {selectedRows.length === filteredRFDs.length ? "Deselect all" : "Select all"}
+              {selectedRFDIds.length === filteredRFDs.length ? "Deselect all" : "Select all"}
             </label>
           </div>
           <hr></hr>
@@ -2854,19 +2859,18 @@ const FileDetailsPage = ({ fileName, onBack }) => {
               maxHeight: filteredRFDs.length > 12 ? '400px' : 'auto',
               overflowY: filteredRFDs.length > 12 ? 'scroll' : 'visible',
               whiteSpace: 'pre-wrap',
-              //border: '1px solid black'
             }}
           >
-            {filteredRFDs.map((rfd, index) => (
-              <div key={index} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+            {filteredRFDs.map((rfdObj) => (
+              <div key={rfdObj.id} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
                 <input
                   type="checkbox"
                   className="larger-checkbox"
-                  checked={selectedRows.includes(index)}
-                  onChange={() => toggleRowSelection(index)}
+                  checked={selectedRFDIds.includes(rfdObj.id)}
+                  onChange={() => toggleRowSelection(rfdObj.id)}
                 />
                 <label style={{ marginLeft: '10px' }}>
-                  {rfd}
+                  {rfdObj.rfd}
                 </label>
               </div>
             ))}
@@ -2884,11 +2888,11 @@ const FileDetailsPage = ({ fileName, onBack }) => {
       <span
             className={`menu-trigger infoPrompt ${!cardVisibility.prompt ? 'disabled' : ''} ${activeButtons.infoPrompt ? 'active' : ''}`}
             onClick={() => {
-              if (cardVisibility.prompt) {
-                toggleMenuInfoPrompt();
-                handleMenuClick('infoPrompt');
+              if (cardVisibility.executionParameters) {
+                toggleMenuInfoExecutionParameters();
+                handleMenuClick('infoExecutionParameters');
               }
-            }}
+            }}            
           >
               <InfoIcon style={{ width: '25px', height: '25px', marginTop: '3px' }} />
       </span>
