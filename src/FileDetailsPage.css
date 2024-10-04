@@ -773,5 +773,16 @@ body {
   fill: white; 
 }
 
+.dark-mode .box-plot {
+  background-color: var(--dark-mode-bg);
+  color: var(--dark-mode-text);
+  border-color: #A5978B; 
+}
+
+.dark-mode .box-plot .box {
+  background-color: #5C4742; 
+  color: #A5978B;
+}
+
 
 
