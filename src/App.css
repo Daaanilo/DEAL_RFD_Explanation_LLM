@@ -367,3 +367,31 @@ ul li button.delete-button:hover,
 .dark-mode .search-section input[type="text"]::placeholder {
   color: var(--text-color-dark);
 }
+
+/* View Toggle Button */
+.top-left-controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.view-toggle-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.view-toggle-button svg {
+  width: 32px;
+  height: 32px;
+  fill: var(--text-color);
+}
+
+/* Dark mode adjustment for the view toggle icon */
+.dark-mode .view-toggle-button svg {
+  fill: var(--text-color-dark);
+}
+
+.dark-mode .view-toggle-button svg {
+  fill: var(--text-color-dark);
+}

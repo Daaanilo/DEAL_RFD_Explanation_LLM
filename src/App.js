@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button,Table } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash3-fill.svg';
@@ -10,6 +10,8 @@ import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil-squar
 import { ReactComponent as MoonIcon } from 'bootstrap-icons/icons/moon-fill.svg';
 import { ReactComponent as SunIcon } from 'bootstrap-icons/icons/brightness-high-fill.svg';
 import { ReactComponent as UploadIcon } from 'bootstrap-icons/icons/upload.svg';
+import { ReactComponent as GridIcon } from 'bootstrap-icons/icons/grid-fill.svg';
+import { ReactComponent as ListIcon } from 'bootstrap-icons/icons/list-ul.svg';
 import { DarkModeContext } from './DarkModeProvider';
 import FileDetailsPage from './FileDetailsPage';
 import './App.css';
@@ -147,6 +149,11 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [pinnedFiles, setPinnedFiles] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  // New state variables for view mode, pagination, and sorting
+  const [viewMode, setViewMode] = useState('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filesPerPage] = useState(10);
+  const [sortOption, setSortOption] = useState('dateDesc');
 
   useEffect(() => {
     document.body.style.backgroundColor = darkMode ? 'var(--background-color-dark)' : 'var(--background-color-light)';
@@ -327,8 +334,42 @@ function App() {
   const pinnedFilesList = filteredFiles.filter((file) => pinnedFiles.includes(file._id));
   const otherFilesList = filteredFiles.filter((file) => !pinnedFiles.includes(file._id));
 
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'grid' ? 'list' : 'grid');
+    setCurrentPage(1);
+  };
+
+  // Sorting logic
+  const sortedFiles = [...files].sort((a, b) => {
+    switch (sortOption) {
+      case 'dateDesc':
+        return new Date(b.timestamp) - new Date(a.timestamp);
+      case 'dateAsc':
+        return new Date(a.timestamp) - new Date(b.timestamp);
+      case 'nameAsc':
+        return a.fileName.localeCompare(b.fileName);
+      case 'nameDesc':
+        return b.fileName.localeCompare(a.fileName);
+      default:
+        return 0;
+    }
+  });
+
+  // Pagination logic
+  const indexOfLastFile = currentPage * filesPerPage;
+  const indexOfFirstFile = indexOfLastFile - filesPerPage;
+  const currentFiles = filteredFiles.slice(indexOfFirstFile, indexOfLastFile);
+  const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
+
   return (
     <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
+      {!selectedFileNameId && (
+      <div className="top-left-controls">
+        <button className="view-toggle-button" onClick={toggleViewMode}>
+          {viewMode === 'grid' ? <ListIcon /> : <GridIcon />}
+        </button>
+      </div>
+      )}
       {!selectedFileNameId && (
         <>
           <section className="wrapper">
@@ -353,99 +394,137 @@ function App() {
         </>
       )}
       {!selectedFileNameId ? (
-        <div>
-          <div className="file-container">
-            {pinnedFilesList.map((file, index) => (
-              <div
-                key={file._id}
-                className={`desktop-icon ${file._id}`}
-                onClick={() => handleFileNameClick(file._id)}
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('fileId', file._id);
-                  e.currentTarget.classList.add('dragging');
-                }}
-                onDragEnd={(e) => {
-                  e.currentTarget.classList.remove('dragging');
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  const draggedFileId = e.dataTransfer.getData('fileId');
-                  const draggedFile = files.find((f) => f._id === draggedFileId);
-                  const updatedFiles = [...files];
-                  const currentIndex = updatedFiles.findIndex((f) => f._id === draggedFileId);
-                  updatedFiles.splice(currentIndex, 1);
-                  updatedFiles.splice(index, 0, draggedFile);
-                  setFiles(updatedFiles);
-                }}
-              >
-                <i className="fas fa-file"></i>
-                <p className="file-name" title={file.fileName}>{file.fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}>
-                  <TrashIcon />
-                </button>
-                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon className="pin-icon" />
-                </button>
-                <button
-                  className="edit-btn"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleEditFileName(file._id, file.fileName);
-                  }}
+        viewMode === 'grid' ? (
+          <div>
+            <div className="file-container">
+              {currentFiles.map((file, index) => (
+                <div
+                  key={file._id}
+                  className={`desktop-icon ${file._id}`}
+                  onClick={() => handleFileNameClick(file._id)}
                 >
-                  <PencilIcon className="edit-icon" />
-                </button>
-                <p className="timestamp">{file.timestamp}</p>
-              </div>
-            ))}
-
-            {otherFilesList.map((file, index) => (
-              <div
-                key={file._id}
-                className={`desktop-icon ${file._id}`}
-                onClick={() => handleFileNameClick(file._id)}
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('fileId', file._id);
-                  e.currentTarget.classList.add('dragging');
-                }}
-                onDragEnd={(e) => {
-                  e.currentTarget.classList.remove('dragging');
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  const draggedFileId = e.dataTransfer.getData('fileId');
-                  const draggedFile = files.find((f) => f._id === draggedFileId);
-                  const updatedFiles = [...files];
-                  const currentIndex = updatedFiles.findIndex((f) => f._id === draggedFileId);
-                  updatedFiles.splice(currentIndex, 1);
-                  updatedFiles.splice(pinnedFilesList.length + index, 0, draggedFile);
-                  setFiles(updatedFiles);
-                }}
-              >
-                <i className="fas fa-file"></i>
-                <p className="file-name" title={file.fileName}>{file.fileName}</p>
-                <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}>
-                  <TrashIcon />
-                </button>
-                <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
-                  <PinIcon className="pin-icon" />
-                </button>
-                <button
-                  className="edit-btn"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleEditFileName(file._id, file.fileName);
-                  }}
+                  <i className="fas fa-file"></i>
+                  <p className="file-name" title={file.fileName}>
+                    {file.fileName}
+                  </p>
+                  <button className="remove-btn" onClick={(event) => handleDelete(file._id, event)}>
+                    <TrashIcon />
+                  </button>
+                  <button className="pin-btn" onClick={(event) => handlePinToggle(file._id, event)}>
+                    <PinIcon className={`pin-icon ${pinnedFiles.includes(file._id) ? 'pinned' : ''}`} />
+                  </button>
+                  <button
+                    className="edit-btn"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleEditFileName(file._id, file.fileName, event);
+                    }}
+                  >
+                    <PencilIcon className="edit-icon" />
+                  </button>
+                  <p className="timestamp">{new Date(file.timestamp).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+            <div className="pagination">
+              <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
+                Previous
+              </Button>
+              {[...Array(totalPages)].map((_, index) => (
+                <Button
+                  key={index + 1}
+                  active={currentPage === index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
                 >
-                  <PencilIcon className="edit-icon" />
-                </button>
-                <p className="timestamp">{file.timestamp}</p>
-              </div>
-            ))}
+                  {index + 1}
+                </Button>
+              ))}
+              <Button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : (
+          // List view
+          <div>
+            <Table striped bordered hover variant={darkMode ? 'dark' : 'light'}>
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Date</th>
+                  <th className="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentFiles.map((file) => (
+                  <tr key={file._id}>
+                    <td onClick={() => handleFileNameClick(file._id)} className="file-link">
+                      {file.fileName}
+                    </td>
+                    <td>{new Date(file.timestamp).toLocaleString()}</td>
+                    <td className="text-center">
+                      <Button
+                        variant="outline-success"
+                        size="sm"
+                        onClick={() => handleFileNameClick(file._id)}
+                        className="action-btn"
+                      >
+                        Open
+                      </Button>
+                      <Button
+                        variant="outline-warning"
+                        size="sm"
+                        onClick={(event) => handleEditFileName(file._id, file.fileName, event)}
+                        className="action-btn"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={(event) => handleDelete(file._id, event)}
+                        className="action-btn"
+                      >
+                        Delete
+                      </Button>
+                      <Button
+                        variant="outline-info"
+                        size="sm"
+                        onClick={(event) => handlePinToggle(file._id, event)}
+                        className="action-btn"
+                      >
+                        {pinnedFiles.includes(file._id) ? 'Unpin' : 'Pin'}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <div className="pagination">
+              <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
+                Previous
+              </Button>
+              {[...Array(totalPages)].map((_, index) => (
+                <Button
+                  key={index + 1}
+                  active={currentPage === index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </Button>
+              ))}
+              <Button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )
       ) : (
         <FileDetailsPage fileName={selectedFileNameId} onBack={handleBack} />
       )}
@@ -468,7 +547,7 @@ function App() {
         setNewFileName={setNewFileName}
       />
 
-      <div className="toggle-button" onClick={toggleDarkMode}>
+<div className="toggle-button" onClick={toggleDarkMode}>
         <SunIcon className="sun" />
         <MoonIcon className="moon" />
         <div className="toggle"></div>
