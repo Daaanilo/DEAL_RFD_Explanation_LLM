@@ -396,19 +396,36 @@ const sortedFiles = [...files].sort((a, b) => {
             <SearchIcon className="search-icon" />
           </div>
           <div className="sort-section">
-      <label htmlFor="sort-option">Sort by:</label>
-      <select
-        id="sort-option"
-        value={sortOption}
-        onChange={(e) => setSortOption(e.target.value)}
-        className="form-control"
-      >
-        <option value="dateDesc">Date Descending</option>
-        <option value="dateAsc">Date Ascending</option>
-        <option value="nameAsc">Name Ascending</option>
-        <option value="nameDesc">Name Descending</option>
-      </select>
-    </div>
+        <div className="sort-label">
+          <label>Sort by:</label>
+        </div>
+        <div className="sort-options">
+          <button
+            className={`sort-button ${sortOption === 'dateDesc' ? 'active' : ''}`}
+            onClick={() => setSortOption('dateDesc')}
+          >
+            <i className="fas fa-sort-numeric-down"></i> Date Desc
+          </button>
+          <button
+            className={`sort-button ${sortOption === 'dateAsc' ? 'active' : ''}`}
+            onClick={() => setSortOption('dateAsc')}
+          >
+            <i className="fas fa-sort-numeric-up"></i> Date Asc
+          </button>
+          <button
+            className={`sort-button ${sortOption === 'nameAsc' ? 'active' : ''}`}
+            onClick={() => setSortOption('nameAsc')}
+          >
+            <i className="fas fa-sort-alpha-up"></i> Name Asc
+          </button>
+          <button
+            className={`sort-button ${sortOption === 'nameDesc' ? 'active' : ''}`}
+            onClick={() => setSortOption('nameDesc')}
+          >
+            <i className="fas fa-sort-alpha-down"></i> Name Desc
+          </button>
+        </div>
+      </div>
         </>
       )}
       {!selectedFileNameId ? (

@@ -438,3 +438,66 @@ ul li button.delete-button:hover,
   background-color: #0056b3;
   border-color: #0056b3;
 }
+
+.sort-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sort-label {
+  margin-right: 10px;
+  font-size: 1.2em;
+  color: var(--text-color);
+}
+
+.sort-options {
+  display: flex;
+  gap: 10px;
+}
+
+.sort-button {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border: 1px solid var(--text-color);
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sort-button i {
+  font-size: 1em;
+}
+
+.sort-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.sort-button.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.dark-mode .sort-label {
+  color: var(--text-color-dark);
+}
+
+.dark-mode .sort-button {
+  background-color: var(--background-color-dark);
+  color: var(--text-color-dark);
+  border-color: var(--text-color-dark);
+}
+
+.dark-mode .sort-button:hover,
+.dark-mode .sort-button.active {
+  background-color: var(--primary-color);
+  color: white;
+}
