@@ -82,7 +82,7 @@ const UploadModal = ({
   };
 
   return (
-    <Modal show={showModal} onHide={handleCloseModal} centered>
+    <Modal show={showModal} onHide={handleCloseModal} centered className={darkMode ? 'dark-modal' : ''}>
       <Modal.Header closeButton>
         <Modal.Title>Upload a File</Modal.Title>
       </Modal.Header>

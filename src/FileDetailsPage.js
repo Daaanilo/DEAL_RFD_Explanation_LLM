@@ -1695,7 +1695,7 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
   
   const appPrompt2 = initialPrompts[`Most Common Values`] + allValues;
   
-  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\n\nBelow you will find statistical values that will better enable you to understand the semantic meaning of dependence. Use them to describe dependencies.' + '\n### ' + appPrompt1 + '\n\n### ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
+  prompts['RFDs Analysis with Stats'] = prompts['RFDs Overview'] + '\n\nBelow you will find statistical values that will better enable you to understand the semantic meaning of dependence. Use them to describe dependencies.' + '\n ' + appPrompt1 + '\n\n ' + appPrompt2 + '\n\n' + initialPrompts['Stats'];
 
 
   const getChartDataForAttribute = useMemo(() => (attribute) => {

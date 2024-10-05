@@ -501,3 +501,51 @@ ul li button.delete-button:hover,
   background-color: var(--primary-color);
   color: white;
 }
+
+.dark-modal .modal-content {
+  background-color: var(--background-color-dark);
+  color: var(--text-color-dark);
+}
+
+.dark-modal .modal-header,
+.dark-modal .modal-footer {
+  border-color: #444444;
+}
+
+.dark-modal .modal-title {
+  color: var(--text-color-dark);
+}
+
+.dark-modal .close {
+  color: var(--text-color-dark);
+}
+
+.dark-modal .form-control {
+  background-color: var(--background-color-dark);
+  color: var(--text-color-dark);
+  border-color: #555555;
+}
+
+.dark-modal .form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: none;
+}
+
+.dark-modal .upload-button {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.dark-modal .upload-button:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.dark-modal .btn-close {
+  filter: invert(1);
+  opacity: 1;
+}
+
+.dark-modal .btn-close:hover {
+  filter: invert(0.8);
+}
