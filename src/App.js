@@ -149,7 +149,6 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [pinnedFiles, setPinnedFiles] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  // New state variables for view mode, pagination, and sorting
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [filesPerPage] = useState(10);
@@ -327,20 +326,15 @@ function App() {
     setSelectedFileNameId(null);
   };
 
-  const filteredFiles = files.filter((file) =>
-    file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const sortedFiles = [...files].sort((a, b) => {
+  const isAPinned = pinnedFiles.includes(a._id);
+  const isBPinned = pinnedFiles.includes(b._id);
 
-  const pinnedFilesList = filteredFiles.filter((file) => pinnedFiles.includes(file._id));
-  const otherFilesList = filteredFiles.filter((file) => !pinnedFiles.includes(file._id));
-
-  const toggleViewMode = () => {
-    setViewMode(viewMode === 'grid' ? 'list' : 'grid');
-    setCurrentPage(1);
-  };
-
-  // Sorting logic
-  const sortedFiles = [...files].sort((a, b) => {
+  if (isAPinned && !isBPinned) {
+    return -1;
+  } else if (!isAPinned && isBPinned) {
+    return 1; 
+  } else {
     switch (sortOption) {
       case 'dateDesc':
         return new Date(b.timestamp) - new Date(a.timestamp);
@@ -353,9 +347,19 @@ function App() {
       default:
         return 0;
     }
-  });
+  }
+});
 
-  // Pagination logic
+
+  const filteredFiles = sortedFiles.filter((file) =>
+    file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'grid' ? 'list' : 'grid');
+    setCurrentPage(1);
+  };
+
   const indexOfLastFile = currentPage * filesPerPage;
   const indexOfFirstFile = indexOfLastFile - filesPerPage;
   const currentFiles = filteredFiles.slice(indexOfFirstFile, indexOfLastFile);
@@ -391,6 +395,20 @@ function App() {
             />
             <SearchIcon className="search-icon" />
           </div>
+          <div className="sort-section">
+      <label htmlFor="sort-option">Sort by:</label>
+      <select
+        id="sort-option"
+        value={sortOption}
+        onChange={(e) => setSortOption(e.target.value)}
+        className="form-control"
+      >
+        <option value="dateDesc">Date Descending</option>
+        <option value="dateAsc">Date Ascending</option>
+        <option value="nameAsc">Name Ascending</option>
+        <option value="nameDesc">Name Descending</option>
+      </select>
+    </div>
         </>
       )}
       {!selectedFileNameId ? (
@@ -448,7 +466,6 @@ function App() {
             </div>
           </div>
         ) : (
-          // List view
           <div>
             <Table striped bordered hover variant={darkMode ? 'dark' : 'light'}>
               <thead>
@@ -494,7 +511,7 @@ function App() {
                         variant="outline-info"
                         size="sm"
                         onClick={(event) => handlePinToggle(file._id, event)}
-                        className="action-btn"
+                        className={`action-btn ${pinnedFiles.includes(file._id) ? 'pinned' : ''}`}
                       >
                         {pinnedFiles.includes(file._id) ? 'Unpin' : 'Pin'}
                       </Button>

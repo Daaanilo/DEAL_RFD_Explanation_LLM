@@ -368,7 +368,7 @@ ul li button.delete-button:hover,
   color: var(--text-color-dark);
 }
 
-/* View Toggle Button */
+
 .top-left-controls {
   position: absolute;
   top: 20px;
@@ -387,11 +387,54 @@ ul li button.delete-button:hover,
   fill: var(--text-color);
 }
 
-/* Dark mode adjustment for the view toggle icon */
 .dark-mode .view-toggle-button svg {
   fill: var(--text-color-dark);
 }
 
 .dark-mode .view-toggle-button svg {
   fill: var(--text-color-dark);
+}
+
+.pin-icon {
+  width: 24px;
+  height: 24px;
+  fill: var(--text-color);
+  transition: fill 0.3s;
+}
+
+.pin-icon.pinned {
+  fill: red;
+}
+
+.dark-mode .pin-icon {
+  fill: var(--text-color-dark);
+}
+
+.dark-mode .pin-icon.pinned {
+  fill: red;
+}
+
+.action-btn {
+  margin: 2px;
+}
+
+.action-btn.pinned {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.action-btn.pinned:hover {
+  background-color: #0056b3; 
+  border-color: #0056b3;
+}
+
+.dark-mode .action-btn.pinned {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.dark-mode .action-btn.pinned:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
 }
