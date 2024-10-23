@@ -461,7 +461,7 @@ const sortedFiles = [...files].sort((a, b) => {
                 </div>
               ))}
             </div>
-            <div className="pagination">
+            <div className="pagination d-flex justify-content-center">
               <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
                 Previous
               </Button>
@@ -537,7 +537,7 @@ const sortedFiles = [...files].sort((a, b) => {
                 ))}
               </tbody>
             </Table>
-            <div className="pagination">
+            <div className="pagination d-flex justify-content-center">
               <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
                 Previous
               </Button>
