@@ -147,6 +147,17 @@ body {
   background-color: #52595f;
 }
 
+.dark-mode .select-btn {
+  background-color: #52595f;
+  color: #f8f8f8;
+}
+
+.dark-mode .select-btn:hover {
+  background-color: #34495e;
+  color: #f8f8f8;
+}
+
+
 .larger-checkbox {
   width: 20px;
   height: 20px;
@@ -863,9 +874,21 @@ body {
   }
 }
 
+.dark-mode .pagination-bar {
+  background-color: #343a40;
+  color: #f8f8f8;
+}
 
 
+.dark-mode select {
+  background-color: #343a40;
+  color: #f8f8f8;
+}
 
+.dark-mode .prompt-textbox {
+  background-color: #343a40;
+  color: #f8f8f8;
+}
 
 
 

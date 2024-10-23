@@ -2914,6 +2914,7 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
       {cardVisibility.prompt && (
         <div className="card-body">
           <textarea
+            className='prompt-textbox'
             type="text"
             value={customPromptAI}
             onChange={handleTextareaChange}
