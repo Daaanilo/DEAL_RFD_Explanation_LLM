@@ -152,7 +152,7 @@ function App() {
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [filesPerPage] = useState(10);
-  const [sortOption, setSortOption] = useState('dateDesc');
+  const [sortOption, setSortOption] = useState({ criterion: 'date', order: 'desc' });
 
   useEffect(() => {
     document.body.style.backgroundColor = darkMode ? 'var(--background-color-dark)' : 'var(--background-color-light)';
@@ -326,31 +326,27 @@ function App() {
     setSelectedFileNameId(null);
   };
 
-const sortedFiles = [...files].sort((a, b) => {
-  const isAPinned = pinnedFiles.includes(a._id);
-  const isBPinned = pinnedFiles.includes(b._id);
-
-  if (isAPinned && !isBPinned) {
-    return -1;
-  } else if (!isAPinned && isBPinned) {
-    return 1; 
-  } else {
-    switch (sortOption) {
-      case 'dateDesc':
-        return new Date(b.timestamp) - new Date(a.timestamp);
-      case 'dateAsc':
-        return new Date(a.timestamp) - new Date(b.timestamp);
-      case 'nameAsc':
-        return a.fileName.localeCompare(b.fileName);
-      case 'nameDesc':
-        return b.fileName.localeCompare(a.fileName);
-      default:
-        return 0;
+  const sortedFiles = [...files].sort((a, b) => {
+    const isAPinned = pinnedFiles.includes(a._id);
+    const isBPinned = pinnedFiles.includes(b._id);
+  
+    if (isAPinned && !isBPinned) {
+      return -1;
+    } else if (!isAPinned && isBPinned) {
+      return 1; 
+    } else {
+      if (sortOption.criterion === 'date') {
+        return sortOption.order === 'asc'
+          ? new Date(a.timestamp) - new Date(b.timestamp)
+          : new Date(b.timestamp) - new Date(a.timestamp);
+      } else if (sortOption.criterion === 'name') {
+        return sortOption.order === 'asc'
+          ? a.fileName.localeCompare(b.fileName)
+          : b.fileName.localeCompare(a.fileName);
+      }
     }
-  }
-});
-
-
+  });
+  
   const filteredFiles = sortedFiles.filter((file) =>
     file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -364,6 +360,23 @@ const sortedFiles = [...files].sort((a, b) => {
   const indexOfFirstFile = indexOfLastFile - filesPerPage;
   const currentFiles = filteredFiles.slice(indexOfFirstFile, indexOfLastFile);
   const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
+
+  const toggleSortOrder = (criterion) => {
+    setSortOption((prevSortOption) => {
+      if (prevSortOption.criterion === criterion) {
+        return {
+          ...prevSortOption,
+          order: prevSortOption.order === 'asc' ? 'desc' : 'asc',
+        };
+      } else {
+        return {
+          criterion,
+          order: 'asc',
+        };
+      }
+    });
+  };
+  
 
   return (
     <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
@@ -396,36 +409,26 @@ const sortedFiles = [...files].sort((a, b) => {
             <SearchIcon className="search-icon" />
           </div>
           <div className="sort-section">
-        <div className="sort-label">
-          <label>Sort by:</label>
-        </div>
-        <div className="sort-options">
-          <button
-            className={`sort-button ${sortOption === 'dateDesc' ? 'active' : ''}`}
-            onClick={() => setSortOption('dateDesc')}
-          >
-            <i className="fas fa-sort-numeric-down"></i> Date Desc
-          </button>
-          <button
-            className={`sort-button ${sortOption === 'dateAsc' ? 'active' : ''}`}
-            onClick={() => setSortOption('dateAsc')}
-          >
-            <i className="fas fa-sort-numeric-up"></i> Date Asc
-          </button>
-          <button
-            className={`sort-button ${sortOption === 'nameAsc' ? 'active' : ''}`}
-            onClick={() => setSortOption('nameAsc')}
-          >
-            <i className="fas fa-sort-alpha-up"></i> Name Asc
-          </button>
-          <button
-            className={`sort-button ${sortOption === 'nameDesc' ? 'active' : ''}`}
-            onClick={() => setSortOption('nameDesc')}
-          >
-            <i className="fas fa-sort-alpha-down"></i> Name Desc
-          </button>
-        </div>
-      </div>
+            <div className="sort-label">
+              <label>Sort by:</label>
+            </div>
+            <div className="sort-options">
+              <button
+                className={`sort-button ${sortOption.criterion === 'date' ? 'active' : ''}`}
+                onClick={() => toggleSortOrder('date')}
+              >
+                <i className={`fas fa-sort-${sortOption.criterion === 'date' && sortOption.order === 'asc' ? 'numeric-up' : 'numeric-down'}`}></i>
+                Date {sortOption.criterion === 'date' && (sortOption.order === 'asc' ? 'Asc' : 'Desc')}
+              </button>
+              <button
+                className={`sort-button ${sortOption.criterion === 'name' ? 'active' : ''}`}
+                onClick={() => toggleSortOrder('name')}
+              >
+                <i className={`fas fa-sort-alpha-${sortOption.criterion === 'name' && sortOption.order === 'asc' ? 'up' : 'down'}`}></i>
+                Name {sortOption.criterion === 'name' && (sortOption.order === 'asc' ? 'Asc' : 'Desc')}
+              </button>
+            </div>
+          </div>
         </>
       )}
       {!selectedFileNameId ? (
