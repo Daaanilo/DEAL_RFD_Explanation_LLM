@@ -549,3 +549,7 @@ ul li button.delete-button:hover,
 .dark-modal .btn-close:hover {
   filter: invert(0.8);
 }
+
+.upload-button {
+  margin-left: 20px; 
+}

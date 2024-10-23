@@ -398,7 +398,7 @@ function App() {
             <div className="top2">Dependencies Explanation with Advanced Language Models</div>
           </section>
 
-          <div className="search-section">
+          <div className="search-section d-flex align-items-center">
             <input
               type="text"
               placeholder="Search by file name"
@@ -407,6 +407,9 @@ function App() {
               className="form-control"
             />
             <SearchIcon className="search-icon" />
+            <Button variant="primary" onClick={handleShowModal} className="mt-3 upload-button">
+             Upload File
+            </Button>
           </div>
           <div className="sort-section">
             <div className="sort-label">
@@ -564,14 +567,6 @@ function App() {
         )
       ) : (
         <FileDetailsPage fileName={selectedFileNameId} onBack={handleBack} />
-      )}
-
-      {!selectedFileNameId && (
-        <div className="upload-section">
-          <Button variant="primary" onClick={handleShowModal} className="mt-3 upload-button">
-            Upload File
-          </Button>
-        </div>
       )}
 
       <UploadModal
