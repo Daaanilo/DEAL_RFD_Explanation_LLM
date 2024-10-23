@@ -459,7 +459,7 @@ function App() {
                       handleEditFileName(file._id, file.fileName, event);
                     }}
                   >
-                    <PencilIcon className="edit-icon" />
+                     <PencilIcon style={{ fill: darkMode ? 'white' : 'black' }} /> 
                   </button>
                   <p className="timestamp">{new Date(file.timestamp).toLocaleString()}</p>
                 </div>
@@ -578,7 +578,7 @@ function App() {
       />
 
 <div className="toggle-button" onClick={toggleDarkMode}>
-        <SunIcon className="sun" />
+        <SunIcon className="sun" style={{ fill: darkMode ? 'white' : 'var(--text-color-light)' }} />
         <MoonIcon className="moon" />
         <div className="toggle"></div>
         <div className="animateBg"></div>

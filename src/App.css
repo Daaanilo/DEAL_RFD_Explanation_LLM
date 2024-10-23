@@ -93,6 +93,11 @@ ul li button.delete-button:hover,
   color: gray;
 }
 
+.dark-mode .desktop-icon .timestamp {
+  color: white; 
+}
+
+
 .desktop-icon:hover {
   transform: scale(1.1);
 }
@@ -196,7 +201,6 @@ ul li button.delete-button:hover,
   height: 24px;
   fill: var(--text-color);
 }
-
 
 :root {
   --background-color: #f8f8f8;
@@ -334,7 +338,6 @@ ul li button.delete-button:hover,
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
-
 
 .upload-button {
   display: flex;
@@ -554,3 +557,4 @@ ul li button.delete-button:hover,
 .upload-button {
   margin-left: 20px; 
 }
+
