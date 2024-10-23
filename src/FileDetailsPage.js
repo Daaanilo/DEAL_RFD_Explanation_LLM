@@ -1802,6 +1802,7 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
     setDropdownOpen(false); 
   };
 
+
   return (
       
       <div className={`file-details ${darkMode ? 'dark-mode' : ''}`}>
@@ -1809,19 +1810,11 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
         <button className="back-btn" onClick={onBack}>
             <i className="fas fa-arrow-alt-circle-left" style={{ fontSize: "1.2em" }}></i>
         </button>
-
-          <div className="title-back-container">
-            <div className="dropdown">
-              <button onClick={toggleDropdown} style={{ border: 'none', outline: 'none', background: 'none', cursor: 'pointer' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" className="bi bi-list" viewBox="0 0 16 16">
-                <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
-              </svg>
-              </button>
-              <ul className={`dropdown-menu ${isDropdownOpen ? 'show' : ''}`}>
-                <li onClick={() => handleMenuItemClick('dataset')}>Dataset</li>
-                <li onClick={() => handleMenuItemClick('algorithm')}>Algorithm</li>
-                <li onClick={() => handleMenuItemClick('dependencies')}>Dependencies Analysis</li>
-              </ul>
+        <div className="title-back-container">
+            <div className="sidebar">
+                <button className="sidebar-icon" data-title="Dataset" activeClassName="active" onClick={() => handleMenuItemClick('dataset')}><DatabaseIcon /></button>
+                <button className="sidebar-icon" data-title="Algorithm" activeClassName="active"onClick={() => handleMenuItemClick('algorithm')}><PcIcon /></button>
+                <button className="sidebar-icon" data-title="Dependencies Analysis" activeClassName="active" onClick={() => handleMenuItemClick('dependencies')}><ChartIcon /></button>
             </div>
             
             <h2 className="title">File Details: {info.name[0]}</h2>
