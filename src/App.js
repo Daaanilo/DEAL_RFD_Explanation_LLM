@@ -381,13 +381,6 @@ function App() {
   return (
     <div className={`app-container ${darkMode ? 'dark-mode' : ''}`}>
       {!selectedFileNameId && (
-      <div className="top-left-controls">
-        <button className="view-toggle-button" onClick={toggleViewMode}>
-          {viewMode === 'grid' ? <ListIcon /> : <GridIcon />}
-        </button>
-      </div>
-      )}
-      {!selectedFileNameId && (
         <>
           <section className="wrapper">
             <div className="top">D.E.A.L.</div>
@@ -412,6 +405,11 @@ function App() {
             </Button>
           </div>
           <div className="sort-section">
+          
+            <button className="view-toggle-button" onClick={toggleViewMode}>
+              {viewMode === 'grid' ? <ListIcon /> : <GridIcon />}
+            </button>
+        
             <div className="sort-label">
               <label>Sort by:</label>
             </div>

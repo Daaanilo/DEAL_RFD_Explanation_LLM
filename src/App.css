@@ -379,6 +379,7 @@ ul li button.delete-button:hover,
   background: transparent;
   border: none;
   cursor: pointer;
+  margin-right: 10px;
 }
 
 .view-toggle-button svg {
