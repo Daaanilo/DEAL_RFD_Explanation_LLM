@@ -151,7 +151,7 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filesPerPage] = useState(10);
+  const [filesPerPage] = useState(12);
   const [sortOption, setSortOption] = useState({ criterion: 'date', order: 'desc' });
 
   useEffect(() => {

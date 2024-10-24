@@ -129,6 +129,7 @@ ul li button.delete-button:hover,
   margin-top: 20px;
   position: relative;
   z-index: 1;
+  gap: 10px; 
 }
 
 .search-section input[type="text"] {
@@ -143,9 +144,10 @@ ul li button.delete-button:hover,
   color: var(--text-color);
 }
 
-.search-section:hover input[type="text"] {
+.search-section input[type="text"]:hover {
   width: 800px;
 }
+
 
 .search-section input[type="text"]:focus {
   border-color: var(--primary-color);
@@ -553,10 +555,7 @@ ul li button.delete-button:hover,
 .dark-modal .btn-close:hover {
   filter: invert(0.8);
 }
-
-.upload-button {
-  margin-left: 20px; 
-}
+   
 
 button,
 .delete-button,
@@ -626,3 +625,4 @@ button,
   font-weight: bold;
   margin: 0 6px; 
 }
+
