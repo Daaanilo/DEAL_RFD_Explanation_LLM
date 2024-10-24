@@ -466,33 +466,33 @@ function App() {
               ))}
             </div>
             <div className="pagination-container">
-            <div className="pagination-bar">
-              <button 
-                onClick={() => setCurrentPage(currentPage - 1)} 
-                disabled={currentPage === 1} 
-                className="pagination-button"
-              >
-                {'<'}
-              </button>
-
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`pagination-button ${currentPage === index + 1 ? 'current-page' : ''}`}
+              <div className="pagination-bar">
+                <button 
+                  onClick={() => setCurrentPage(currentPage - 1)} 
+                  disabled={currentPage === 1} 
+                  className="pagination-button"
                 >
-                  {index + 1}
+                  {'<'}
                 </button>
-              ))}
 
-              <button 
-                onClick={() => setCurrentPage(currentPage + 1)} 
-                disabled={currentPage === totalPages} 
-                className="pagination-button"
-              >
-                {'>'}
-              </button>
-            </div>
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`pagination-button ${currentPage === index + 1 ? 'current-page' : ''}`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+
+                <button 
+                  onClick={() => setCurrentPage(currentPage + 1)} 
+                  disabled={currentPage === totalPages} 
+                  className="pagination-button"
+                >
+                  {'>'}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -550,25 +550,34 @@ function App() {
                 ))}
               </tbody>
             </Table>
-            <div className="pagination d-flex justify-content-center">
-              <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
-                Previous
-              </Button>
-              {[...Array(totalPages)].map((_, index) => (
-                <Button
-                  key={index + 1}
-                  active={currentPage === index + 1}
-                  onClick={() => setCurrentPage(index + 1)}
+            <div className="pagination-container">
+              <div className="pagination-bar">
+                <button 
+                  onClick={() => setCurrentPage(currentPage - 1)} 
+                  disabled={currentPage === 1} 
+                  className="pagination-button"
                 >
-                  {index + 1}
-                </Button>
-              ))}
-              <Button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                Next
-              </Button>
+                  {'<'}
+                </button>
+
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`pagination-button ${currentPage === index + 1 ? 'current-page' : ''}`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+
+                <button 
+                  onClick={() => setCurrentPage(currentPage + 1)} 
+                  disabled={currentPage === totalPages} 
+                  className="pagination-button"
+                >
+                  {'>'}
+                </button>
+              </div>
             </div>
           </div>
         )
