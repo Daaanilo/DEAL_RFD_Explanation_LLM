@@ -558,3 +558,14 @@ ul li button.delete-button:hover,
   margin-left: 20px; 
 }
 
+button,
+.delete-button,
+.remove-btn,
+.upload-button,
+.sort-button,
+.action-btn {
+  transition: none;
+  animation: none !important;
+}
+
+
