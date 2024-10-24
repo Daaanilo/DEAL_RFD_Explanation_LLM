@@ -1871,7 +1871,7 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
                       <button
                         type="button"
                         className={`btn ${selectedHeaderValues.includes(statistics.type[item]) ? 'btn-group-toggle active' : 'btn btn-secondary'} no-pulse`}
-                        style={{ background: '#E1E1E1' }}
+                        style={{ background: '#E1E1E1', cursor:"default" }}
                       >
                         <span className="details-header">{statistics.type[item]}</span>
                       </button>
