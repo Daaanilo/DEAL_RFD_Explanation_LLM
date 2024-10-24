@@ -465,25 +465,34 @@ function App() {
                 </div>
               ))}
             </div>
-            <div className="pagination d-flex justify-content-center">
-              <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
-                Previous
-              </Button>
+            <div className="pagination-container">
+            <div className="pagination-bar">
+              <button 
+                onClick={() => setCurrentPage(currentPage - 1)} 
+                disabled={currentPage === 1} 
+                className="pagination-button"
+              >
+                {'<'}
+              </button>
+
               {[...Array(totalPages)].map((_, index) => (
-                <Button
+                <button
                   key={index + 1}
-                  active={currentPage === index + 1}
                   onClick={() => setCurrentPage(index + 1)}
+                  className={`pagination-button ${currentPage === index + 1 ? 'current-page' : ''}`}
                 >
                   {index + 1}
-                </Button>
+                </button>
               ))}
-              <Button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
+
+              <button 
+                onClick={() => setCurrentPage(currentPage + 1)} 
+                disabled={currentPage === totalPages} 
+                className="pagination-button"
               >
-                Next
-              </Button>
+                {'>'}
+              </button>
+            </div>
             </div>
           </div>
         ) : (
