@@ -1221,40 +1221,46 @@ const lhsAttributeChartData = {
 
 
   // CHART: IMPLICATING ATTRIBUTES
-
   const findImplicatingAttributes = (rfdArray, attributesHeader) => {
     const implicatingAttributes = {};
   
-    const extractAttributes = (str) => {
-      return str.match(/[a-zA-Z][a-zA-Z0-9]*/g).filter(attr => !attr.includes('@'));
-    };
   
-    attributesHeader.forEach(attribute => {
+    const filteredAttributesHeader = attributesHeader.filter(
+      attribute => !selectedHeaderValues.includes(attribute)
+    );
+  
+    filteredAttributesHeader.forEach(attribute => {
       implicatingAttributes[attribute] = new Set();
       rfdArray.forEach(rfdObj => {
         if (typeof rfdObj.rfd !== 'string') {
           console.error('RFD is not a string:', rfdObj);
-          return; 
+          return;
         }
-        const rfd = rfdObj.rfd;
-        const [lhs, rhs] = rfd.split(' -> ');
+        const [lhs, rhs] = rfdObj.rfd.split(' -> ');
   
         if (!rhs) {
-          console.error('Invalid RFD format:', rfd);
-          return; 
+          console.error('Invalid RFD format:', rfdObj.rfd);
+          return;
         }
   
         const rhsAttribute = rhs.substring(0, rhs.indexOf('@')).trim();
   
         if (rhsAttribute === attribute) {
-          const leftAttributes = extractAttributes(lhs);
-          leftAttributes.forEach(attr => implicatingAttributes[attribute].add(attr.trim()));
+          const leftAttributes = lhs.match(/[a-zA-Z][a-zA-Z0-9]*/g)
+            .filter(attr => !attr.includes('@'))
+            .filter(attr => !selectedHeaderValues.includes(attr.trim())); 
+  
+          leftAttributes.forEach(attr =>
+            implicatingAttributes[attribute].add(attr.trim())
+          );
         }
       });
     });
   
     return implicatingAttributes;
   };
+  
+
   
 
   let implicatingAttributes = 0;
@@ -1465,16 +1471,28 @@ const statisticModes = filteredStatisticLabels.map(label => statistics.mode[labe
 
   const [currentPageBoxPlot, setcurrentPageBoxPlot] = useState(1);
   const chartsPerPageBoxPlot = 2;
-  const totalChartsBoxPlot = Object.keys(statistics.type).length;
+  const totalChartsBoxPlot = Object.keys(statistics.type)
+  .filter(label => !selectedHeaderValues.includes(label))
+  .length;
   const totalPagesBoxPlot = Math.ceil(totalChartsBoxPlot / chartsPerPageBoxPlot);
   
   const getPaginatedChartsBoxPlot = () => {
+    const filteredLabels = Object.keys(statistics.type)
+      .filter(label => !selectedHeaderValues.includes(label));
+  
     const start = (currentPageBoxPlot - 1) * chartsPerPageBoxPlot;
     const end = start + chartsPerPageBoxPlot;
-    const statisticLabels = Object.keys(statistics.type).slice(start, end);
+  
+    const statisticLabels = filteredLabels.slice(start, end);
     const seriesData = statisticLabels.map((label, index) => ({
       x: label,
-      y: [statistics.min[label], statistics.mean[label], statistics.median[label], statistics.mode[label], statistics.max[label]]
+      y: [
+        statistics.min[label],
+        statistics.mean[label],
+        statistics.median[label],
+        statistics.mode[label],
+        statistics.max[label],
+      ],
     }));
     return seriesData;
   };
@@ -1757,12 +1775,17 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
   
   const [currentPage, setCurrentPage] = useState(1);
   const chartsPerPage = 2;
-  const totalCharts = Object.keys(relativeFrequency).length;
+  const totalCharts = Object.keys(relativeFrequency)
+  .filter(attribute => !selectedHeaderValues.includes(attribute))
+  .length;
   const totalPages = Math.ceil(totalCharts / chartsPerPage);
 
   const getPaginatedCharts = () => {
+    const filteredAttributes = Object.keys(relativeFrequency)
+      .filter(attribute => !selectedHeaderValues.includes(attribute));
+  
     const start = (currentPage - 1) * chartsPerPage;
-    return Object.keys(relativeFrequency).slice(start, start + chartsPerPage);
+    return filteredAttributes.slice(start, start + chartsPerPage);
   };
 
   const handlePageChange = (page) => {
