@@ -20,9 +20,9 @@ import './FileDetailsPage.css';
 import './DarkModeProvider.css'; 
 import axios from 'axios';
 
-import ai21HandleUserInput from './ai21api.js'; // If it doesn't work, replace the key in 'ai21api.js'
+const { gemmaHandleUserInput} = require ('./gemmaapi.js'); // If it doesn't work, replace the key in 'ai21api.js'
 const { chatGPTHandleUserInput } = require('./chatgptapi.js'); // If it doesn't work, replace the key in 'chatgptapi.js'
-const { llamaHandleUserInput } = require('./llamaapi.js'); // If it doesn't work, replace 'llamaapi.js' with 'llamaapi-backup.js'
+const { llamaHandleUserInput } = require('./llamaapi-backup.js'); // If it doesn't work, replace 'llamaapi.js' with 'llamaapi-backup.js'
 
 const FileDetailsPage = ({ fileName, onBack }) => {
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
@@ -435,8 +435,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         response = await chatGPTHandleUserInput(JSON.stringify(customPromptAI));
       } else if (selectedLLM === 'Llama3') {
         response = await llamaHandleUserInput(JSON.stringify(customPromptAI));
-      } else if (selectedLLM === 'Jurassic-2 Ultra') {
-        response = await ai21HandleUserInput(JSON.stringify(customPromptAI));
+      } else if (selectedLLM === 'Gemma') {
+        response = await gemmaHandleUserInput(JSON.stringify(customPromptAI));
       } else {  
         response = 'Invalid LLM selected';
       }
@@ -477,8 +477,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         response = await chatGPTHandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
       } else if (selectedLLM === 'Llama3') {
         response = await llamaHandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
-      } else if (selectedLLM === 'Jurassic-2 Ultra') {
-        response = await ai21HandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
+      } else if (selectedLLM === 'Gemma') {
+        response = await gemmaHandleUserInput('Can you provide a comprehensive summary of the following analysis, emphasizing the semantic relationships and real-world implications of the functional dependencies: ' + responseAI);
       } else {  
         response = 'Invalid LLM selected';
       }
@@ -2965,7 +2965,7 @@ const statisticMax = minMaxLabels.map(label => statistics.max[label]);
               >
                 <option value="ChatGPT3.5">ChatGPT3.5</option>
                 <option value="Llama3">Llama3</option>
-                <option value="Jurassic-2 Ultra">Jurassic-2 Ultra</option>
+                <option value="Gemma">Gemma</option>
               </select>
             </div>
             <button className="select-btn" onClick={scrollToBottom} disabled={isLoading}>
