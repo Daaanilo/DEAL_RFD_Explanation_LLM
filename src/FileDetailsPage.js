@@ -243,8 +243,8 @@ const FileDetailsPage = ({ fileName, onBack }) => {
         if (item.execution && item.execution.result && item.execution.result.data && item.execution.result.data.length) {
           item.execution.result.data.forEach(resultData => {
             if (resultData.lhs && resultData.rhs) {
-              const lhsColumns = resultData.lhs.map((lhsItem, idx) => `${lhsItem.column}@[thr_${idx + 1}]`).join(', ');
-              const rhsColumns = resultData.rhs.map((rhsItem, idx) => `${rhsItem.column}@[thr_${idx + 1}]`).join(', ');
+              const lhsColumns = resultData.lhs.map(lhsItem => `${lhsItem.column}@[${lhsItem.comparison_relaxation.toFixed(1)}]`).join(', ');
+              const rhsColumns = resultData.rhs.map(rhsItem => `${rhsItem.column}@[${rhsItem.comparison_relaxation.toFixed(1)}]`).join(', ');
               const rfdString = `${lhsColumns} -> ${rhsColumns}`;
               extractedRFDs.push({ id: uuidv4(), rfd: rfdString });
             }
