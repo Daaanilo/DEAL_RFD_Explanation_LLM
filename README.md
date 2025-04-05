@@ -53,3 +53,6 @@ The platform consists of two main pages:
 | 📝 **Istruzioni Dinamiche**           | Istruzioni modificate in tempo reale tramite prompt engineering e prompt tuning.      | Real-time modifiable instructions using prompt engineering and prompt tuning.    |
 
 ---
+
+Questo progetto è stato sviluppato come parte della tesi triennale in Informatica di Danilo Gisolfi e Vincenzo Maiellaro.
+This project was developed as part of the Bachelor's Thesis in Computer Science by Danilo Gisolfi and Vincenzo Maiellaro.
