@@ -1,7 +1,7 @@
 const Groq = require('groq-sdk');
 
-const apiKey = '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';
-// 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
+const apiKey = 'your-groq-api-key-here';
+
 const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
 
 async function llamaHandleUserInput(input) {

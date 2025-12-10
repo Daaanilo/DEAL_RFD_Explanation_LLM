@@ -1,7 +1,7 @@
 import LlamaAI from 'llamaai';
 
-const apiToken = 'LL-te88EB5bX94nttzrvoqnWQ0R03GMKUsgYvZ66fcUzUvg1X9GeC3nfckXkNyzYYQH';
-// LL-te88EB5bX94nttzrvoqnWQ0R03GMKUsgYvZ66fcUzUvg1X9GeC3nfckXkNyzYYQH
+const apiToken = 'your-llamaai-api-token-here';
+
 const llamaAPI = new LlamaAI(apiToken);
 
 const llamaHandleUserInput = async (input) => {

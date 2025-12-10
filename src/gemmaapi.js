@@ -1,6 +1,6 @@
 const Groq = require('groq-sdk');
 
-const apiKey = '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';
+const apiKey = 'your-groq-api-key-here';
 const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
 
 async function gemmaHandleUserInput(input) {

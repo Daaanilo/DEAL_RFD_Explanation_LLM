@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 5000;
 
-mongoose.connect('mongodb+srv://admin:admin@progettouniversitario.7eqm09o.mongodb.net/?retryWrites=true&w=majority&appName=progettouniversitario')
+mongoose.connect('your-mongodb-connection-string-here', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => {
     console.error('Error connecting to MongoDB:', err);
