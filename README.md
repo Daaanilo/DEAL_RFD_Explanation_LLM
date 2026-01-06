@@ -1,58 +1,174 @@
-# DEAL: Dependencies Explanation with Advanced Language Models
+<p align="center">
+  <img src="https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React">
+  <img src="https://img.shields.io/badge/LLM-AI%20Powered-FF6F00?style=for-the-badge&logo=openai&logoColor=white" alt="LLM">
+  <img src="https://img.shields.io/badge/Data-Analytics-4285F4?style=for-the-badge&logo=googleanalytics&logoColor=white" alt="Analytics">
+  <img src="https://img.shields.io/badge/Status-Bachelor%20Thesis-blueviolet?style=for-the-badge" alt="Status">
+  <img src="https://img.shields.io/badge/License-Academic-green?style=for-the-badge" alt="License">
+</p>
 
-## 🧠 Descrizione del Progetto / Project Description
+<h1 align="center">🔍 DEAL</h1>
+<h3 align="center">Dependencies Explanation with Advanced Language Models</h3>
 
-**ITA 🇮🇹**  
-**DEAL** è una piattaforma web interattiva progettata per gestire i risultati di discovery e le statistiche correlate, supportata da **Large Language Models** (LLM). L'obiettivo principale di questo strumento è quello di semplificare l'analisi delle dipendenze nei dataset e di fornire informazioni dettagliate su ogni file caricato, inclusi i risultati di analisi delle dipendenze.
+<p align="center">
+  <strong>Interactive Web Platform for Dependency Analysis powered by LLMs</strong><br>
+  <em>Piattaforma Web per l'Analisi delle Dipendenze con LLM</em>
+</p>
 
-La piattaforma è composta da due pagine principali:
-1. **Gestione dei File**: permette di caricare, visualizzare, cercare, eliminare, appuntare e spostare i file.
-2. **Dettagli del File**: visualizza informazioni dettagliate sui file caricati, inclusi i dataset, gli algoritmi utilizzati e i risultati dell'analisi delle dipendenze.
-
-**ENG 🇬🇧**  
-**DEAL** is an interactive web platform designed for managing discovery results and their related statistics, supported by **Large Language Models** (LLM). The main goal of this tool is to simplify the analysis of dependencies within datasets and provide detailed information about each uploaded file, including dependency analysis results.
-
-The platform consists of two main pages:
-1. **File Management**: allows users to upload, view, search, delete, pin, and move files.
-2. **File Details**: provides a detailed view of the uploaded files, including the dataset, the algorithms used, and the dependency analysis results.
-
----
-
-## 👨‍💻 Componenti del Team / Team Members
-
-- Danilo Gisolfi  
-- Vincenzo Maiellaro  
+<p align="center">
+  <a href="#-project-description-english">🇬🇧 English</a> •
+  <a href="#-descrizione-del-progetto-italiano">🇮🇹 Italiano</a> •
+  <a href="#-key-features--caratteristiche-principali">✨ Features</a> •
+  <a href="#-platform-structure--struttura-della-piattaforma">🏗️ Structure</a>
+</p>
 
 ---
 
-## 🎯 Obiettivi del Progetto / Project Goals
+## 👨‍💻 Team Members / Componenti del Team
 
-**ITA 🇮🇹**
-- Creare una piattaforma web interattiva che permetta la gestione avanzata dei file e dei risultati delle analisi delle dipendenze.
-- Offrire una visualizzazione dettagliata di ogni file caricato, con informazioni sui dataset, gli algoritmi utilizzati e le dipendenze scoperte.
-- Implementare un sistema di filtri per esplorare i risultati delle analisi delle dipendenze, con la possibilità di modificare le istruzioni in tempo reale.
-- Integrare i **Large Language Models** per la generazione dinamica delle istruzioni e migliorare l'interazione utente.
-
-**ENG 🇬🇧**
-- Create an interactive web platform that allows advanced management of files and dependency analysis results.
-- Provide a detailed view of each uploaded file, including information on datasets, algorithms used, and discovered dependencies.
-- Implement a filtering system to explore dependency analysis results, with real-time modifiable instructions.
-- Integrate **Large Language Models** to dynamically generate instructions and enhance user interaction.
-
----
-
-## 🛠️ Caratteristiche principali / Key Features
-
-| Funzionalità                          | Descrizione IT 🇮🇹                                                                  | Description EN 🇬🇧                                                                |
-|---------------------------------------|-------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| 🗂️ **Gestione dei File**              | Permette di caricare, visualizzare, cercare, eliminare, appuntare e spostare i file.  | Allows uploading, viewing, searching, deleting, pinning, and moving files.       |
-| 📄 **Dettagli del File**              | Visualizza informazioni dettagliate su ogni file, con 21 card suddivise in tre sezioni. | Displays detailed information on each file, with 21 cards grouped into three sections. |
-| 📊 **Dataset**                        | Include informazioni sui dataset e le caratteristiche principali.                   | Includes information on the datasets and key characteristics.                   |
-| 🔬 **Algoritmo**                       | Mostra i dettagli dell'algoritmo utilizzato per la discovery delle dipendenze.       | Displays details on the algorithm used for dependency discovery.                 |
-| 📈 **Analisi delle Dipendenze**       | Sintetizza i risultati dell'analisi delle dipendenze, con la possibilità di filtrare tramite card specifiche. | Summarizes the results of the dependency analysis, allowing filtering through specific cards. |
-| 📝 **Istruzioni Dinamiche**           | Istruzioni modificate in tempo reale tramite prompt engineering e prompt tuning.      | Real-time modifiable instructions using prompt engineering and prompt tuning.    |
+<table align="center">
+  <tr>
+    <td align="center">
+      <strong>Danilo Gisolfi</strong><br>
+      <sub>Bachelor's Thesis</sub>
+    </td>
+    <td align="center">
+      <strong>Vincenzo Maiellaro</strong><br>
+      <sub>Bachelor's Thesis</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
-Questo progetto è stato sviluppato come parte della tesi triennale in Informatica di Danilo Gisolfi e Vincenzo Maiellaro.
-This project was developed as part of the Bachelor's Thesis in Computer Science by Danilo Gisolfi and Vincenzo Maiellaro.
+## 📖 Project Description (English)
+
+**DEAL** is an interactive web platform designed for managing discovery results and their related statistics, supported by **Large Language Models** (LLM).
+
+### 🎯 Main Goal
+
+Simplify the analysis of dependencies within datasets and provide detailed information about each uploaded file, including dependency analysis results.
+
+### 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        DEAL Platform                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    📁 FILE MANAGEMENT                     │   │
+│  │  Upload • View • Search • Delete • Pin • Move             │   │
+│  └──────────────────────────┬───────────────────────────────┘   │
+│                             │                                    │
+│                             ▼                                    │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    📄 FILE DETAILS                        │   │
+│  │                                                           │   │
+│  │  ┌─────────┐    ┌─────────┐    ┌─────────────────┐       │   │
+│  │  │ Dataset │    │Algorithm│    │   Dependencies  │       │   │
+│  │  │  Info   │    │ Details │    │    Analysis     │       │   │
+│  │  └─────────┘    └─────────┘    └─────────────────┘       │   │
+│  │                                                           │   │
+│  │              21 Interactive Cards in 3 Sections           │   │
+│  └──────────────────────────┬───────────────────────────────┘   │
+│                             │                                    │
+│                             ▼                                    │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    🤖 LLM Integration                     │   │
+│  │         Dynamic Instructions • Prompt Engineering         │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 📑 Two Main Pages
+
+| Page | Description |
+|------|-------------|
+| 🗂️ **File Management** | Upload, view, search, delete, pin, and move files |
+| 📄 **File Details** | Detailed view with 21 cards grouped into 3 sections |
+
+### 🎯 Project Goals
+
+- [x] Create an interactive web platform for file and dependency management
+- [x] Provide detailed view of files with datasets, algorithms, and dependencies
+- [x] Implement filtering system with real-time modifiable instructions
+- [x] Integrate LLMs for dynamic instruction generation
+
+---
+
+## 📖 Descrizione del Progetto (Italiano)
+
+**DEAL** è una piattaforma web interattiva progettata per gestire i risultati di discovery e le statistiche correlate, supportata da **Large Language Models** (LLM).
+
+### 🎯 Obiettivo Principale
+
+Semplificare l'analisi delle dipendenze nei dataset e fornire informazioni dettagliate su ogni file caricato, inclusi i risultati di analisi delle dipendenze.
+
+### 📑 Le Due Pagine Principali
+
+| Pagina | Descrizione |
+|--------|-------------|
+| 🗂️ **Gestione File** | Carica, visualizza, cerca, elimina, appunta e sposta i file |
+| 📄 **Dettagli File** | Visualizza informazioni dettagliate con 21 card in 3 sezioni |
+
+### 🎯 Obiettivi del Progetto
+
+- [x] Creare una piattaforma web interattiva per la gestione dei file e delle dipendenze
+- [x] Offrire visualizzazione dettagliata con dataset, algoritmi e dipendenze
+- [x] Implementare sistema di filtri con istruzioni modificabili in tempo reale
+- [x] Integrare LLM per generazione dinamica delle istruzioni
+
+---
+
+## ✨ Key Features / Caratteristiche Principali
+
+| Feature | Description 🇬🇧 | Descrizione 🇮🇹 |
+|---------|-----------------|-----------------|
+| 🗂️ **File Management** | Upload, view, search, delete, pin, and move files | Carica, visualizza, cerca, elimina, appunta e sposta i file |
+| 📄 **File Details** | 21 cards in 3 sections with detailed information | 21 card suddivise in 3 sezioni con informazioni dettagliate |
+| 📊 **Dataset** | Dataset information and key characteristics | Informazioni sui dataset e caratteristiche principali |
+| 🔬 **Algorithm** | Algorithm details for dependency discovery | Dettagli dell'algoritmo per la discovery delle dipendenze |
+| 📈 **Dependency Analysis** | Filterable results through specific cards | Risultati filtrabili tramite card specifiche |
+| 📝 **Dynamic Instructions** | Real-time prompt engineering and tuning | Prompt engineering e prompt tuning in tempo reale |
+
+---
+
+## 🔬 Technology Stack
+
+| Layer | Technology |
+|-------|------------|
+| 🖥️ **Frontend** | React / Modern Web Framework |
+| 🤖 **AI/LLM** | Large Language Models Integration |
+| 📊 **Data** | Dependency Discovery & Analysis |
+| 🔄 **Real-time** | Dynamic Prompt Engineering |
+
+---
+
+## 📊 File Details Structure / Struttura Dettagli File
+
+The details page presents **21 cards** organized into **3 sections**:
+
+| Section | Content |
+|---------|---------|
+| 📊 **Dataset** | Information about the analyzed dataset |
+| 🔬 **Algorithm** | Details on the discovery algorithm used |
+| 📈 **Dependencies** | Analysis results with interactive filters |
+
+---
+
+## 📜 License / Licenza
+
+This project was developed as part of the **Bachelor's Thesis in Computer Science** by Danilo Gisolfi and Vincenzo Maiellaro.
+
+Questo progetto è stato sviluppato come parte della **Tesi Triennale in Informatica** di Danilo Gisolfi e Vincenzo Maiellaro.
+
+---
+
+<p align="center">
+  <strong>Made with ❤️ for Data Science Research</strong><br>
+  <sub>DEAL • Dependencies Explanation with Advanced Language Models</sub>
+</p>
+
+<p align="center">
+  <a href="#-deal">⬆️ Back to Top / Torna su</a>
+</p>
